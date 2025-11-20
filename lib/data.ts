@@ -14,9 +14,16 @@ export async function getAllFields(): Promise<SportsField[]> {
       return [];
     }
     
-    const fields = await prisma.sportsField.findMany({
+    // Adaugă timeout pentru query
+    const queryPromise = prisma.sportsField.findMany({
       orderBy: { createdAt: 'desc' },
     });
+    
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Query timeout')), 5000)
+    );
+    
+    const fields = await Promise.race([queryPromise, timeoutPromise]);
     
     return fields.map(field => ({
       id: field.id,
@@ -37,6 +44,7 @@ export async function getAllFields(): Promise<SportsField[]> {
   } catch (error: any) {
     console.error('Error reading fields:', error);
     // Returnează array gol în loc să arunce eroare
+    // Astfel aplicația poate continua să funcționeze chiar dacă baza de date are probleme
     return [];
   }
 }
