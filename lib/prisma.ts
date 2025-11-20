@@ -54,6 +54,43 @@ let dbInitialized = false;
 let dbInitializing = false;
 
 export async function ensureDatabaseInitialized() {
+  // Încearcă să încarce .env dacă DATABASE_URL nu este setat sau este SQLite
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
+    try {
+      const cwd = process.cwd();
+      const possiblePaths = [
+        resolve(cwd, '.env'),
+        resolve(cwd, 'public_html', '.env'),
+        resolve(cwd, '..', '.env'),
+        resolve(cwd, '..', 'public_html', '.env'),
+        resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
+      ];
+
+      let loaded = false;
+      for (const envPath of possiblePaths) {
+        if (existsSync(envPath)) {
+          try {
+            config({ path: envPath });
+            console.log('✅ Loaded .env file from:', envPath);
+            console.log('✅ DATABASE_URL after loading .env:', process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.length + ' chars)' : 'NOT SET');
+            loaded = true;
+            break;
+          } catch (error: any) {
+            console.log('⚠️ Error loading .env from:', envPath, error.message);
+          }
+        }
+      }
+
+      if (!loaded) {
+        console.log('⚠️ .env file not found in any of these locations:');
+        possiblePaths.forEach(path => console.log('  -', path));
+        console.log('⚠️ Current working directory:', cwd);
+      }
+    } catch (envError: any) {
+      console.log('⚠️ Could not load .env:', envError.message);
+    }
+  }
+
   // Debug: log toate variabilele de mediu disponibile
   const allEnvKeys = Object.keys(process.env);
   const databaseKeys = allEnvKeys.filter(k => 
