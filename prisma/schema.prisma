@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SportsField {
+  id            String   @id @default(uuid())
+  name          String
+  type          String   // tenis, fotbal, baschet, volei, handbal, alte
+  location      String
+  city          String
+  description   String   @default("")
+  contactName   String
+  contactPhone  String
+  contactEmail  String
+  amenities     String   @default("[]") // JSON array stored as string
+  pricePerHour  Float?
+  imageUrl      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type])
+  @@index([city])
+}
+
+model Coach {
+  id            String   @id @default(uuid())
+  name          String
+  sport         String   // tenis, fotbal, baschet, volei, handbal, alte
+  city          String
+  location      String?  // Optional - unde oferă antrenamente
+  description   String   @default("")
+  experience    String   @default("") // Ani de experiență sau detalii
+  qualifications String  @default("[]") // JSON array stored as string
+  contactName   String
+  contactPhone  String
+  contactEmail  String
+  pricePerHour  Float?
+  imageUrl      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([sport])
+  @@index([city])
+}
