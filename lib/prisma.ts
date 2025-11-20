@@ -8,8 +8,8 @@ const globalForPrisma = globalThis as unknown as {
 if (!process.env.DATABASE_URL) {
   throw new Error(
     'DATABASE_URL environment variable is not set. ' +
-    'Please set it to your PostgreSQL connection string. ' +
-    'Example: postgresql://user:password@host:5432/database?schema=public'
+    'Please set it to your MySQL connection string. ' +
+    'Example: mysql://user:password@host:3306/database'
   );
 }
 

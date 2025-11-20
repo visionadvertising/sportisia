@@ -11,9 +11,9 @@ npm install
 
 Creează fișierul `.env` în root-ul proiectului (dacă nu există deja):
 
-**Pentru PostgreSQL (recomandat pentru producție):**
+**Pentru MySQL (recomandat pentru producție pe Hostinger):**
 ```
-DATABASE_URL="postgresql://user:password@localhost:5432/database?schema=public"
+DATABASE_URL="mysql://user:password@localhost:3306/database"
 ```
 
 **Pentru SQLite (doar pentru development local):**
@@ -21,7 +21,7 @@ DATABASE_URL="postgresql://user:password@localhost:5432/database?schema=public"
 DATABASE_URL="file:./data/database.db"
 ```
 
-**Notă:** Aplicația folosește acum PostgreSQL. Vezi `POSTGRESQL_SETUP.md` pentru instrucțiuni detaliate.
+**Notă:** Aplicația folosește acum MySQL pentru producție. Vezi `MYSQL_SETUP.md` pentru instrucțiuni detaliate pentru Hostinger.
 
 ### 3. Inițializare bază de date
 
