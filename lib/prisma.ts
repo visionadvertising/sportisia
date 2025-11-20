@@ -62,8 +62,18 @@ export async function ensureDatabaseInitialized() {
     if (error.message?.includes('no such table') || error.message?.includes('does not exist')) {
       console.log('🔄 Initializing database tables...');
       try {
-        // Creează tabelele manual
-        await prisma.$executeRawUnsafe(`
+        // Funcție helper pentru SQL cu timeout
+        const executeWithTimeout = async (sql: string, timeout = 10000) => {
+          return Promise.race([
+            prisma.$executeRawUnsafe(sql),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('SQL execution timeout')), timeout)
+            )
+          ]);
+        };
+
+        // Creează tabelele manual cu timeout
+        await executeWithTimeout(`
           CREATE TABLE IF NOT EXISTS "SportsField" (
             "id" TEXT NOT NULL PRIMARY KEY,
             "name" TEXT NOT NULL,
@@ -82,7 +92,7 @@ export async function ensureDatabaseInitialized() {
           );
         `);
         
-        await prisma.$executeRawUnsafe(`
+        await executeWithTimeout(`
           CREATE TABLE IF NOT EXISTS "Coach" (
             "id" TEXT NOT NULL PRIMARY KEY,
             "name" TEXT NOT NULL,
@@ -102,11 +112,11 @@ export async function ensureDatabaseInitialized() {
           );
         `);
         
-        // Creează indexurile
-        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SportsField_type_idx" ON "SportsField"("type");`);
-        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "SportsField_city_idx" ON "SportsField"("city");`);
-        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Coach_sport_idx" ON "Coach"("sport");`);
-        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Coach_city_idx" ON "Coach"("city");`);
+        // Creează indexurile cu timeout mai scurt
+        await executeWithTimeout(`CREATE INDEX IF NOT EXISTS "SportsField_type_idx" ON "SportsField"("type");`, 5000);
+        await executeWithTimeout(`CREATE INDEX IF NOT EXISTS "SportsField_city_idx" ON "SportsField"("city");`, 5000);
+        await executeWithTimeout(`CREATE INDEX IF NOT EXISTS "Coach_sport_idx" ON "Coach"("sport");`, 5000);
+        await executeWithTimeout(`CREATE INDEX IF NOT EXISTS "Coach_city_idx" ON "Coach"("city");`, 5000);
         
         console.log('✅ Database initialized successfully');
         dbInitialized = true;
