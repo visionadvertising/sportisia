@@ -35,22 +35,8 @@ function validateDatabaseUrl() {
 }
 
 // Validează doar la runtime, nu la build time
-if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
-  // Rulează validarea doar când nu suntem în build time
-  // Next.js setează NODE_ENV la 'production' la build, dar verificăm și alte condiții
-  try {
-    validateDatabaseUrl();
-  } catch (error) {
-    // La build time, doar logăm eroarea, nu o aruncăm
-    if (process.env.NEXT_PHASE === 'phase-production-build') {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn('⚠️ DATABASE_URL validation warning (build time):', errorMessage);
-    } else {
-      // La runtime, aruncă eroarea
-      throw error;
-    }
-  }
-}
+// Nu validăm la build time pentru a permite build-ul să treacă chiar dacă DATABASE_URL nu este setat
+// Validarea se va face la runtime când se încearcă să se folosească baza de date
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
@@ -63,6 +49,9 @@ let dbInitialized = false;
 let dbInitializing = false;
 
 export async function ensureDatabaseInitialized() {
+  // Validează DATABASE_URL la runtime (când se încearcă să se folosească baza de date)
+  validateDatabaseUrl();
+  
   if (dbInitialized) return;
   if (dbInitializing) {
     // Așteaptă dacă inițializarea este deja în curs, dar cu timeout
