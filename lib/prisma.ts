@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 const globalForPrisma = globalThis as unknown as {
@@ -13,12 +13,30 @@ if (!existsSync(dataDir)) {
 }
 
 // Setează DATABASE_URL dacă nu este setat
-// Folosește calea absolută pentru a funcționa corect în producție
+// Folosește calea relativă care funcționează mai bine cu SQLite
 if (!process.env.DATABASE_URL) {
+  // Verifică dacă fișierul există, dacă nu, îl creează
   const dbPath = join(process.cwd(), 'data', 'database.db');
-  // Normalizează calea pentru Windows (înlocuiește backslash cu forward slash)
-  const normalizedPath = dbPath.replace(/\\/g, '/');
-  process.env.DATABASE_URL = `file:${normalizedPath}`;
+  try {
+    if (!existsSync(dbPath)) {
+      // Creează fișierul gol
+      writeFileSync(dbPath, '');
+      // Setează permisiunile (dacă este posibil)
+      try {
+        const { chmodSync } = require('fs');
+        chmodSync(dbPath, 0o644);
+      } catch (e) {
+        // Ignoră eroarea de permisiuni dacă nu funcționează
+      }
+    }
+  } catch (error) {
+    console.error('Error creating database file:', error);
+  }
+  // Folosește calea relativă - funcționează mai bine cu SQLite
+  process.env.DATABASE_URL = 'file:./data/database.db';
+  console.log('DATABASE_URL set to:', process.env.DATABASE_URL);
+  console.log('Database path:', dbPath);
+  console.log('Database exists:', existsSync(dbPath));
 }
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient();
