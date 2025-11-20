@@ -20,7 +20,7 @@ export async function GET() {
         connected: true,
         fieldsCount,
         coachesCount,
-        testQuery: testQuery
+        testQuery: Array.isArray(testQuery) ? testQuery.map((row: any) => ({ test: Number(row.test) })) : testQuery
       },
       env: {
         databaseUrl: process.env.DATABASE_URL ? 'Setat' : 'Nu este setat',
