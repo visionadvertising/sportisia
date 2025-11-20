@@ -106,19 +106,16 @@ export async function GET() {
             success: false,
             message: 'DATABASE_URL nu este configurat corect pentru MySQL.',
             error: initError.message,
-            debug: {
-              ...envDebug,
-              rawDatabaseUrl: process.env.DATABASE_URL || 'NOT SET',
-              allProcessEnvKeys: Object.keys(process.env).slice(0, 30)
-            },
+            debug: envDebug,
             instructions: {
               step1: 'Intră în panoul Hostinger',
               step2: 'Navighează la: Management > Websites > [site-ul tău] > Environment Variables',
               step3: 'Verifică că variabila DATABASE_URL este setată corect',
-              step4: 'Valoare corectă: mysql://u328389087_sportisiaro_user:K6PI#+/h@localhost:3306/u328389087_sportisiaro',
-              step5: 'IMPORTANT: Click pe butonul "Save" după ce setezi variabila',
-              step6: 'După salvare, declanșează un rebuild manual',
-              step7: 'Verifică logurile aplicației pentru a vedea dacă variabila este disponibilă la runtime',
+              step4: 'Valoare corectă: mysql://u328389087_sportisiaro_user:[parola]@localhost:3306/u328389087_sportisiaro',
+              step5: 'IMPORTANT: Pe Hostinger, variabilele din "Deployment settings" sunt doar pentru build time!',
+              step6: 'Caută o secțiune separată pentru "Runtime Environment Variables" sau "Application Settings"',
+              step7: 'Dacă nu există, contactează suportul Hostinger pentru a seta variabilele la runtime',
+              step8: 'Alternativ, verifică dacă trebuie să creezi un fișier .env pe server',
               documentation: 'Vezi MYSQL_SETUP.md pentru instrucțiuni detaliate'
             }
           },

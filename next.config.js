@@ -5,12 +5,10 @@ const nextConfig = {
   swcMinify: true,
   // Asigură-te că fișierele statice sunt servite corect
   trailingSlash: false,
-  // Asigură-te că DATABASE_URL este disponibil la runtime
-  env: {
-    DATABASE_URL: process.env.DATABASE_URL,
-  },
+  // NOTĂ: env din next.config.js este doar pentru build time, nu pentru runtime
+  // Pentru runtime, variabilele trebuie setate în environment-ul serverului
   // Configurație pentru producție pe Hostinger
-  output: 'standalone',
+  // output: 'standalone', // Comentat - poate cauza probleme pe Hostinger
   // Asigură-te că chunk-urile sunt generate corect
   webpack: (config, { isServer }) => {
     if (!isServer) {
