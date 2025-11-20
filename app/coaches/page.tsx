@@ -140,7 +140,7 @@ export default function CoachesPage() {
 
         <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
             <input
               type="text"
               placeholder="🔍 Caută după nume, oraș sau experiență..."
@@ -181,6 +181,7 @@ export default function CoachesPage() {
             }}>
               + Adaugă Antrenor
             </Link>
+            </div>
           </div>
         </div>
 
