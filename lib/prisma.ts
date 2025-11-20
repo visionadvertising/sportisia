@@ -4,13 +4,52 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Verifică că DATABASE_URL este setat
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    'DATABASE_URL environment variable is not set. ' +
-    'Please set it to your MySQL connection string. ' +
-    'Example: mysql://user:password@host:3306/database'
-  );
+// Verifică că DATABASE_URL este setat (doar la runtime, nu la build time)
+function validateDatabaseUrl() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      'DATABASE_URL environment variable is not set. ' +
+      'Please set it to your MySQL connection string. ' +
+      'Example: mysql://user:password@host:3306/database'
+    );
+  }
+
+  // Verifică că DATABASE_URL nu este setat la SQLite (valoare veche)
+  if (process.env.DATABASE_URL.startsWith('file:')) {
+    throw new Error(
+      'DATABASE_URL is set to SQLite (file:), but the application now uses MySQL. ' +
+      'Please update DATABASE_URL to a MySQL connection string. ' +
+      'Example: mysql://user:password@host:3306/database ' +
+      'Current value: ' + process.env.DATABASE_URL.substring(0, 50) + '...'
+    );
+  }
+
+  // Verifică că DATABASE_URL este un connection string MySQL valid
+  if (!process.env.DATABASE_URL.startsWith('mysql://')) {
+    throw new Error(
+      'DATABASE_URL must start with "mysql://" for MySQL. ' +
+      'Current value starts with: ' + process.env.DATABASE_URL.substring(0, 20) + '... ' +
+      'Please set it to: mysql://user:password@host:3306/database'
+    );
+  }
+}
+
+// Validează doar la runtime, nu la build time
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
+  // Rulează validarea doar când nu suntem în build time
+  // Next.js setează NODE_ENV la 'production' la build, dar verificăm și alte condiții
+  try {
+    validateDatabaseUrl();
+  } catch (error) {
+    // La build time, doar logăm eroarea, nu o aruncăm
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn('⚠️ DATABASE_URL validation warning (build time):', errorMessage);
+    } else {
+      // La runtime, aruncă eroarea
+      throw error;
+    }
+  }
 }
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient();
