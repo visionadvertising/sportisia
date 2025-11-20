@@ -110,11 +110,12 @@ export async function GET() {
         return NextResponse.json(
           {
             success: false,
-            message: 'Tabelele bazei de date nu există. Te rugăm să rulezi migrațiile Prisma.',
+            message: 'Tabelele bazei de date nu există. Accesează /api/db-push pentru a le crea automat.',
             error: initError.message,
             instructions: {
-              viaSSH: 'Rulează: npm run db:push',
-              viaAPI: 'Tabelele trebuie create manual folosind Prisma. Vezi MYSQL_SETUP.md pentru detalii.'
+              viaAPI: 'Accesează: https://lavender-cassowary-938357.hostingersite.com/api/db-push',
+              viaSSH: 'Rulează: npm run db:push (dacă npm este disponibil)',
+              note: 'Endpoint-ul /api/db-push va crea tabelele automat fără să fie nevoie de npm'
             }
           },
           { status: 500 }
