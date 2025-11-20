@@ -4,8 +4,15 @@ import { prisma } from './prisma';
 export async function getAllFields(): Promise<SportsField[]> {
   try {
     // Asigură-te că baza de date este inițializată
-    const { ensureDatabaseInitialized } = await import('./prisma');
-    await ensureDatabaseInitialized();
+    try {
+      const { ensureDatabaseInitialized } = await import('./prisma');
+      await ensureDatabaseInitialized();
+    } catch (initError: any) {
+      console.error('Database initialization error in getAllFields:', initError);
+      // Dacă inițializarea eșuează, returnează array gol în loc să arunce eroare
+      // Astfel aplicația poate continua să funcționeze
+      return [];
+    }
     
     const fields = await prisma.sportsField.findMany({
       orderBy: { createdAt: 'desc' },
@@ -27,8 +34,9 @@ export async function getAllFields(): Promise<SportsField[]> {
       createdAt: field.createdAt.toISOString(),
       updatedAt: field.updatedAt.toISOString(),
     }));
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error reading fields:', error);
+    // Returnează array gol în loc să arunce eroare
     return [];
   }
 }
