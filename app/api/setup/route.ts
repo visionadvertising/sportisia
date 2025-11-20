@@ -124,6 +124,70 @@ export async function GET() {
       throw initError;
     }
     
+    // Încearcă să creeze tabelele dacă nu există
+    try {
+      // Verifică dacă tabelele există
+      await prisma.$queryRaw`SELECT 1 FROM \`SportsField\` LIMIT 1`;
+    } catch (tableError: any) {
+      // Dacă tabelele nu există, le creează
+      if (tableError.code === '42S02' || tableError.code === 'ER_NO_SUCH_TABLE' || 
+          tableError.message?.includes('does not exist') || tableError.message?.includes('Table')) {
+        console.log('🔄 Creating database tables...');
+        
+        // Creează tabelele manual
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS \`SportsField\` (
+            \`id\` VARCHAR(191) NOT NULL,
+            \`name\` VARCHAR(191) NOT NULL,
+            \`type\` VARCHAR(191) NOT NULL,
+            \`location\` VARCHAR(191) NOT NULL,
+            \`city\` VARCHAR(191) NOT NULL,
+            \`description\` VARCHAR(191) NOT NULL DEFAULT '',
+            \`contactName\` VARCHAR(191) NOT NULL,
+            \`contactPhone\` VARCHAR(191) NOT NULL,
+            \`contactEmail\` VARCHAR(191) NOT NULL,
+            \`amenities\` VARCHAR(191) NOT NULL DEFAULT '[]',
+            \`pricePerHour\` DOUBLE,
+            \`imageUrl\` VARCHAR(191),
+            \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+            \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+            PRIMARY KEY (\`id\`)
+          ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        `);
+
+        await prisma.$executeRawUnsafe(`
+          CREATE TABLE IF NOT EXISTS \`Coach\` (
+            \`id\` VARCHAR(191) NOT NULL,
+            \`name\` VARCHAR(191) NOT NULL,
+            \`sport\` VARCHAR(191) NOT NULL,
+            \`city\` VARCHAR(191) NOT NULL,
+            \`location\` VARCHAR(191),
+            \`description\` VARCHAR(191) NOT NULL DEFAULT '',
+            \`experience\` VARCHAR(191) NOT NULL DEFAULT '',
+            \`qualifications\` VARCHAR(191) NOT NULL DEFAULT '[]',
+            \`contactName\` VARCHAR(191) NOT NULL,
+            \`contactPhone\` VARCHAR(191) NOT NULL,
+            \`contactEmail\` VARCHAR(191) NOT NULL,
+            \`pricePerHour\` DOUBLE,
+            \`imageUrl\` VARCHAR(191),
+            \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+            \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+            PRIMARY KEY (\`id\`)
+          ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+        `);
+
+        // Creează indexurile
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS \`SportsField_type_idx\` ON \`SportsField\`(\`type\`);`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS \`SportsField_city_idx\` ON \`SportsField\`(\`city\`);`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS \`Coach_sport_idx\` ON \`Coach\`(\`sport\`);`);
+        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS \`Coach_city_idx\` ON \`Coach\`(\`city\`);`);
+        
+        console.log('✅ Database tables created successfully');
+      } else {
+        throw tableError;
+      }
+    }
+    
     // Verifică dacă terenurile există deja
     const existingFields = await prisma.sportsField.findMany();
     
