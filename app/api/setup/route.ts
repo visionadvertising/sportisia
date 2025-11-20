@@ -73,7 +73,29 @@ export async function GET() {
   try {
     // Asigură-te că baza de date este inițializată
     const { ensureDatabaseInitialized } = await import('@/lib/prisma');
-    await ensureDatabaseInitialized();
+    
+    try {
+      await ensureDatabaseInitialized();
+    } catch (initError: any) {
+      // Dacă tabelele nu există, oferă instrucțiuni clare
+      if (initError.message?.includes('Database tables not found') || 
+          initError.message?.includes('does not exist') ||
+          initError.code === '42P01') {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Tabelele bazei de date nu există. Te rugăm să rulezi migrațiile Prisma.',
+            error: initError.message,
+            instructions: {
+              viaSSH: 'Rulează: npm run db:push',
+              viaAPI: 'Tabelele trebuie create manual folosind Prisma. Vezi POSTGRESQL_SETUP.md pentru detalii.'
+            }
+          },
+          { status: 500 }
+        );
+      }
+      throw initError;
+    }
     
     // Verifică dacă terenurile există deja
     const existingFields = await prisma.sportsField.findMany();

@@ -1,54 +1,16 @@
 import { PrismaClient } from '@prisma/client';
-import { existsSync, mkdirSync, writeFileSync, chmodSync } from 'fs';
-import { join } from 'path';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Asigură-te că folderul data există
-const dataDir = join(process.cwd(), 'data');
-if (!existsSync(dataDir)) {
-  mkdirSync(dataDir, { recursive: true });
-}
-
-// Setează DATABASE_URL dacă nu este setat
-// Folosește calea absolută pentru a funcționa corect în producție
+// Verifică că DATABASE_URL este setat
 if (!process.env.DATABASE_URL) {
-  // Verifică dacă fișierul există, dacă nu, îl creează
-  const dbPath = join(process.cwd(), 'data', 'database.db');
-  try {
-    if (!existsSync(dbPath)) {
-      // Creează fișierul gol
-      writeFileSync(dbPath, '');
-      // Setează permisiunile (dacă este posibil, doar pe Linux/Mac)
-      try {
-        if (process.platform !== 'win32') {
-          chmodSync(dbPath, 0o644);
-        }
-      } catch (e) {
-        // Ignoră eroarea de permisiuni dacă nu funcționează
-      }
-    }
-  } catch (error) {
-    // Log doar în development
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Error creating database file:', error);
-    }
-  }
-  
-  // Folosește calea absolută formatată corect pentru SQLite
-  // Pe Windows: file:///C:/path/to/db.db
-  // Pe Linux/Mac: file:/path/to/db.db
-  let dbUrl: string;
-  if (process.platform === 'win32') {
-    // Windows: trebuie să înlocuim backslash-urile și să adăugăm 3 slash-uri
-    dbUrl = 'file:///' + dbPath.replace(/\\/g, '/');
-  } else {
-    // Linux/Mac: doar un slash după file:
-    dbUrl = 'file:' + dbPath;
-  }
-  process.env.DATABASE_URL = dbUrl;
+  throw new Error(
+    'DATABASE_URL environment variable is not set. ' +
+    'Please set it to your PostgreSQL connection string. ' +
+    'Example: postgresql://user:password@host:5432/database?schema=public'
+  );
 }
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient();
@@ -85,96 +47,34 @@ export async function ensureDatabaseInitialized() {
     // Conectează cu timeout
     const connectPromise = prisma.$connect();
     const connectTimeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timeout')), 3000)
+      setTimeout(() => reject(new Error('Connection timeout')), 5000)
     );
     await Promise.race([connectPromise, connectTimeout]);
     
-    // Adaugă timeout pentru query
-    const queryPromise = prisma.$queryRaw`SELECT 1 FROM SportsField LIMIT 1`;
+    // Verifică dacă tabelele există
+    const queryPromise = prisma.$queryRaw`SELECT 1 FROM "SportsField" LIMIT 1`;
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Query timeout')), 3000)
+      setTimeout(() => reject(new Error('Query timeout')), 5000)
     );
     
     await Promise.race([queryPromise, timeoutPromise]);
     dbInitialized = true;
     dbInitializing = false;
   } catch (error: any) {
-    // Dacă tabelele nu există, le creează folosind SQL direct
-    if (error.message?.includes('no such table') || error.message?.includes('does not exist')) {
-      console.log('🔄 Initializing database tables...');
-      try {
-        // Funcție helper pentru SQL cu timeout
-        const executeWithTimeout = async (sql: string, timeout = 10000) => {
-          return Promise.race([
-            prisma.$executeRawUnsafe(sql),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('SQL execution timeout')), timeout)
-            )
-          ]);
-        };
-
-        // Creează tabelele manual cu timeout
-        await executeWithTimeout(`
-          CREATE TABLE IF NOT EXISTS "SportsField" (
-            "id" TEXT NOT NULL PRIMARY KEY,
-            "name" TEXT NOT NULL,
-            "type" TEXT NOT NULL,
-            "location" TEXT NOT NULL,
-            "city" TEXT NOT NULL,
-            "description" TEXT NOT NULL DEFAULT '',
-            "contactName" TEXT NOT NULL,
-            "contactPhone" TEXT NOT NULL,
-            "contactEmail" TEXT NOT NULL,
-            "amenities" TEXT NOT NULL DEFAULT '[]',
-            "pricePerHour" REAL,
-            "imageUrl" TEXT,
-            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-          );
-        `);
-        
-        await executeWithTimeout(`
-          CREATE TABLE IF NOT EXISTS "Coach" (
-            "id" TEXT NOT NULL PRIMARY KEY,
-            "name" TEXT NOT NULL,
-            "sport" TEXT NOT NULL,
-            "city" TEXT NOT NULL,
-            "location" TEXT,
-            "description" TEXT NOT NULL DEFAULT '',
-            "experience" TEXT NOT NULL DEFAULT '',
-            "qualifications" TEXT NOT NULL DEFAULT '[]',
-            "contactName" TEXT NOT NULL,
-            "contactPhone" TEXT NOT NULL,
-            "contactEmail" TEXT NOT NULL,
-            "pricePerHour" REAL,
-            "imageUrl" TEXT,
-            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-          );
-        `);
-        
-        // Creează indexurile cu timeout mai scurt
-        await executeWithTimeout(`CREATE INDEX IF NOT EXISTS "SportsField_type_idx" ON "SportsField"("type");`, 5000);
-        await executeWithTimeout(`CREATE INDEX IF NOT EXISTS "SportsField_city_idx" ON "SportsField"("city");`, 5000);
-        await executeWithTimeout(`CREATE INDEX IF NOT EXISTS "Coach_sport_idx" ON "Coach"("sport");`, 5000);
-        await executeWithTimeout(`CREATE INDEX IF NOT EXISTS "Coach_city_idx" ON "Coach"("city");`, 5000);
-        
-        console.log('✅ Database initialized successfully');
-        dbInitialized = true;
-      } catch (initError: any) {
-        console.error('❌ Error initializing database:', initError);
-        dbInitializing = false;
-        // Nu arunca eroare, lasă aplicația să continue
-        // Baza de date va fi inițializată la următorul request
-        return;
-      }
+    // Dacă tabelele nu există, folosește Prisma migrate sau db push
+    if (error.message?.includes('does not exist') || error.message?.includes('relation') || error.code === '42P01') {
+      console.log('🔄 Database tables do not exist. Please run: npm run db:push');
+      dbInitializing = false;
+      throw new Error(
+        'Database tables not found. Please run "npm run db:push" to create the schema. ' +
+        'If you are in production, ensure migrations have been applied.'
+      );
     } else {
       // Alt tip de eroare - resetează flag-ul și lasă aplicația să continue
-      console.error('Database query error:', error);
+      console.error('Database connection error:', error.message);
       dbInitializing = false;
-      return;
+      throw error;
     }
-    dbInitializing = false;
   }
 }
 

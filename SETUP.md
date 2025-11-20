@@ -10,9 +10,18 @@ npm install
 ### 2. Configurare bază de date
 
 Creează fișierul `.env` în root-ul proiectului (dacă nu există deja):
+
+**Pentru PostgreSQL (recomandat pentru producție):**
+```
+DATABASE_URL="postgresql://user:password@localhost:5432/database?schema=public"
+```
+
+**Pentru SQLite (doar pentru development local):**
 ```
 DATABASE_URL="file:./data/database.db"
 ```
+
+**Notă:** Aplicația folosește acum PostgreSQL. Vezi `POSTGRESQL_SETUP.md` pentru instrucțiuni detaliate.
 
 ### 3. Inițializare bază de date
 
