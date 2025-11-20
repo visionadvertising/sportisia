@@ -30,9 +30,17 @@ let dbInitializing = false;
 export async function ensureDatabaseInitialized() {
   if (dbInitialized) return;
   if (dbInitializing) {
-    // Așteaptă dacă inițializarea este deja în curs
-    while (dbInitializing) {
+    // Așteaptă dacă inițializarea este deja în curs, dar cu timeout
+    let waitCount = 0;
+    const maxWait = 50; // Maximum 5 seconds wait
+    while (dbInitializing && waitCount < maxWait) {
       await new Promise(resolve => setTimeout(resolve, 100));
+      waitCount++;
+    }
+    if (dbInitializing) {
+      // Timeout - resetează flag-ul
+      dbInitializing = false;
+      throw new Error('Database initialization timeout');
     }
     return;
   }
@@ -40,8 +48,13 @@ export async function ensureDatabaseInitialized() {
   dbInitializing = true;
   
   try {
-    // Verifică dacă baza de date există și are tabele
-    await prisma.$queryRaw`SELECT 1 FROM SportsField LIMIT 1`;
+    // Adaugă timeout pentru query
+    const queryPromise = prisma.$queryRaw`SELECT 1 FROM SportsField LIMIT 1`;
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Query timeout')), 5000)
+    );
+    
+    await Promise.race([queryPromise, timeoutPromise]);
     dbInitialized = true;
     dbInitializing = false;
   } catch (error: any) {
@@ -99,11 +112,16 @@ export async function ensureDatabaseInitialized() {
         dbInitialized = true;
       } catch (initError: any) {
         console.error('❌ Error initializing database:', initError);
-        throw initError;
+        dbInitializing = false;
+        // Nu arunca eroare, lasă aplicația să continue
+        // Baza de date va fi inițializată la următorul request
+        return;
       }
     } else {
-      // Alt tip de eroare - aruncă mai departe
-      throw error;
+      // Alt tip de eroare - resetează flag-ul și lasă aplicația să continue
+      console.error('Database query error:', error);
+      dbInitializing = false;
+      return;
     }
     dbInitializing = false;
   }
