@@ -23,6 +23,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    // Asigură-te că baza de date este inițializată înainte de salvare
+    try {
+      const { ensureDatabaseInitialized } = await import('@/lib/prisma');
+      await ensureDatabaseInitialized();
+    } catch (initError: any) {
+      console.error('Database initialization error:', initError);
+      return NextResponse.json(
+        { 
+          error: 'Failed to initialize database',
+          message: initError.message || 'Database initialization failed',
+          details: 'Please try accessing /api/setup first to initialize the database'
+        },
+        { status: 500 }
+      );
+    }
+    
     const newField: SportsField = {
       id: crypto.randomUUID(),
       name: body.name,
@@ -47,8 +63,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to create field',
-        message: error.message,
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        message: error.message || 'Unknown error occurred',
+        errorType: error.constructor?.name,
+        details: error.message
       },
       { status: 500 }
     );
