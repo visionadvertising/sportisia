@@ -14,22 +14,15 @@ function validateDatabaseUrl() {
     );
   }
 
-  // Verifică că DATABASE_URL nu este setat la SQLite (valoare veche)
+  // Verifică doar că nu este SQLite (valoare veche)
+  // Lăsăm Prisma să valideze restul connection string-ului
   if (process.env.DATABASE_URL.startsWith('file:')) {
     throw new Error(
       'DATABASE_URL is set to SQLite (file:), but the application now uses MySQL. ' +
       'Please update DATABASE_URL to a MySQL connection string. ' +
       'Example: mysql://user:password@host:3306/database ' +
-      'Current value: ' + process.env.DATABASE_URL.substring(0, 50) + '...'
-    );
-  }
-
-  // Verifică că DATABASE_URL este un connection string MySQL valid
-  if (!process.env.DATABASE_URL.startsWith('mysql://')) {
-    throw new Error(
-      'DATABASE_URL must start with "mysql://" for MySQL. ' +
-      'Current value starts with: ' + process.env.DATABASE_URL.substring(0, 20) + '... ' +
-      'Please set it to: mysql://user:password@host:3306/database'
+      'Note: If your password contains special characters (#, +, /, etc.), they must be URL-encoded. ' +
+      'For example: # becomes %23, + becomes %2B, / becomes %2F'
     );
   }
 }
