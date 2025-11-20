@@ -32,7 +32,7 @@ export async function ensureDatabaseInitialized() {
   if (dbInitializing) {
     // Așteaptă dacă inițializarea este deja în curs, dar cu timeout
     let waitCount = 0;
-    const maxWait = 50; // Maximum 5 seconds wait
+    const maxWait = 30; // Maximum 3 seconds wait
     while (dbInitializing && waitCount < maxWait) {
       await new Promise(resolve => setTimeout(resolve, 100));
       waitCount++;
@@ -48,10 +48,17 @@ export async function ensureDatabaseInitialized() {
   dbInitializing = true;
   
   try {
+    // Conectează cu timeout
+    const connectPromise = prisma.$connect();
+    const connectTimeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout')), 3000)
+    );
+    await Promise.race([connectPromise, connectTimeout]);
+    
     // Adaugă timeout pentru query
     const queryPromise = prisma.$queryRaw`SELECT 1 FROM SportsField LIMIT 1`;
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Query timeout')), 5000)
+      setTimeout(() => reject(new Error('Query timeout')), 3000)
     );
     
     await Promise.race([queryPromise, timeoutPromise]);
@@ -137,11 +144,6 @@ export async function ensureDatabaseInitialized() {
   }
 }
 
-// Inițializează la prima conexiune
-prisma.$connect()
-  .then(() => ensureDatabaseInitialized())
-  .catch((error) => {
-    console.error('Error connecting to database:', error);
-    dbInitializing = false;
-  });
+// Nu mai inițializăm automat la pornire - se va face la primul acces
+// Inițializarea se face doar când este necesară, cu timeout
 
