@@ -62,16 +62,23 @@ git push
 
 ### Pasul 2: Setează variabilele de mediu
 
-Înainte de deploy, asigură-te că ai setat:
-- **DATABASE_URL** - connection string-ul MySQL
+**⚠️ IMPORTANT:** Pe Hostinger, variabilele de mediu trebuie setate corect pentru a fi disponibile la runtime.
 
 **Unde să le setezi:**
 1. **Intră în panoul Hostinger**
-2. **Navighează la:** Management > Websites > [site-ul tău] > Environment Variables (sau Build Settings)
-3. **Adaugă:**
-   - Nume: `DATABASE_URL`
-   - Valoare: `mysql://u328389087_sportisiaro_user:parola123@localhost:3306/u328389087_sportisiaro`
-   (Înlocuiește cu datele tale reale)
+2. **Navighează la:** Management > Websites > [site-ul tău] > **Environment Variables**
+3. **Adaugă variabila:**
+   - **Nume:** `DATABASE_URL`
+   - **Valoare:** `mysql://u328389087_sportisiaro_user:K6PI#+/h@localhost:3306/u328389087_sportisiaro`
+   (Înlocuiește cu datele tale reale din baza de date MySQL)
+4. **⚠️ CRITIC: Click pe butonul "Save" (purple) din colțul dreapta jos**
+5. **După salvare, declanșează un rebuild manual**
+
+**Dacă variabila nu este disponibilă la runtime:**
+- Verifică că ai salvat setările (click pe "Save")
+- Verifică că ai declanșat un rebuild după salvare
+- Verifică logurile aplicației pentru a vedea ce variabile sunt disponibile
+- Contactează suportul Hostinger dacă problema persistă
 
 ### Pasul 3: Declanșează deploy-ul
 
