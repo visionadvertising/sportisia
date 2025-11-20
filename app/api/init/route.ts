@@ -69,7 +69,7 @@ const fields = [
   }
 ];
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Verifică dacă terenurile există deja
     const existingFields = await prisma.sportsField.findMany();
