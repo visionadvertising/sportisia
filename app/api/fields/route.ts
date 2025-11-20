@@ -6,9 +6,14 @@ export async function GET() {
   try {
     const fields = await getAllFields();
     return NextResponse.json(fields);
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Error fetching fields:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch fields' },
+      { 
+        error: 'Failed to fetch fields',
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
@@ -37,9 +42,14 @@ export async function POST(request: NextRequest) {
 
     const savedField = await saveField(newField);
     return NextResponse.json(savedField, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Error creating field:', error);
     return NextResponse.json(
-      { error: 'Failed to create field' },
+      { 
+        error: 'Failed to create field',
+        message: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

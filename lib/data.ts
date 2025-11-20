@@ -3,6 +3,10 @@ import { prisma } from './prisma';
 
 export async function getAllFields(): Promise<SportsField[]> {
   try {
+    // Asigură-te că baza de date este inițializată
+    const { ensureDatabaseInitialized } = await import('./prisma');
+    await ensureDatabaseInitialized();
+    
     const fields = await prisma.sportsField.findMany({
       orderBy: { createdAt: 'desc' },
     });
@@ -63,6 +67,10 @@ export async function getFieldById(id: string): Promise<SportsField | null> {
 
 export async function saveField(field: SportsField): Promise<SportsField> {
   try {
+    // Asigură-te că baza de date este inițializată
+    const { ensureDatabaseInitialized } = await import('./prisma');
+    await ensureDatabaseInitialized();
+    
     const data = {
       name: field.name,
       type: field.type,
