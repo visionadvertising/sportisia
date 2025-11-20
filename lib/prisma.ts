@@ -42,24 +42,22 @@ let dbInitialized = false;
 let dbInitializing = false;
 
 export async function ensureDatabaseInitialized() {
-  // Debug: log toate variabilele de mediu disponibile
-  console.log('🔍 Environment check:', {
-    DATABASE_URL: process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.length + ' chars)' : 'NOT SET',
-    DATABASE_URL_PREVIEW: process.env.DATABASE_URL?.substring(0, 20) || 'N/A',
-    NODE_ENV: process.env.NODE_ENV,
-    ALL_ENV_KEYS: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('DB')).join(', ')
-  });
+  // Validează doar că DATABASE_URL este setat și nu este SQLite
+  // Lăsăm Prisma să valideze connection string-ul complet
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      'DATABASE_URL environment variable is not set. ' +
+      'Please set it to your MySQL connection string. ' +
+      'Example: mysql://user:password@host:3306/database'
+    );
+  }
 
-  // Validează DATABASE_URL la runtime (când se încearcă să se folosească baza de date)
-  try {
-    validateDatabaseUrl();
-  } catch (validationError: any) {
-    // Dacă validarea eșuează, aruncă eroarea cu mesaj clar
-    console.error('❌ DATABASE_URL validation failed:', validationError.message);
-    console.error('Current DATABASE_URL:', process.env.DATABASE_URL ? 
-      process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET');
-    console.error('All process.env keys:', Object.keys(process.env).slice(0, 20).join(', '));
-    throw validationError;
+  if (process.env.DATABASE_URL.startsWith('file:')) {
+    throw new Error(
+      'DATABASE_URL is set to SQLite (file:), but the application now uses MySQL. ' +
+      'Please update DATABASE_URL to a MySQL connection string. ' +
+      'Note: If your password contains special characters (#, +, /, etc.), they must be URL-encoded.'
+    );
   }
   
   if (dbInitialized) return;
