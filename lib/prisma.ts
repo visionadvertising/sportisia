@@ -4,36 +4,12 @@ import { resolve } from 'path';
 import { existsSync } from 'fs';
 
 // Încarcă .env manual în producție (Next.js nu o face automat)
-if (process.env.NODE_ENV === 'production') {
-  const cwd = process.cwd();
-  const possiblePaths = [
-    resolve(cwd, '.env'),
-    resolve(cwd, 'public_html', '.env'),
-    resolve(cwd, '..', '.env'),
-    resolve(cwd, '..', 'public_html', '.env'),
-    resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
-  ];
-
-  let loaded = false;
-  for (const envPath of possiblePaths) {
-    if (existsSync(envPath)) {
-      try {
-        config({ path: envPath });
-        console.log('✅ Loaded .env file from:', envPath);
-        console.log('✅ DATABASE_URL after loading .env:', process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.length + ' chars)' : 'NOT SET');
-        loaded = true;
-        break;
-      } catch (error: any) {
-        console.log('⚠️ Error loading .env from:', envPath, error.message);
-      }
-    }
-  }
-
-  if (!loaded) {
-    console.log('⚠️ .env file not found in any of these locations:');
-    possiblePaths.forEach(path => console.log('  -', path));
-    console.log('⚠️ Current working directory:', cwd);
-  }
+// NU rulează la build time pentru a permite build-ul să treacă
+if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+  // Verifică dacă suntem la runtime (nu la build time)
+  // La build time, process.env.NODE_ENV este 'production' dar nu trebuie să încărcăm .env
+  // Vom încărca .env doar când este necesar (la primul acces la baza de date)
+  // Această logică este mutată în ensureDatabaseInitialized()
 }
 
 const globalForPrisma = globalThis as unknown as {
