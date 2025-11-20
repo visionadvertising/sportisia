@@ -1,4 +1,34 @@
 import { PrismaClient } from '@prisma/client';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+import { existsSync } from 'fs';
+
+// Încarcă .env manual în producție (Next.js nu o face automat)
+if (process.env.NODE_ENV === 'production') {
+  const envPath = resolve(process.cwd(), '.env');
+  if (existsSync(envPath)) {
+    try {
+      config({ path: envPath });
+      console.log('✅ Loaded .env file from:', envPath);
+      console.log('✅ DATABASE_URL after loading .env:', process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.length + ' chars)' : 'NOT SET');
+    } catch (error: any) {
+      console.log('⚠️ Error loading .env file:', error.message);
+    }
+  } else {
+    console.log('⚠️ .env file not found at:', envPath);
+    console.log('⚠️ Current working directory:', process.cwd());
+    // Încearcă și din public_html
+    const altPath = resolve(process.cwd(), 'public_html', '.env');
+    if (existsSync(altPath)) {
+      try {
+        config({ path: altPath });
+        console.log('✅ Loaded .env file from:', altPath);
+      } catch (error: any) {
+        console.log('⚠️ Error loading .env from public_html:', error.message);
+      }
+    }
+  }
+}
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
