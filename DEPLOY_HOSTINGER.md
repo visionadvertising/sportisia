@@ -39,16 +39,35 @@ Pe Hostinger, deploy-ul poate fi:
 
 După configurare, fiecare push pe `main` va declanșa automat deploy-ul.
 
-### Opțiunea 2: Deploy manual
+### Opțiunea 2: Deploy manual (Rebuild)
 
-1. **Intră în panoul Hostinger**
-2. **Navighează la:** Management > Websites > [site-ul tău]
-3. **Caută butonul:**
-   - "Deploy" sau
-   - "Rebuild" sau
-   - "Build Now"
+**Pași pentru rebuild manual:**
 
-4. **Click pe buton pentru a declanșa deploy-ul manual**
+1. **Intră în panoul Hostinger** (hpanel.hostinger.com)
+2. **Navighează la:** 
+   - **Management** → **Websites** → **[site-ul tău]** (lavender-cassowary-938357.hostingersite.com)
+3. **Caută una dintre aceste secțiuni:**
+   - **"Deploy"** sau
+   - **"Builds"** sau
+   - **"CI/CD"** sau
+   - **"Git Integration"** sau
+   - **"Deployment"**
+
+4. **În acea secțiune, caută butonul:**
+   - **"Deploy"** sau
+   - **"Rebuild"** sau
+   - **"Build Now"** sau
+   - **"Redeploy"**
+
+5. **Click pe buton pentru a declanșa rebuild-ul manual**
+
+**Alternativ:**
+- Dacă nu găsești butonul, poți face un **push gol pe GitHub**:
+  ```bash
+  git commit --allow-empty -m "Trigger rebuild"
+  git push
+  ```
+  Aceasta va declanșa rebuild-ul automat dacă este configurat.
 
 ## Pași pentru deploy
 
