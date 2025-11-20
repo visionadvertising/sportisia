@@ -13,7 +13,7 @@ if (!existsSync(dataDir)) {
 }
 
 // Setează DATABASE_URL dacă nu este setat
-// Folosește calea relativă care funcționează mai bine cu SQLite
+// Folosește calea absolută pentru a funcționa corect în producție
 if (!process.env.DATABASE_URL) {
   // Verifică dacă fișierul există, dacă nu, îl creează
   const dbPath = join(process.cwd(), 'data', 'database.db');
@@ -36,8 +36,19 @@ if (!process.env.DATABASE_URL) {
       console.error('Error creating database file:', error);
     }
   }
-  // Folosește calea relativă - funcționează mai bine cu SQLite
-  process.env.DATABASE_URL = 'file:./data/database.db';
+  
+  // Folosește calea absolută formatată corect pentru SQLite
+  // Pe Windows: file:///C:/path/to/db.db
+  // Pe Linux/Mac: file:/path/to/db.db
+  let dbUrl: string;
+  if (process.platform === 'win32') {
+    // Windows: trebuie să înlocuim backslash-urile și să adăugăm 3 slash-uri
+    dbUrl = 'file:///' + dbPath.replace(/\\/g, '/');
+  } else {
+    // Linux/Mac: doar un slash după file:
+    dbUrl = 'file:' + dbPath;
+  }
+  process.env.DATABASE_URL = dbUrl;
 }
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient();
