@@ -71,6 +71,34 @@ const fields = [
 
 export async function GET() {
   try {
+    // Încearcă să încarce .env manual dacă nu este setat
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
+      try {
+        const { config } = await import('dotenv');
+        const { resolve } = await import('path');
+        const { existsSync } = await import('fs');
+        
+        const cwd = process.cwd();
+        const possiblePaths = [
+          resolve(cwd, '.env'),
+          resolve(cwd, 'public_html', '.env'),
+          resolve(cwd, '..', '.env'),
+          resolve(cwd, '..', 'public_html', '.env'),
+          resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
+        ];
+
+        for (const envPath of possiblePaths) {
+          if (existsSync(envPath)) {
+            config({ path: envPath });
+            console.log('✅ Loaded .env from setup endpoint:', envPath);
+            break;
+          }
+        }
+      } catch (envError: any) {
+        console.log('⚠️ Could not load .env in setup endpoint:', envError.message);
+      }
+    }
+
     // Debug: verifică ce variabile de mediu sunt disponibile
     const allEnvKeys = Object.keys(process.env);
     const databaseKeys = allEnvKeys.filter(key => 
@@ -86,7 +114,8 @@ export async function GET() {
       NODE_ENV: process.env.NODE_ENV,
       ALL_DATABASE_KEYS: databaseKeys,
       TOTAL_ENV_KEYS: allEnvKeys.length,
-      SAMPLE_ENV_KEYS: allEnvKeys.slice(0, 20)
+      SAMPLE_ENV_KEYS: allEnvKeys.slice(0, 20),
+      CURRENT_WORKING_DIR: process.cwd()
     };
     
     console.log('🔍 Setup endpoint - Environment check:', envDebug);
