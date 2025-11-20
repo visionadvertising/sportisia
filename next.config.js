@@ -9,6 +9,18 @@ const nextConfig = {
   env: {
     DATABASE_URL: process.env.DATABASE_URL,
   },
+  // Configurație pentru producție pe Hostinger
+  output: 'standalone',
+  // Asigură-te că chunk-urile sunt generate corect
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
+  },
 }
 
 module.exports = nextConfig

@@ -118,27 +118,90 @@ export async function GET() {
         );
       }
       
-      // Dacă tabelele nu există, oferă instrucțiuni clare
+      // Dacă tabelele nu există, le creează automat
       if (initError.message?.includes('Database tables not found') || 
           initError.message?.includes('does not exist') ||
           initError.code === '42P01' ||
           initError.code === '42S02' ||
           initError.code === 'ER_NO_SUCH_TABLE') {
-        return NextResponse.json(
-          {
-            success: false,
-            message: 'Tabelele bazei de date nu există. Accesează /api/db-push pentru a le crea automat.',
-            error: initError.message,
-            instructions: {
-              viaAPI: 'Accesează: https://lavender-cassowary-938357.hostingersite.com/api/db-push',
-              viaSSH: 'Rulează: npm run db:push (dacă npm este disponibil)',
-              note: 'Endpoint-ul /api/db-push va crea tabelele automat fără să fie nevoie de npm'
-            }
-          },
-          { status: 500 }
-        );
+        console.log('🔄 Tables do not exist, creating them automatically...');
+        
+        try {
+          // Creează tabelele direct aici
+          await prisma.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS \`SportsField\` (
+              \`id\` VARCHAR(191) NOT NULL,
+              \`name\` VARCHAR(191) NOT NULL,
+              \`type\` VARCHAR(191) NOT NULL,
+              \`location\` VARCHAR(191) NOT NULL,
+              \`city\` VARCHAR(191) NOT NULL,
+              \`description\` VARCHAR(191) NOT NULL DEFAULT '',
+              \`contactName\` VARCHAR(191) NOT NULL,
+              \`contactPhone\` VARCHAR(191) NOT NULL,
+              \`contactEmail\` VARCHAR(191) NOT NULL,
+              \`amenities\` VARCHAR(191) NOT NULL DEFAULT '[]',
+              \`pricePerHour\` DOUBLE,
+              \`imageUrl\` VARCHAR(191),
+              \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+              \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+              PRIMARY KEY (\`id\`)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          `);
+
+          await prisma.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS \`Coach\` (
+              \`id\` VARCHAR(191) NOT NULL,
+              \`name\` VARCHAR(191) NOT NULL,
+              \`sport\` VARCHAR(191) NOT NULL,
+              \`city\` VARCHAR(191) NOT NULL,
+              \`location\` VARCHAR(191),
+              \`description\` VARCHAR(191) NOT NULL DEFAULT '',
+              \`experience\` VARCHAR(191) NOT NULL DEFAULT '',
+              \`qualifications\` VARCHAR(191) NOT NULL DEFAULT '[]',
+              \`contactName\` VARCHAR(191) NOT NULL,
+              \`contactPhone\` VARCHAR(191) NOT NULL,
+              \`contactEmail\` VARCHAR(191) NOT NULL,
+              \`pricePerHour\` DOUBLE,
+              \`imageUrl\` VARCHAR(191),
+              \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+              \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+              PRIMARY KEY (\`id\`)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          `);
+
+          // Creează indexurile
+          await prisma.$executeRawUnsafe(`
+            CREATE INDEX IF NOT EXISTS \`SportsField_type_idx\` ON \`SportsField\`(\`type\`);
+          `);
+          await prisma.$executeRawUnsafe(`
+            CREATE INDEX IF NOT EXISTS \`SportsField_city_idx\` ON \`SportsField\`(\`city\`);
+          `);
+          await prisma.$executeRawUnsafe(`
+            CREATE INDEX IF NOT EXISTS \`Coach_sport_idx\` ON \`Coach\`(\`sport\`);
+          `);
+          await prisma.$executeRawUnsafe(`
+            CREATE INDEX IF NOT EXISTS \`Coach_city_idx\` ON \`Coach\`(\`city\`);
+          `);
+
+          console.log('✅ Tables created successfully');
+          // Continuă cu inițializarea după ce tabelele sunt create
+        } catch (createError: any) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: 'Eroare la crearea tabelelor: ' + createError.message,
+              error: createError.message,
+              instructions: {
+                viaAPI: 'Accesează: https://lavender-cassowary-938357.hostingersite.com/api/db-push',
+                note: 'Endpoint-ul /api/db-push va crea tabelele automat'
+              }
+            },
+            { status: 500 }
+          );
+        }
+      } else {
+        throw initError;
       }
-      throw initError;
     }
     
     // Încearcă să creeze tabelele dacă nu există
