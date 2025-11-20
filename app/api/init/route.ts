@@ -71,6 +71,21 @@ const fields = [
 
 export async function GET(request: Request) {
   try {
+    // Asigură-te că baza de date este inițializată
+    const { ensureDatabaseInitialized } = await import('@/lib/prisma');
+    try {
+      await ensureDatabaseInitialized();
+    } catch (initError: any) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Eroare la inițializarea bazei de date: ' + initError.message,
+          error: initError.message
+        },
+        { status: 500 }
+      );
+    }
+    
     // Verifică dacă terenurile există deja
     const existingFields = await prisma.sportsField.findMany();
     
@@ -111,6 +126,20 @@ export async function GET(request: Request) {
 export async function POST() {
   // Permite forțarea adăugării chiar dacă există deja terenuri
   try {
+    // Asigură-te că baza de date este inițializată
+    const { ensureDatabaseInitialized } = await import('@/lib/prisma');
+    try {
+      await ensureDatabaseInitialized();
+    } catch (initError: any) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Eroare la inițializarea bazei de date: ' + initError.message,
+          error: initError.message
+        },
+        { status: 500 }
+      );
+    }
     const createdFields = [];
     for (const field of fields) {
       const created = await prisma.sportsField.create({
