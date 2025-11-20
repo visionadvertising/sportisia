@@ -98,7 +98,11 @@ export async function GET() {
             success: false,
             message: 'DATABASE_URL nu este configurat corect pentru MySQL.',
             error: initError.message,
-            debug: envDebug,
+            debug: {
+              ...envDebug,
+              rawDatabaseUrl: process.env.DATABASE_URL || 'NOT SET',
+              allProcessEnvKeys: Object.keys(process.env).slice(0, 30)
+            },
             instructions: {
               step1: 'Intră în panoul Hostinger',
               step2: 'Navighează la: Management > Websites > [site-ul tău] > Environment Variables',

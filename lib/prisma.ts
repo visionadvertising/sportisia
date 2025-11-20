@@ -49,6 +49,14 @@ let dbInitialized = false;
 let dbInitializing = false;
 
 export async function ensureDatabaseInitialized() {
+  // Debug: log toate variabilele de mediu disponibile
+  console.log('🔍 Environment check:', {
+    DATABASE_URL: process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.length + ' chars)' : 'NOT SET',
+    DATABASE_URL_PREVIEW: process.env.DATABASE_URL?.substring(0, 20) || 'N/A',
+    NODE_ENV: process.env.NODE_ENV,
+    ALL_ENV_KEYS: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('DB')).join(', ')
+  });
+
   // Validează DATABASE_URL la runtime (când se încearcă să se folosească baza de date)
   try {
     validateDatabaseUrl();
@@ -57,6 +65,7 @@ export async function ensureDatabaseInitialized() {
     console.error('❌ DATABASE_URL validation failed:', validationError.message);
     console.error('Current DATABASE_URL:', process.env.DATABASE_URL ? 
       process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET');
+    console.error('All process.env keys:', Object.keys(process.env).slice(0, 20).join(', '));
     throw validationError;
   }
   
