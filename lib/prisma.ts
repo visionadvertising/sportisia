@@ -51,8 +51,8 @@ export async function ensureDatabaseInitialized() {
     );
     await Promise.race([connectPromise, connectTimeout]);
     
-    // Verifică dacă tabelele există
-    const queryPromise = prisma.$queryRaw`SELECT 1 FROM "SportsField" LIMIT 1`;
+    // Verifică dacă tabelele există (folosește backticks pentru MySQL)
+    const queryPromise = prisma.$queryRaw`SELECT 1 FROM \`SportsField\` LIMIT 1`;
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Query timeout')), 5000)
     );
@@ -62,7 +62,11 @@ export async function ensureDatabaseInitialized() {
     dbInitializing = false;
   } catch (error: any) {
     // Dacă tabelele nu există, folosește Prisma migrate sau db push
-    if (error.message?.includes('does not exist') || error.message?.includes('relation') || error.code === '42P01') {
+    // MySQL error code 42S02 = Table doesn't exist, ER_NO_SUCH_TABLE = Table doesn't exist
+    if (error.message?.includes('does not exist') || 
+        error.message?.includes('Table') || 
+        error.code === '42S02' ||
+        error.code === 'ER_NO_SUCH_TABLE') {
       console.log('🔄 Database tables do not exist. Please run: npm run db:push');
       dbInitializing = false;
       throw new Error(
