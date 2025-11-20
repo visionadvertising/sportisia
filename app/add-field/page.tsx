@@ -98,6 +98,10 @@ export default function AddField() {
     setLoading(true);
 
     try {
+      // Creează un AbortController pentru timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secunde timeout
+
       const response = await fetch('/api/fields', {
         method: 'POST',
         headers: {
@@ -107,7 +111,10 @@ export default function AddField() {
           ...formData,
           pricePerHour: formData.pricePerHour ? parseFloat(formData.pricePerHour) : undefined,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const field = await response.json();
@@ -117,11 +124,17 @@ export default function AddField() {
         }, 500);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        showError(errorData.error || 'Eroare la adăugarea terenului');
+        const errorMessage = errorData.message || errorData.error || 'Eroare la adăugarea terenului';
+        showError(errorMessage);
+        console.error('Server error:', errorData);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding field:', error);
-      showError('Eroare la adăugarea terenului. Verifică conexiunea la internet.');
+      if (error.name === 'AbortError') {
+        showError('Request-ul a durat prea mult. Te rugăm să reîncerci.');
+      } else {
+        showError('Eroare la adăugarea terenului. Verifică conexiunea la internet sau încearcă din nou.');
+      }
     } finally {
       setLoading(false);
     }

@@ -75,6 +75,15 @@ export async function getFieldById(id: string): Promise<SportsField | null> {
 
 export async function saveField(field: SportsField): Promise<SportsField> {
   try {
+    // Asigură-te că baza de date este inițializată înainte de salvare
+    try {
+      const { ensureDatabaseInitialized } = await import('./prisma');
+      await ensureDatabaseInitialized();
+    } catch (initError: any) {
+      console.error('Database initialization error in saveField:', initError);
+      throw new Error('Baza de date nu a putut fi inițializată: ' + (initError.message || 'Unknown error'));
+    }
+    
     const data = {
       name: field.name,
       type: field.type,
