@@ -72,16 +72,24 @@ const fields = [
 export async function GET() {
   try {
     // Debug: verifică ce variabile de mediu sunt disponibile
+    const allEnvKeys = Object.keys(process.env);
+    const databaseKeys = allEnvKeys.filter(key => 
+      key.includes('DATABASE') || key.includes('DB') || key.includes('MYSQL')
+    );
+    
     const envDebug = {
       DATABASE_URL: process.env.DATABASE_URL ? 
         process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET',
       DATABASE_URL_LENGTH: process.env.DATABASE_URL?.length || 0,
       DATABASE_URL_STARTS_WITH: process.env.DATABASE_URL?.substring(0, 10) || 'N/A',
+      DATABASE_URL_FULL: process.env.DATABASE_URL || 'NOT SET',
       NODE_ENV: process.env.NODE_ENV,
-      ALL_ENV_KEYS: Object.keys(process.env).filter(key => 
-        key.includes('DATABASE') || key.includes('DB') || key.includes('MYSQL')
-      )
+      ALL_DATABASE_KEYS: databaseKeys,
+      TOTAL_ENV_KEYS: allEnvKeys.length,
+      SAMPLE_ENV_KEYS: allEnvKeys.slice(0, 20)
     };
+    
+    console.log('🔍 Setup endpoint - Environment check:', envDebug);
 
     // Asigură-te că baza de date este inițializată
     const { ensureDatabaseInitialized } = await import('@/lib/prisma');

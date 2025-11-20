@@ -42,14 +42,30 @@ let dbInitialized = false;
 let dbInitializing = false;
 
 export async function ensureDatabaseInitialized() {
+  // Debug: log toate variabilele de mediu disponibile
+  const allEnvKeys = Object.keys(process.env);
+  const databaseKeys = allEnvKeys.filter(k => 
+    k.includes('DATABASE') || k.includes('DB') || k.includes('MYSQL')
+  );
+  
+  console.log('🔍 Environment variables check:', {
+    DATABASE_URL_EXISTS: !!process.env.DATABASE_URL,
+    DATABASE_URL_LENGTH: process.env.DATABASE_URL?.length || 0,
+    DATABASE_URL_PREVIEW: process.env.DATABASE_URL?.substring(0, 30) || 'NOT SET',
+    ALL_DATABASE_KEYS: databaseKeys,
+    NODE_ENV: process.env.NODE_ENV,
+    TOTAL_ENV_KEYS: allEnvKeys.length
+  });
+
   // Validează doar că DATABASE_URL este setat și nu este SQLite
   // Lăsăm Prisma să valideze connection string-ul complet
   if (!process.env.DATABASE_URL) {
-    throw new Error(
-      'DATABASE_URL environment variable is not set. ' +
+    const errorMsg = 'DATABASE_URL environment variable is not set. ' +
       'Please set it to your MySQL connection string. ' +
-      'Example: mysql://user:password@host:3306/database'
-    );
+      'Example: mysql://user:password@host:3306/database. ' +
+      `Found ${databaseKeys.length} database-related env keys: ${databaseKeys.join(', ')}`;
+    console.error('❌', errorMsg);
+    throw new Error(errorMsg);
   }
 
   if (process.env.DATABASE_URL.startsWith('file:')) {
