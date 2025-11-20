@@ -13,8 +13,12 @@ if (!existsSync(dataDir)) {
 }
 
 // Setează DATABASE_URL dacă nu este setat
+// Folosește calea absolută pentru a funcționa corect în producție
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'file:./data/database.db';
+  const dbPath = join(process.cwd(), 'data', 'database.db');
+  // Normalizează calea pentru Windows (înlocuiește backslash cu forward slash)
+  const normalizedPath = dbPath.replace(/\\/g, '/');
+  process.env.DATABASE_URL = `file:${normalizedPath}`;
 }
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient();
