@@ -5,6 +5,10 @@ const nextConfig = {
   swcMinify: true,
   // Asigură-te că fișierele statice sunt servite corect
   trailingSlash: false,
+  // Asigură-te că DATABASE_URL este disponibil la runtime
+  env: {
+    DATABASE_URL: process.env.DATABASE_URL,
+  },
 }
 
 module.exports = nextConfig

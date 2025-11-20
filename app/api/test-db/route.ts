@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
+  // Debug: afișează toate variabilele de mediu disponibile
+  const envVars = {
+    DATABASE_URL: process.env.DATABASE_URL ? 
+      process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET',
+    NODE_ENV: process.env.NODE_ENV,
+    allEnvKeys: Object.keys(process.env).filter(key => key.includes('DATABASE') || key.includes('DB'))
+  };
   try {
     // Testează conexiunea la baza de date
     await prisma.$connect();
@@ -22,10 +29,7 @@ export async function GET() {
         coachesCount,
         testQuery: Array.isArray(testQuery) ? testQuery.map((row: any) => ({ test: Number(row.test) })) : testQuery
       },
-      env: {
-        databaseUrl: process.env.DATABASE_URL ? 'Setat' : 'Nu este setat',
-        nodeEnv: process.env.NODE_ENV
-      }
+      env: envVars
     });
   } catch (error: any) {
     console.error('Database test error:', error);
@@ -35,9 +39,11 @@ export async function GET() {
         message: 'Eroare la conexiunea cu baza de date',
         error: error.message,
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-        env: {
-          databaseUrl: process.env.DATABASE_URL ? 'Setat' : 'Nu este setat',
-          nodeEnv: process.env.NODE_ENV
+        env: envVars,
+        debug: {
+          hasDatabaseUrl: !!process.env.DATABASE_URL,
+          databaseUrlLength: process.env.DATABASE_URL?.length || 0,
+          databaseUrlStart: process.env.DATABASE_URL?.substring(0, 20) || 'N/A'
         }
       },
       { status: 500 }

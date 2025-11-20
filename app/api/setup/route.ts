@@ -71,6 +71,18 @@ const fields = [
 
 export async function GET() {
   try {
+    // Debug: verifică ce variabile de mediu sunt disponibile
+    const envDebug = {
+      DATABASE_URL: process.env.DATABASE_URL ? 
+        process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET',
+      DATABASE_URL_LENGTH: process.env.DATABASE_URL?.length || 0,
+      DATABASE_URL_STARTS_WITH: process.env.DATABASE_URL?.substring(0, 10) || 'N/A',
+      NODE_ENV: process.env.NODE_ENV,
+      ALL_ENV_KEYS: Object.keys(process.env).filter(key => 
+        key.includes('DATABASE') || key.includes('DB') || key.includes('MYSQL')
+      )
+    };
+
     // Asigură-te că baza de date este inițializată
     const { ensureDatabaseInitialized } = await import('@/lib/prisma');
     
@@ -86,14 +98,15 @@ export async function GET() {
             success: false,
             message: 'DATABASE_URL nu este configurat corect pentru MySQL.',
             error: initError.message,
+            debug: envDebug,
             instructions: {
               step1: 'Intră în panoul Hostinger',
               step2: 'Navighează la: Management > Websites > [site-ul tău] > Environment Variables',
-              step3: 'Adaugă variabila:',
-              step4: '  Nume: DATABASE_URL',
-              step5: '  Valoare: mysql://u328389087_sportisiaro_user:parola123@localhost:3306/u328389087_sportisiaro',
-              step6: '  (Înlocuiește cu datele tale reale din baza de date MySQL)',
-              step7: 'După ce setezi DATABASE_URL, declanșează un rebuild',
+              step3: 'Verifică că variabila DATABASE_URL este setată corect',
+              step4: 'Valoare corectă: mysql://u328389087_sportisiaro_user:K6PI#+/h@localhost:3306/u328389087_sportisiaro',
+              step5: 'IMPORTANT: Click pe butonul "Save" după ce setezi variabila',
+              step6: 'După salvare, declanșează un rebuild manual',
+              step7: 'Verifică logurile aplicației pentru a vedea dacă variabila este disponibilă la runtime',
               documentation: 'Vezi MYSQL_SETUP.md pentru instrucțiuni detaliate'
             }
           },
