@@ -77,10 +77,36 @@ export async function GET() {
     try {
       await ensureDatabaseInitialized();
     } catch (initError: any) {
+      // Dacă DATABASE_URL este setat la SQLite sau invalid
+      if (initError.message?.includes('SQLite') || 
+          initError.message?.includes('must start with "mysql://"') ||
+          initError.message?.includes('DATABASE_URL environment variable is not set')) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'DATABASE_URL nu este configurat corect pentru MySQL.',
+            error: initError.message,
+            instructions: {
+              step1: 'Intră în panoul Hostinger',
+              step2: 'Navighează la: Management > Websites > [site-ul tău] > Environment Variables',
+              step3: 'Adaugă variabila:',
+              step4: '  Nume: DATABASE_URL',
+              step5: '  Valoare: mysql://u328389087_sportisiaro_user:parola123@localhost:3306/u328389087_sportisiaro',
+              step6: '  (Înlocuiește cu datele tale reale din baza de date MySQL)',
+              step7: 'După ce setezi DATABASE_URL, declanșează un rebuild',
+              documentation: 'Vezi MYSQL_SETUP.md pentru instrucțiuni detaliate'
+            }
+          },
+          { status: 500 }
+        );
+      }
+      
       // Dacă tabelele nu există, oferă instrucțiuni clare
       if (initError.message?.includes('Database tables not found') || 
           initError.message?.includes('does not exist') ||
-          initError.code === '42P01') {
+          initError.code === '42P01' ||
+          initError.code === '42S02' ||
+          initError.code === 'ER_NO_SUCH_TABLE') {
         return NextResponse.json(
           {
             success: false,
@@ -88,7 +114,7 @@ export async function GET() {
             error: initError.message,
             instructions: {
               viaSSH: 'Rulează: npm run db:push',
-              viaAPI: 'Tabelele trebuie create manual folosind Prisma. Vezi POSTGRESQL_SETUP.md pentru detalii.'
+              viaAPI: 'Tabelele trebuie create manual folosind Prisma. Vezi MYSQL_SETUP.md pentru detalii.'
             }
           },
           { status: 500 }

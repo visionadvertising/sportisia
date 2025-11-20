@@ -50,7 +50,15 @@ let dbInitializing = false;
 
 export async function ensureDatabaseInitialized() {
   // Validează DATABASE_URL la runtime (când se încearcă să se folosească baza de date)
-  validateDatabaseUrl();
+  try {
+    validateDatabaseUrl();
+  } catch (validationError: any) {
+    // Dacă validarea eșuează, aruncă eroarea cu mesaj clar
+    console.error('❌ DATABASE_URL validation failed:', validationError.message);
+    console.error('Current DATABASE_URL:', process.env.DATABASE_URL ? 
+      process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET');
+    throw validationError;
+  }
   
   if (dbInitialized) return;
   if (dbInitializing) {
