@@ -83,11 +83,11 @@ export async function getFieldById(id: string): Promise<SportsField | null> {
 
 export async function saveField(field: SportsField): Promise<SportsField> {
   try {
-    // Forțează încărcarea .env înainte de a folosi Prisma
+    // Forțează încărcarea .env și resetarea PrismaClient înainte de a folosi Prisma
     if (typeof window === 'undefined') {
       const { config } = require('dotenv');
       const { resolve } = require('path');
-      const { existsSync } = require('fs');
+      const { existsSync, readFileSync } = require('fs');
       
       const cwd = process.cwd();
       const possiblePaths = [
@@ -97,12 +97,55 @@ export async function saveField(field: SportsField): Promise<SportsField> {
         resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
       ];
       
+      let envLoaded = false;
       for (const envPath of possiblePaths) {
         if (existsSync(envPath)) {
+          const beforeLoad = process.env.DATABASE_URL;
           config({ path: envPath, override: true });
-          console.log('✅ Loaded .env in saveField from:', envPath);
-          break;
+          const afterLoad = process.env.DATABASE_URL;
+          
+          console.log('🔍 saveField: Before .env load:', beforeLoad ? beforeLoad.substring(0, 40) + '...' : 'NOT SET');
+          console.log('🔍 saveField: After .env load:', afterLoad ? afterLoad.substring(0, 40) + '...' : 'NOT SET');
+          
+          // Dacă .env nu s-a încărcat corect, încercăm citirea directă
+          if (!afterLoad || afterLoad.includes('build_user') || afterLoad.includes('build_db')) {
+            try {
+              const envContent = readFileSync(envPath, 'utf8');
+              const lines = envContent.split('\n');
+              for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine.startsWith('DATABASE_URL=')) {
+                  const dbUrl = trimmedLine.substring('DATABASE_URL='.length).trim().replace(/^["']|["']$/g, '');
+                  if (dbUrl && !dbUrl.includes('build_user') && !dbUrl.includes('build_db')) {
+                    process.env.DATABASE_URL = dbUrl;
+                    console.log('✅ saveField: Loaded DATABASE_URL directly from .env:', dbUrl.substring(0, 50) + '...');
+                    envLoaded = true;
+                    break;
+                  }
+                }
+              }
+            } catch (readError: any) {
+              console.error('❌ saveField: Error reading .env file:', readError.message);
+            }
+          } else {
+            envLoaded = true;
+          }
+          
+          if (envLoaded) {
+            console.log('✅ saveField: .env loaded successfully from:', envPath);
+            // Forțează resetarea PrismaClient pentru a folosi noile credențiale
+            const { resetPrismaClient } = await import('./prisma');
+            if (resetPrismaClient) {
+              await resetPrismaClient();
+              console.log('✅ saveField: PrismaClient reset with new credentials');
+            }
+            break;
+          }
         }
+      }
+      
+      if (!envLoaded) {
+        console.warn('⚠️ saveField: Could not load .env file from any path');
       }
     }
     

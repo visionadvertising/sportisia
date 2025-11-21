@@ -137,7 +137,47 @@ function validateDatabaseUrl() {
 let prismaInstance: PrismaClient | null = null;
 let lastDatabaseUrl: string | null = null;
 
+// Funcție pentru a reseta PrismaClient (exportată pentru a putea fi apelată din alte module)
+export async function resetPrismaClient(): Promise<void> {
+  console.log('🔄 Resetting PrismaClient...');
+  if (prismaInstance) {
+    try {
+      await prismaInstance.$disconnect();
+    } catch (e) {
+      // Ignoră erorile la deconectare
+    }
+    prismaInstance = null;
+  }
+  if (globalForPrisma.prisma) {
+    try {
+      await globalForPrisma.prisma.$disconnect();
+    } catch (e) {
+      // Ignoră erorile la deconectare
+    }
+    globalForPrisma.prisma = undefined;
+  }
+  lastDatabaseUrl = null;
+  console.log('✅ PrismaClient reset complete');
+}
+
 function getPrismaClient(): PrismaClient {
+  // Verifică dacă DATABASE_URL s-a schimbat - dacă da, resetează PrismaClient
+  const currentDatabaseUrl = process.env.DATABASE_URL || '';
+  if (lastDatabaseUrl && lastDatabaseUrl !== currentDatabaseUrl && 
+      !currentDatabaseUrl.includes('build_user') && 
+      !currentDatabaseUrl.includes('build_db')) {
+    console.log('🔄 DATABASE_URL changed, resetting PrismaClient...');
+    if (prismaInstance) {
+      prismaInstance.$disconnect().catch(() => {});
+      prismaInstance = null;
+    }
+    if (globalForPrisma.prisma) {
+      globalForPrisma.prisma.$disconnect().catch(() => {});
+      globalForPrisma.prisma = undefined;
+    }
+    lastDatabaseUrl = null;
+  }
+  
   if (globalForPrisma.prisma) {
     return globalForPrisma.prisma;
   }
