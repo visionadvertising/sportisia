@@ -3,5 +3,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <html lang="ro">
+      <head>
+        <title>Under Construction</title>
+      </head>
+      <body style={{ margin: 0, padding: 0 }}>{children}</body>
+    </html>
+  )
 }
