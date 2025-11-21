@@ -15,13 +15,41 @@ const nextConfig = {
   generateBuildId: async () => {
     return 'build-' + Date.now();
   },
-  // Asigură-te că chunk-urile sunt generate corect
-  webpack: (config, { isServer }) => {
+  // Reduce code splitting pentru a evita problemele cu chunks
+  webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
       };
+      
+      // Reduce code splitting în producție pentru a evita problemele cu chunks
+      if (!dev) {
+        config.optimization = {
+          ...config.optimization,
+          splitChunks: {
+            chunks: 'all',
+            cacheGroups: {
+              default: false,
+              vendors: false,
+              // Grupează toate chunks-urile într-un singur fișier pentru paginile din app
+              app: {
+                name: 'app',
+                chunks: 'all',
+                test: /[\\/]app[\\/]/,
+                priority: 20,
+              },
+              // Grupează node_modules separat
+              vendor: {
+                name: 'vendor',
+                chunks: 'all',
+                test: /[\\/]node_modules[\\/]/,
+                priority: 10,
+              },
+            },
+          },
+        };
+      }
     }
     return config;
   },

@@ -14,8 +14,17 @@
 RewriteEngine On
 RewriteBase /
 
-# Serve static files from .next/static
+# Serve static files from .next/static (cu path corect)
+RewriteCond %{REQUEST_URI} ^/_next/static
 RewriteRule ^_next/static/(.*)$ .next/static/$1 [L]
+
+# Serve chunks from .next/static/chunks
+RewriteCond %{REQUEST_URI} ^/_next/static/chunks
+RewriteRule ^_next/static/chunks/(.*)$ .next/static/chunks/$1 [L]
+
+# Serve app chunks
+RewriteCond %{REQUEST_URI} ^/_next/static/chunks/app
+RewriteRule ^_next/static/chunks/app/(.*)$ .next/static/chunks/app/$1 [L]
 
 # Serve other Next.js files
 RewriteCond %{REQUEST_FILENAME} !-f
