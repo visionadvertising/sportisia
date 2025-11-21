@@ -258,7 +258,11 @@ function getPrismaClient(): PrismaClient {
 
   // Acum creează PrismaClient
   try {
-    console.log('🔧 Creating PrismaClient with DATABASE_URL:', process.env.DATABASE_URL.substring(0, 30) + '...');
+    if (process.env.DATABASE_URL) {
+      console.log('🔧 Creating PrismaClient with DATABASE_URL:', process.env.DATABASE_URL.substring(0, 30) + '...');
+    } else {
+      console.log('🔧 Creating PrismaClient without DATABASE_URL (will fail on connection)');
+    }
     prismaInstance = new PrismaClient();
     
     if (process.env.NODE_ENV !== 'production') {
