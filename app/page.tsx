@@ -11,7 +11,12 @@ export default function Home() {
       color: '#ffffff',
       fontFamily: 'Arial, sans-serif'
     }}>
-      <h1>Under Construction</h1>
+      <div style={{ textAlign: 'center' }}>
+        <h1 style={{ fontSize: '3rem', margin: 0 }}>Under Construction</h1>
+        <p style={{ fontSize: '1rem', marginTop: '20px', opacity: 0.8 }}>
+          Version 4.0.1 - {new Date().toISOString()}
+        </p>
+      </div>
     </div>
   )
 }
