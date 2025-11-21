@@ -360,23 +360,17 @@ export async function ensureDatabaseInitialized() {
     TOTAL_ENV_KEYS: allEnvKeys.length
   });
 
-  // Validează doar că DATABASE_URL este setat și nu este SQLite
-  // Lăsăm Prisma să valideze connection string-ul complet
+  // Nu validăm aici - lăsăm Prisma să gestioneze conexiunea
+  // Dacă DATABASE_URL nu este setat sau este invalid, Prisma va arunca eroarea reală
   if (!process.env.DATABASE_URL) {
-    const errorMsg = 'DATABASE_URL environment variable is not set. ' +
-      'Please set it to your MySQL connection string. ' +
-      'Example: mysql://user:password@host:3306/database. ' +
-      `Found ${databaseKeys.length} database-related env keys: ${databaseKeys.join(', ')}`;
-    console.error('❌', errorMsg);
-    throw new Error(errorMsg);
-  }
-
-  if (process.env.DATABASE_URL.startsWith('file:')) {
-    throw new Error(
-      'DATABASE_URL is set to SQLite (file:), but the application now uses MySQL. ' +
-      'Please update DATABASE_URL to a MySQL connection string. ' +
-      'Note: If your password contains special characters (#, +, /, etc.), they must be URL-encoded.'
-    );
+    console.warn('⚠️ DATABASE_URL not set - Prisma will throw connection error');
+    // NU aruncăm eroare - lăsăm Prisma să gestioneze
+  } else if (process.env.DATABASE_URL.startsWith('file:')) {
+    console.warn('⚠️ DATABASE_URL is SQLite (file:) - Prisma will throw error when trying to connect to MySQL');
+    // NU aruncăm eroare - lăsăm Prisma să gestioneze
+  } else if (process.env.DATABASE_URL.includes('build_user') || process.env.DATABASE_URL.includes('build_db')) {
+    console.warn('⚠️ DATABASE_URL is still build default - Prisma will throw connection error');
+    // NU aruncăm eroare - lăsăm Prisma să gestioneze
   }
   
   if (dbInitialized) return;
