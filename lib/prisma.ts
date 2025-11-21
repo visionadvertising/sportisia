@@ -60,19 +60,32 @@ export async function ensureDatabaseInitialized() {
       const cwd = process.cwd();
       const possiblePaths = [
         resolve(cwd, '.env'),
+        resolve(cwd, '.env.local'),
+        resolve(cwd, '.env.production'),
         resolve(cwd, 'public_html', '.env'),
         resolve(cwd, '..', '.env'),
         resolve(cwd, '..', 'public_html', '.env'),
         resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
+        resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env.local'),
+        resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env.production'),
       ];
 
+      console.log('🔍 Searching for .env file...');
+      console.log('🔍 Current working directory:', cwd);
+      
       let loaded = false;
       for (const envPath of possiblePaths) {
-        if (existsSync(envPath)) {
+        const exists = existsSync(envPath);
+        console.log(`  ${exists ? '✅' : '❌'} ${envPath}`);
+        
+        if (exists) {
           try {
             config({ path: envPath });
             console.log('✅ Loaded .env file from:', envPath);
             console.log('✅ DATABASE_URL after loading .env:', process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.length + ' chars)' : 'NOT SET');
+            if (process.env.DATABASE_URL) {
+              console.log('✅ DATABASE_URL preview:', process.env.DATABASE_URL.substring(0, 30) + '...');
+            }
             loaded = true;
             break;
           } catch (error: any) {
@@ -85,9 +98,11 @@ export async function ensureDatabaseInitialized() {
         console.log('⚠️ .env file not found in any of these locations:');
         possiblePaths.forEach(path => console.log('  -', path));
         console.log('⚠️ Current working directory:', cwd);
+        console.log('⚠️ Please create .env file in one of these locations with: DATABASE_URL=mysql://user:password@localhost:3306/database');
       }
     } catch (envError: any) {
       console.log('⚠️ Could not load .env:', envError.message);
+      console.log('⚠️ Error stack:', envError.stack);
     }
   }
 
