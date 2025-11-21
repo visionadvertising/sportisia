@@ -32,14 +32,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# data
-/data/*.json
-/data/*.db
-/data/*.db-journal
-!data/.gitkeep
-
-# prisma database
-/prisma/data/*.db
-/prisma/data/*.db-journal
-

@@ -31,7 +31,7 @@ export default function Home() {
           fontSize: '0.9rem',
           opacity: 0.7
         }}>
-          Version 2.0 - {new Date().toLocaleDateString()}
+          Version 2.0.1 - Fresh Build - {new Date().toISOString().split('T')[0]}
         </p>
       </div>
     </div>
