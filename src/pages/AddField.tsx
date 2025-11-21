@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import API_BASE_URL from '../config'
 
 function AddField() {
   const navigate = useNavigate()
@@ -46,7 +47,7 @@ function AddField() {
 
     try {
       // TODO: Înlocuiește cu URL-ul tău de API
-      const response = await fetch('/api/fields', {
+      const response = await fetch(`${API_BASE_URL}/fields`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
