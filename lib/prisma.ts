@@ -135,6 +135,7 @@ function validateDatabaseUrl() {
 // Creează PrismaClient doar când este necesar (lazy initialization)
 // Astfel evităm validarea DATABASE_URL la import time
 let prismaInstance: PrismaClient | null = null;
+let lastDatabaseUrl: string | null = null;
 
 function getPrismaClient(): PrismaClient {
   if (globalForPrisma.prisma) {
@@ -244,6 +245,20 @@ function getPrismaClient(): PrismaClient {
     }
   }
 
+  // Verifică dacă DATABASE_URL s-a schimbat - dacă da, recreăm PrismaClient
+  const currentDatabaseUrl = process.env.DATABASE_URL || '';
+  if (prismaInstance && lastDatabaseUrl && lastDatabaseUrl !== currentDatabaseUrl) {
+    console.log('🔄 DATABASE_URL changed, recreating PrismaClient...');
+    // Închide conexiunea veche
+    try {
+      await prismaInstance.$disconnect();
+    } catch (e) {
+      // Ignoră erorile la deconectare
+    }
+    prismaInstance = null;
+    globalForPrisma.prisma = undefined;
+  }
+
   // Verifică din nou după încărcarea .env
   // Dacă încă este build default, logăm dar NU aruncăm eroare
   // Lăsăm Prisma să încerce să se conecteze și să arunce eroarea reală
@@ -264,6 +279,7 @@ function getPrismaClient(): PrismaClient {
       console.log('🔧 Creating PrismaClient without DATABASE_URL (will fail on connection)');
     }
     prismaInstance = new PrismaClient();
+    lastDatabaseUrl = currentDatabaseUrl;
     
     if (process.env.NODE_ENV !== 'production') {
       globalForPrisma.prisma = prismaInstance;
