@@ -75,9 +75,15 @@ function validateDatabaseUrl() {
 
 // Creează PrismaClient doar când este necesar (lazy initialization)
 // Astfel evităm validarea DATABASE_URL la import time
+let prismaInstance: PrismaClient | null = null;
+
 function getPrismaClient(): PrismaClient {
   if (globalForPrisma.prisma) {
     return globalForPrisma.prisma;
+  }
+
+  if (prismaInstance) {
+    return prismaInstance;
   }
 
   // Asigură-te că .env este încărcat înainte de a crea PrismaClient
@@ -97,26 +103,53 @@ function getPrismaClient(): PrismaClient {
           config({ path: envPath });
           if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) {
             console.log('✅ Loaded .env for PrismaClient from:', envPath);
+            console.log('✅ DATABASE_URL is now set:', process.env.DATABASE_URL.substring(0, 30) + '...');
             break;
           }
         } catch (error: any) {
-          // Continuă
+          console.log('⚠️ Error loading .env from:', envPath, error.message);
         }
       }
     }
   }
 
-  // Acum creează PrismaClient
-  const client = new PrismaClient();
-  
-  if (process.env.NODE_ENV !== 'production') {
-    globalForPrisma.prisma = client;
+  // Verifică din nou după încărcarea .env
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
+    console.error('❌ DATABASE_URL is still not set after loading .env');
+    console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
+    throw new Error(
+      'DATABASE_URL environment variable is not set. ' +
+      'Please create a .env file in the application root with: ' +
+      'DATABASE_URL=mysql://user:password@localhost:3306/database'
+    );
   }
-  
-  return client;
+
+  // Acum creează PrismaClient
+  try {
+    prismaInstance = new PrismaClient();
+    
+    if (process.env.NODE_ENV !== 'production') {
+      globalForPrisma.prisma = prismaInstance;
+    }
+    
+    return prismaInstance;
+  } catch (error: any) {
+    console.error('❌ Failed to create PrismaClient:', error.message);
+    throw error;
+  }
 }
 
-export const prisma = getPrismaClient();
+// Export lazy - se creează doar când este accesat
+export const prisma = new Proxy({} as PrismaClient, {
+  get(target, prop) {
+    const client = getPrismaClient();
+    const value = (client as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  }
+});
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
