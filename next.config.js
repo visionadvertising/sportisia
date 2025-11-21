@@ -11,6 +11,10 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: [],
   },
+  // Forțează generarea corectă a chunks-urilor
+  generateBuildId: async () => {
+    return 'build-' + Date.now();
+  },
   // Asigură-te că chunk-urile sunt generate corect
   webpack: (config, { isServer }) => {
     if (!isServer) {
