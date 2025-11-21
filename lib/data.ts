@@ -83,16 +83,8 @@ export async function getFieldById(id: string): Promise<SportsField | null> {
 
 export async function saveField(field: SportsField): Promise<SportsField> {
   try {
-    // Asigură-te că baza de date este inițializată înainte de salvare
-    // Nu aruncăm eroare dacă inițializarea eșuează - încercăm direct să salvăm
-    try {
-      const { ensureDatabaseInitialized } = await import('./prisma');
-      await ensureDatabaseInitialized();
-    } catch (initError: any) {
-      // Logăm eroarea dar continuăm - poate tabelele există deja
-      console.warn('⚠️ Database initialization warning in saveField:', initError.message);
-      // NU aruncăm eroare - încercăm direct să salvăm
-    }
+    // Nu mai apelăm ensureDatabaseInitialized() - lăsăm Prisma să gestioneze direct conexiunea
+    // Dacă tabelele nu există, Prisma va arunca eroarea reală
     
     const data = {
       name: field.name,
@@ -141,8 +133,12 @@ export async function saveField(field: SportsField): Promise<SportsField> {
       createdAt: savedField.createdAt.toISOString(),
       updatedAt: savedField.updatedAt.toISOString(),
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving field:', error);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error meta:', error.meta);
+    // Aruncă eroarea pentru ca endpoint-ul să o gestioneze
     throw error;
   }
 }
