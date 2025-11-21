@@ -82,12 +82,57 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(savedField, { status: 201 });
   } catch (error: any) {
     console.error('Error creating field:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error code:', error.code);
+    
+    // Verifică dacă este eroare de autentificare
+    if (error.message?.includes('Authentication failed') || 
+        error.message?.includes('credentials') ||
+        error.code === 'P1000' ||
+        error.code === 'P1001') {
+      return NextResponse.json(
+        { 
+          error: 'Database authentication failed',
+          message: 'Credențialele bazei de date nu sunt valide. Verifică fișierul .env și permisiunile utilizatorului MySQL.',
+          details: error.message,
+          instructions: {
+            step1: 'Verifică că fișierul .env există pe server',
+            step2: 'Verifică că utilizatorul MySQL este asociat cu baza de date în panoul Hostinger',
+            step3: 'Verifică că utilizatorul are toate permisiunile necesare'
+          }
+        },
+        { status: 500 }
+      );
+    }
+    
+    // Verifică dacă tabelele nu există
+    if (error.message?.includes('does not exist') || 
+        error.message?.includes('Table') ||
+        error.code === '42S02' ||
+        error.code === 'ER_NO_SUCH_TABLE') {
+      return NextResponse.json(
+        { 
+          error: 'Database tables not found',
+          message: 'Tabelele bazei de date nu există. Te rugăm să accesezi /api/setup pentru a le crea.',
+          details: error.message,
+          instructions: {
+            step1: 'Accesează: https://lavender-cassowary-938357.hostingersite.com/api/setup',
+            step2: 'Aceasta va crea automat tabelele necesare',
+            step3: 'După ce tabelele sunt create, încearcă din nou să adaugi terenul'
+          }
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
       { 
         error: 'Failed to create field',
         message: error.message || 'Unknown error occurred',
         errorType: error.constructor?.name,
-        details: error.message
+        errorCode: error.code,
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
       { status: 500 }
     );
