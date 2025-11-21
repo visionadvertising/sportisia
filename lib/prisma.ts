@@ -48,7 +48,15 @@ function loadEnvFile(): boolean {
 }
 
 // Încarcă .env IMEDIAT la import (înainte de Prisma)
-loadEnvFile();
+// IMPORTANT: Această funcție trebuie să ruleze înainte de a importa Prisma
+const envLoaded = loadEnvFile();
+
+// Dacă .env nu a fost încărcat și suntem în producție, logăm un warning
+if (!envLoaded && process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+  console.error('❌ CRITICAL: .env file not loaded! DATABASE_URL is not set.');
+  console.error('❌ Please create .env file in:', process.cwd());
+  console.error('❌ Or set DATABASE_URL as environment variable in Hostinger panel');
+}
 
 // Import Prisma DUPĂ ce am încărcat .env
 import { PrismaClient } from '@prisma/client';
