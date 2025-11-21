@@ -8,10 +8,11 @@ function loadEnvFile(): boolean {
     return false; // Nu pe client
   }
 
-  // Dacă DATABASE_URL este deja setat corect și nu este placeholder, nu mai încărca
+  // Dacă DATABASE_URL este deja setat corect și nu este build default, nu mai încărca
   if (process.env.DATABASE_URL && 
       !process.env.DATABASE_URL.startsWith('file:') && 
-      !process.env.DATABASE_URL.includes('placeholder')) {
+      !process.env.DATABASE_URL.includes('build_user') &&
+      !process.env.DATABASE_URL.includes('build_db')) {
     return true;
   }
 
@@ -31,10 +32,11 @@ function loadEnvFile(): boolean {
   for (const envPath of possiblePaths) {
     if (existsSync(envPath)) {
       try {
-        config({ path: envPath });
+        config({ path: envPath, override: true }); // override pentru a înlocui build default
         if (process.env.DATABASE_URL && 
             !process.env.DATABASE_URL.startsWith('file:') && 
-            !process.env.DATABASE_URL.includes('placeholder')) {
+            !process.env.DATABASE_URL.includes('build_user') &&
+            !process.env.DATABASE_URL.includes('build_db')) {
           console.log('✅ Loaded .env file from:', envPath);
           console.log('✅ DATABASE_URL loaded:', process.env.DATABASE_URL.substring(0, 40) + '...');
           return true;
@@ -58,8 +60,12 @@ function loadEnvFile(): boolean {
 // Setează DATABASE_URL default pentru build time (dacă nu este setat)
 // Aceasta permite build-ul să treacă chiar dacă .env nu este disponibil
 // IMPORTANT: Trebuie setat ÎNAINTE de a importa Prisma
+// Folosim o valoare MySQL validă pentru a trece validarea Prisma
 if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'mysql://placeholder:placeholder@localhost:3306/placeholder';
+  // Folosim o valoare MySQL validă (nu doar "placeholder")
+  // Aceasta va trece validarea Prisma la build time
+  process.env.DATABASE_URL = 'mysql://build_user:build_pass@localhost:3306/build_db';
+  console.log('⚠️ Using default DATABASE_URL for build time');
 }
 
 // Încarcă .env IMEDIAT la import (înainte de Prisma)
@@ -120,21 +126,24 @@ function getPrismaClient(): PrismaClient {
   }
 
   // Asigură-te că .env este încărcat înainte de a crea PrismaClient
-  // Verifică dacă DATABASE_URL este placeholder sau invalid
+  // Verifică dacă DATABASE_URL este build default sau invalid
   if (!process.env.DATABASE_URL || 
       process.env.DATABASE_URL.startsWith('file:') || 
-      process.env.DATABASE_URL.includes('placeholder')) {
+      process.env.DATABASE_URL.includes('build_user') ||
+      process.env.DATABASE_URL.includes('build_db')) {
     
-    console.log('🔍 DATABASE_URL not set or invalid, loading .env...');
-    console.log('🔍 Current DATABASE_URL before load:', process.env.DATABASE_URL || 'NOT SET');
+    console.log('🔍 DATABASE_URL not set or is build default, loading .env...');
+    console.log('🔍 Current DATABASE_URL before load:', process.env.DATABASE_URL ? 
+      process.env.DATABASE_URL.substring(0, 40) + '...' : 'NOT SET');
     
     const loaded = loadEnvFile();
     
     console.log('🔍 After loadEnvFile, DATABASE_URL:', process.env.DATABASE_URL ? 
-      process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET');
+      process.env.DATABASE_URL.substring(0, 40) + '...' : 'NOT SET');
     
     if (!loaded || !process.env.DATABASE_URL || 
-        process.env.DATABASE_URL.includes('placeholder') ||
+        process.env.DATABASE_URL.includes('build_user') ||
+        process.env.DATABASE_URL.includes('build_db') ||
         process.env.DATABASE_URL.startsWith('file:')) {
       console.error('❌ DATABASE_URL is still not set after loading .env');
       console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
@@ -152,7 +161,8 @@ function getPrismaClient(): PrismaClient {
 
   // Verifică din nou după încărcarea .env
   if (!process.env.DATABASE_URL || 
-      process.env.DATABASE_URL.includes('placeholder') ||
+      process.env.DATABASE_URL.includes('build_user') ||
+      process.env.DATABASE_URL.includes('build_db') ||
       process.env.DATABASE_URL.startsWith('file:')) {
     console.error('❌ DATABASE_URL is still not set correctly after loading .env');
     console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
