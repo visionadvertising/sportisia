@@ -60,7 +60,8 @@ if (!envLoaded && process.env.NODE_ENV === 'production' && typeof window === 'un
 
 // Setează DATABASE_URL default pentru build time (dacă nu este setat)
 // Aceasta permite build-ul să treacă chiar dacă .env nu este disponibil
-if (!process.env.DATABASE_URL) {
+// IMPORTANT: Trebuie setat ÎNAINTE de a importa Prisma
+if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
   process.env.DATABASE_URL = 'mysql://placeholder:placeholder@localhost:3306/placeholder';
 }
 
@@ -114,7 +115,12 @@ function getPrismaClient(): PrismaClient {
       process.env.DATABASE_URL.includes('placeholder')) {
     
     console.log('🔍 DATABASE_URL not set or invalid, loading .env...');
+    console.log('🔍 Current DATABASE_URL before load:', process.env.DATABASE_URL || 'NOT SET');
+    
     const loaded = loadEnvFile();
+    
+    console.log('🔍 After loadEnvFile, DATABASE_URL:', process.env.DATABASE_URL ? 
+      process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET');
     
     if (!loaded || !process.env.DATABASE_URL || 
         process.env.DATABASE_URL.includes('placeholder') ||
@@ -122,10 +128,13 @@ function getPrismaClient(): PrismaClient {
       console.error('❌ DATABASE_URL is still not set after loading .env');
       console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
       console.error('❌ Current working directory:', process.cwd());
+      console.error('❌ Please create .env file with: DATABASE_URL=mysql://user:password@localhost:3306/database');
+      
       throw new Error(
         'DATABASE_URL environment variable is not set. ' +
         'Please create a .env file in /home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html/ ' +
-        'with: DATABASE_URL=mysql://u328389087_sportisiaro_user:[password]@localhost:3306/u328389087_sportisiaro'
+        'with: DATABASE_URL=mysql://u328389087_sportisiaro_user:[password]@localhost:3306/u328389087_sportisiaro. ' +
+        'Current value: ' + (process.env.DATABASE_URL || 'NOT SET')
       );
     }
   }
