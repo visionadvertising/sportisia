@@ -2,14 +2,25 @@ import express from 'express'
 import mysql from 'mysql2/promise'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
-app.use(cors())
+// CORS - permite requests de la același domeniu
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*',
+  credentials: true
+}))
+
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 // Database connection
 let pool
@@ -74,6 +85,11 @@ async function initDatabase() {
 
 // Initialize database on startup
 initDatabase().catch(console.error)
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, message: 'API is running', timestamp: new Date().toISOString() })
+})
 
 // API Routes
 
@@ -163,7 +179,13 @@ app.get('/api/fields/:id', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+// Error handling
+app.use((err, req, res, next) => {
+  console.error('Error:', err)
+  res.status(500).json({ success: false, error: 'Internal server error' })
 })
 
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`)
+  console.log(`API available at http://localhost:${PORT}/api`)
+})
