@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 
 // Funcție pentru a încărca .env
 function loadEnvFile(): boolean {
@@ -171,32 +171,61 @@ function getPrismaClient(): PrismaClient {
         process.env.DATABASE_URL.includes('build_db') ||
         process.env.DATABASE_URL.startsWith('file:')) {
       
-      // Încercăm să citim direct din fișier
-      const fs = require('fs');
-      const path = require('path');
-      const envPath = path.join(process.cwd(), '.env');
+      // Încercăm să citim direct din fișier - verificăm toate path-urile posibile
+      const cwd = process.cwd();
+      const possibleEnvPaths = [
+        resolve(cwd, '.env'),
+        resolve(cwd, '.env.local'),
+        resolve(cwd, '.env.production'),
+        resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
+        resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env.local'),
+        resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env.production'),
+      ];
       
-      console.log('🔍 Trying to read .env file directly from:', envPath);
+      console.log('🔍 Trying to read .env file directly from multiple paths...');
+      let foundEnv = false;
       
-      if (fs.existsSync(envPath)) {
-        try {
-          const envContent = fs.readFileSync(envPath, 'utf8');
-          console.log('🔍 .env file content (first 200 chars):', envContent.substring(0, 200));
-          
-          // Parsează manual DATABASE_URL
-          const dbUrlMatch = envContent.match(/^DATABASE_URL=(.+)$/m);
-          if (dbUrlMatch && dbUrlMatch[1]) {
-            const dbUrl = dbUrlMatch[1].trim();
-            if (dbUrl && !dbUrl.includes('build_user') && !dbUrl.includes('build_db')) {
-              process.env.DATABASE_URL = dbUrl;
-              console.log('✅ Loaded DATABASE_URL directly from .env file:', dbUrl.substring(0, 50) + '...');
+      for (const envPath of possibleEnvPaths) {
+        console.log('🔍 Checking:', envPath);
+        if (existsSync(envPath)) {
+          try {
+            console.log('✅ Found .env file at:', envPath);
+            const envContent = readFileSync(envPath, 'utf8');
+            console.log('🔍 .env file size:', envContent.length, 'chars');
+            console.log('🔍 .env file content (first 200 chars):', envContent.substring(0, 200));
+            
+            // Parsează manual DATABASE_URL - caută pe mai multe linii
+            const lines = envContent.split('\n');
+            for (const line of lines) {
+              const trimmedLine = line.trim();
+              if (trimmedLine.startsWith('DATABASE_URL=')) {
+                const dbUrl = trimmedLine.substring('DATABASE_URL='.length).trim();
+                // Elimină ghilimele dacă există
+                const cleanDbUrl = dbUrl.replace(/^["']|["']$/g, '');
+                if (cleanDbUrl && !cleanDbUrl.includes('build_user') && !cleanDbUrl.includes('build_db')) {
+                  process.env.DATABASE_URL = cleanDbUrl;
+                  console.log('✅ Loaded DATABASE_URL directly from .env file:', cleanDbUrl.substring(0, 50) + '...');
+                  foundEnv = true;
+                  break;
+                } else {
+                  console.log('⚠️ DATABASE_URL in .env is still build default:', cleanDbUrl.substring(0, 50));
+                }
+              }
             }
+            
+            if (foundEnv) {
+              break;
+            }
+          } catch (error: any) {
+            console.error('❌ Error reading .env file from', envPath, ':', error.message);
           }
-        } catch (error: any) {
-          console.error('❌ Error reading .env file:', error.message);
+        } else {
+          console.log('❌ .env file does not exist at:', envPath);
         }
-      } else {
-        console.error('❌ .env file does not exist at:', envPath);
+      }
+      
+      if (!foundEnv) {
+        console.error('❌ Could not find or read .env file from any of the checked paths');
       }
       
       // Verifică din nou după citirea directă
