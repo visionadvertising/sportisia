@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "setup": "npm install && chmod +x start.sh && ./start.sh",
+    "postinstall": "chmod +x start.sh 2>/dev/null || true"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -13,4 +15,3 @@
     "dotenv": "^16.4.1"
   }
 }
-
