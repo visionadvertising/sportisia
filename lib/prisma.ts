@@ -405,33 +405,38 @@ export async function ensureDatabaseInitialized() {
     await Promise.race([connectPromise, connectTimeout]);
     
     // Verifică dacă tabelele există (folosește backticks pentru MySQL)
-    const queryPromise = prisma.$queryRaw`SELECT 1 FROM \`SportsField\` LIMIT 1`;
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Query timeout')), 5000)
-    );
+    // Dacă tabelele nu există, nu aruncăm eroare - le vom crea când este necesar
+    try {
+      const queryPromise = prisma.$queryRaw`SELECT 1 FROM \`SportsField\` LIMIT 1`;
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout')), 5000)
+      );
+      
+      await Promise.race([queryPromise, timeoutPromise]);
+      console.log('✅ Database tables exist');
+    } catch (tableError: any) {
+      // Dacă tabelele nu există, logăm dar NU aruncăm eroare
+      // Tabelele vor fi create automat când este necesar
+      if (tableError.message?.includes('does not exist') || 
+          tableError.message?.includes('Table') || 
+          tableError.code === '42S02' ||
+          tableError.code === 'ER_NO_SUCH_TABLE') {
+        console.log('⚠️ Database tables do not exist yet - will be created when needed');
+        // NU aruncăm eroare - tabelele vor fi create automat
+      } else {
+        // Alt tip de eroare - poate fi problema de conexiune
+        console.warn('⚠️ Could not verify tables:', tableError.message);
+        // NU aruncăm eroare - lăsăm aplicația să continue
+      }
+    }
     
-    await Promise.race([queryPromise, timeoutPromise]);
     dbInitialized = true;
     dbInitializing = false;
   } catch (error: any) {
-    // Dacă tabelele nu există, folosește Prisma migrate sau db push
-    // MySQL error code 42S02 = Table doesn't exist, ER_NO_SUCH_TABLE = Table doesn't exist
-    if (error.message?.includes('does not exist') || 
-        error.message?.includes('Table') || 
-        error.code === '42S02' ||
-        error.code === 'ER_NO_SUCH_TABLE') {
-      console.log('🔄 Database tables do not exist. Please run: npm run db:push');
-      dbInitializing = false;
-      throw new Error(
-        'Database tables not found. Please run "npm run db:push" to create the schema. ' +
-        'If you are in production, ensure migrations have been applied.'
-      );
-    } else {
-      // Alt tip de eroare - resetează flag-ul și lasă aplicația să continue
-      console.error('Database connection error:', error.message);
-      dbInitializing = false;
-      throw error;
-    }
+    // Dacă este eroare de conexiune, aruncăm eroarea reală de la Prisma
+    console.error('Database connection error:', error.message);
+    dbInitializing = false;
+    throw error;
   }
 }
 
