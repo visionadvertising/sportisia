@@ -58,7 +58,13 @@ if (!envLoaded && process.env.NODE_ENV === 'production' && typeof window === 'un
   console.error('❌ Or set DATABASE_URL as environment variable in Hostinger panel');
 }
 
-// Import Prisma DUPĂ ce am încărcat .env
+// Setează DATABASE_URL default pentru build time (dacă nu este setat)
+// Aceasta permite build-ul să treacă chiar dacă .env nu este disponibil
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'mysql://placeholder:placeholder@localhost:3306/placeholder';
+}
+
+// Import Prisma DUPĂ ce am setat default
 import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
@@ -102,27 +108,36 @@ function getPrismaClient(): PrismaClient {
   }
 
   // Asigură-te că .env este încărcat înainte de a crea PrismaClient
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
+  // Verifică dacă DATABASE_URL este placeholder sau invalid
+  if (!process.env.DATABASE_URL || 
+      process.env.DATABASE_URL.startsWith('file:') || 
+      process.env.DATABASE_URL.includes('placeholder')) {
+    
+    console.log('🔍 DATABASE_URL not set or invalid, loading .env...');
     const loaded = loadEnvFile();
     
-    if (!loaded) {
+    if (!loaded || !process.env.DATABASE_URL || 
+        process.env.DATABASE_URL.includes('placeholder') ||
+        process.env.DATABASE_URL.startsWith('file:')) {
       console.error('❌ DATABASE_URL is still not set after loading .env');
       console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
       console.error('❌ Current working directory:', process.cwd());
       throw new Error(
         'DATABASE_URL environment variable is not set. ' +
         'Please create a .env file in /home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html/ ' +
-        'with: DATABASE_URL=mysql://user:password@localhost:3306/database'
+        'with: DATABASE_URL=mysql://u328389087_sportisiaro_user:[password]@localhost:3306/u328389087_sportisiaro'
       );
     }
   }
 
   // Verifică din nou după încărcarea .env
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
-    console.error('❌ DATABASE_URL is still not set after loading .env');
+  if (!process.env.DATABASE_URL || 
+      process.env.DATABASE_URL.includes('placeholder') ||
+      process.env.DATABASE_URL.startsWith('file:')) {
+    console.error('❌ DATABASE_URL is still not set correctly after loading .env');
     console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
     throw new Error(
-      'DATABASE_URL environment variable is not set. ' +
+      'DATABASE_URL environment variable is not set correctly. ' +
       'Please create a .env file in the application root with: ' +
       'DATABASE_URL=mysql://user:password@localhost:3306/database'
     );
