@@ -1,33 +1,20 @@
 # Next.js configuration for Hostinger
-# Asigură-te că fișierele statice sunt servite corect
+# Configurație simplă - lăsăm Next.js să gestioneze routing-ul
+
+# Dezactivează LiteSpeed Cache pentru fișierele Next.js
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Excludează _next/ de la cache și optimizări
+  RewriteCond %{REQUEST_URI} ^/_next/
+  RewriteRule ^(.*)$ - [E=no-cache:1]
+</IfModule>
 
 # Dezactivează cache pentru chunks-urile Next.js
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|css)$">
-    Header set Cache-Control "no-cache, no-store, must-revalidate"
-    Header set Pragma "no-cache"
-    Header set Expires "0"
+    Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
 </IfModule>
-
-# Asigură-te că Next.js poate servi fișierele statice
-RewriteEngine On
-RewriteBase /
-
-# Serve static files from .next/static (cu path corect)
-RewriteCond %{REQUEST_URI} ^/_next/static
-RewriteRule ^_next/static/(.*)$ .next/static/$1 [L]
-
-# Serve chunks from .next/static/chunks
-RewriteCond %{REQUEST_URI} ^/_next/static/chunks
-RewriteRule ^_next/static/chunks/(.*)$ .next/static/chunks/$1 [L]
-
-# Serve app chunks
-RewriteCond %{REQUEST_URI} ^/_next/static/chunks/app
-RewriteRule ^_next/static/chunks/app/(.*)$ .next/static/chunks/app/$1 [L]
-
-# Serve other Next.js files
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ /index.html [L]
 
