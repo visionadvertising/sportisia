@@ -1,16 +1,50 @@
-import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 import { existsSync } from 'fs';
 
-// Încarcă .env manual în producție (Next.js nu o face automat)
-// NU rulează la build time pentru a permite build-ul să treacă
-if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
-  // Verifică dacă suntem la runtime (nu la build time)
-  // La build time, process.env.NODE_ENV este 'production' dar nu trebuie să încărcăm .env
-  // Vom încărca .env doar când este necesar (la primul acces la baza de date)
-  // Această logică este mutată în ensureDatabaseInitialized()
+// Încarcă .env IMEDIAT la runtime (înainte de orice altceva)
+// Next.js nu încarcă automat .env în producție
+if (typeof window === 'undefined') {
+  // Doar pe server, nu în browser
+  const cwd = process.cwd();
+  const possiblePaths = [
+    resolve(cwd, '.env'),
+    resolve(cwd, '.env.local'),
+    resolve(cwd, '.env.production'),
+    resolve(cwd, 'public_html', '.env'),
+    resolve(cwd, '..', '.env'),
+    resolve(cwd, '..', 'public_html', '.env'),
+    resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
+    resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env.local'),
+    resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env.production'),
+  ];
+
+  // Încearcă să încarce .env doar dacă DATABASE_URL nu este deja setat
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
+    let loaded = false;
+    for (const envPath of possiblePaths) {
+      if (existsSync(envPath)) {
+        try {
+          config({ path: envPath });
+          if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) {
+            console.log('✅ Loaded .env file from:', envPath);
+            loaded = true;
+            break;
+          }
+        } catch (error: any) {
+          // Continuă să caute în alte locații
+        }
+      }
+    }
+    
+    if (!loaded && process.env.NODE_ENV === 'production') {
+      console.log('⚠️ .env file not found. DATABASE_URL will need to be set via environment variables.');
+    }
+  }
 }
+
+// Import Prisma DUPĂ ce am încărcat .env
+import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -39,11 +73,50 @@ function validateDatabaseUrl() {
   }
 }
 
-// Validează doar la runtime, nu la build time
-// Nu validăm la build time pentru a permite build-ul să treacă chiar dacă DATABASE_URL nu este setat
-// Validarea se va face la runtime când se încearcă să se folosească baza de date
+// Creează PrismaClient doar când este necesar (lazy initialization)
+// Astfel evităm validarea DATABASE_URL la import time
+function getPrismaClient(): PrismaClient {
+  if (globalForPrisma.prisma) {
+    return globalForPrisma.prisma;
+  }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+  // Asigură-te că .env este încărcat înainte de a crea PrismaClient
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
+    // Încearcă să încarce .env din nou
+    const cwd = process.cwd();
+    const possiblePaths = [
+      resolve(cwd, '.env'),
+      resolve(cwd, '.env.local'),
+      resolve(cwd, '.env.production'),
+      resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
+    ];
+
+    for (const envPath of possiblePaths) {
+      if (existsSync(envPath)) {
+        try {
+          config({ path: envPath });
+          if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) {
+            console.log('✅ Loaded .env for PrismaClient from:', envPath);
+            break;
+          }
+        } catch (error: any) {
+          // Continuă
+        }
+      }
+    }
+  }
+
+  // Acum creează PrismaClient
+  const client = new PrismaClient();
+  
+  if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = client;
+  }
+  
+  return client;
+}
+
+export const prisma = getPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
