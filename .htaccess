@@ -1,20 +1,4 @@
 # Next.js configuration for Hostinger
 # Configurație simplă - lăsăm Next.js să gestioneze routing-ul
 
-# Dezactivează LiteSpeed Cache pentru fișierele Next.js
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  
-  # Excludează _next/ de la cache și optimizări
-  RewriteCond %{REQUEST_URI} ^/_next/
-  RewriteRule ^(.*)$ - [E=no-cache:1]
-</IfModule>
-
-# Dezactivează cache pentru chunks-urile Next.js
-<IfModule mod_headers.c>
-  <FilesMatch "\.(js|css)$">
-    Header set Cache-Control "public, max-age=31536000, immutable"
-  </FilesMatch>
-</IfModule>
-
+# Nu interferăm cu Next.js routing - lăsăm serverul să gestioneze totul
