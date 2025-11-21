@@ -8,8 +8,10 @@ function loadEnvFile(): boolean {
     return false; // Nu pe client
   }
 
-  // Dacă DATABASE_URL este deja setat corect, nu mai încărca
-  if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) {
+  // Dacă DATABASE_URL este deja setat corect și nu este placeholder, nu mai încărca
+  if (process.env.DATABASE_URL && 
+      !process.env.DATABASE_URL.startsWith('file:') && 
+      !process.env.DATABASE_URL.includes('placeholder')) {
     return true;
   }
 
@@ -30,12 +32,18 @@ function loadEnvFile(): boolean {
     if (existsSync(envPath)) {
       try {
         config({ path: envPath });
-        if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) {
+        if (process.env.DATABASE_URL && 
+            !process.env.DATABASE_URL.startsWith('file:') && 
+            !process.env.DATABASE_URL.includes('placeholder')) {
           console.log('✅ Loaded .env file from:', envPath);
+          console.log('✅ DATABASE_URL loaded:', process.env.DATABASE_URL.substring(0, 40) + '...');
           return true;
+        } else {
+          console.log('⚠️ .env file found but DATABASE_URL is still invalid:', 
+            process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 30) : 'NOT SET');
         }
       } catch (error: any) {
-        // Continuă să caute
+        console.log('⚠️ Error loading .env from:', envPath, error.message);
       }
     }
   }
