@@ -229,37 +229,31 @@ function getPrismaClient(): PrismaClient {
       }
       
       // Verifică din nou după citirea directă
+      // Dacă încă este build default, logăm dar NU aruncăm eroare
+      // Lăsăm Prisma să încerce să se conecteze și să arunce eroarea reală
       if (!process.env.DATABASE_URL || 
           process.env.DATABASE_URL.includes('build_user') ||
           process.env.DATABASE_URL.includes('build_db') ||
           process.env.DATABASE_URL.startsWith('file:')) {
-        console.error('❌ DATABASE_URL is still not set after loading .env');
-        console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
-        console.error('❌ Current working directory:', process.cwd());
-        console.error('❌ Please create .env file with: DATABASE_URL=mysql://user:password@localhost:3306/database');
-        
-        throw new Error(
-          'DATABASE_URL environment variable is not set. ' +
-          'Please create a .env file in /home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html/ ' +
-          'with: DATABASE_URL=mysql://u328389087_sportisiaro_user:[password]@localhost:3306/u328389087_sportisiaro. ' +
-          'Current value: ' + (process.env.DATABASE_URL || 'NOT SET')
-        );
+        console.error('⚠️ DATABASE_URL is still build default after loading .env');
+        console.error('⚠️ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
+        console.error('⚠️ Current working directory:', process.cwd());
+        console.error('⚠️ Will attempt connection anyway - Prisma will throw the real error');
+        // NU aruncăm eroare aici - lăsăm Prisma să încerce conexiunea
       }
     }
   }
 
   // Verifică din nou după încărcarea .env
+  // Dacă încă este build default, logăm dar NU aruncăm eroare
+  // Lăsăm Prisma să încerce să se conecteze și să arunce eroarea reală
   if (!process.env.DATABASE_URL || 
       process.env.DATABASE_URL.includes('build_user') ||
       process.env.DATABASE_URL.includes('build_db') ||
       process.env.DATABASE_URL.startsWith('file:')) {
-    console.error('❌ DATABASE_URL is still not set correctly after loading .env');
-    console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
-    throw new Error(
-      'DATABASE_URL environment variable is not set correctly. ' +
-      'Please create a .env file in the application root with: ' +
-      'DATABASE_URL=mysql://user:password@localhost:3306/database'
-    );
+    console.warn('⚠️ DATABASE_URL is still build default - will attempt connection anyway');
+    console.warn('⚠️ Prisma will throw the real connection error if credentials are wrong');
+    // NU aruncăm eroare aici - lăsăm Prisma să gestioneze conexiunea
   }
 
   // Acum creează PrismaClient
