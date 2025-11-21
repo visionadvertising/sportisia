@@ -1,5 +1,3 @@
-'use client'
-
 export default function Home() {
   return (
     <div style={{
@@ -107,11 +105,8 @@ export default function Home() {
                 border: '2px solid #e0e0e0',
                 borderRadius: '8px',
                 fontSize: '1rem',
-                outline: 'none',
-                transition: 'border-color 0.3s'
+                outline: 'none'
               }}
-              onFocus={(e) => e.target.style.borderColor = '#667eea'}
-              onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
             />
           </div>
           <div style={{ flex: '1', minWidth: '200px' }}>
@@ -131,11 +126,8 @@ export default function Home() {
                 fontSize: '1rem',
                 outline: 'none',
                 background: 'white',
-                cursor: 'pointer',
-                transition: 'border-color 0.3s'
+                cursor: 'pointer'
               }}
-              onFocus={(e) => e.target.style.borderColor = '#667eea'}
-              onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
             >
               <option value="">Sport</option>
               <option value="tenis">Tenis</option>
@@ -161,11 +153,8 @@ export default function Home() {
                 fontSize: '1rem',
                 outline: 'none',
                 background: 'white',
-                cursor: 'pointer',
-                transition: 'border-color 0.3s'
+                cursor: 'pointer'
               }}
-              onFocus={(e) => e.target.style.borderColor = '#667eea'}
-              onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
             >
               <option value="">Service type</option>
               <option value="teren">Teren</option>
@@ -183,16 +172,7 @@ export default function Home() {
               fontSize: '1rem',
               fontWeight: 'bold',
               cursor: 'pointer',
-              transition: 'transform 0.2s, box-shadow 0.2s',
               whiteSpace: 'nowrap'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 5px 15px rgba(102, 126, 234, 0.4)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'none'
             }}
           >
             🔍 Caută
@@ -234,16 +214,7 @@ export default function Home() {
                 padding: '1.5rem',
                 boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
                 cursor: 'pointer',
-                transition: 'transform 0.2s, box-shadow 0.2s',
                 textAlign: 'center'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px)'
-                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)'
               }}
             >
               <div style={{
