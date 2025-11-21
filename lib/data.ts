@@ -3,15 +3,60 @@ import { prisma } from './prisma';
 
 export async function getAllFields(): Promise<SportsField[]> {
   try {
-    // Asigură-te că baza de date este inițializată
-    try {
-      const { ensureDatabaseInitialized } = await import('./prisma');
-      await ensureDatabaseInitialized();
-    } catch (initError: any) {
-      console.error('Database initialization error in getAllFields:', initError);
-      // Dacă inițializarea eșuează, returnează array gol în loc să arunce eroare
-      // Astfel aplicația poate continua să funcționeze
-      return [];
+    // Forțează încărcarea .env înainte de a folosi Prisma
+    if (typeof window === 'undefined') {
+      const { config } = require('dotenv');
+      const { resolve } = require('path');
+      const { existsSync, readFileSync } = require('fs');
+      
+      const cwd = process.cwd();
+      const possiblePaths = [
+        resolve(cwd, '.env'),
+        resolve(cwd, '.env.local'),
+        resolve(cwd, '.env.production'),
+        resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
+      ];
+      
+      let envLoaded = false;
+      for (const envPath of possiblePaths) {
+        if (existsSync(envPath)) {
+          const beforeLoad = process.env.DATABASE_URL;
+          config({ path: envPath, override: true });
+          const afterLoad = process.env.DATABASE_URL;
+          
+          // Dacă .env nu s-a încărcat corect, încercăm citirea directă
+          if (!afterLoad || afterLoad.includes('build_user') || afterLoad.includes('build_db')) {
+            try {
+              const envContent = readFileSync(envPath, 'utf8');
+              const lines = envContent.split('\n');
+              for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine.startsWith('DATABASE_URL=')) {
+                  const dbUrl = trimmedLine.substring('DATABASE_URL='.length).trim().replace(/^["']|["']$/g, '');
+                  if (dbUrl && !dbUrl.includes('build_user') && !dbUrl.includes('build_db')) {
+                    process.env.DATABASE_URL = dbUrl;
+                    envLoaded = true;
+                    break;
+                  }
+                }
+              }
+            } catch (readError: any) {
+              console.error('Error reading .env file:', readError.message);
+            }
+          } else {
+            envLoaded = true;
+          }
+          
+          if (envLoaded) {
+            // Forțează resetarea PrismaClient pentru a folosi noile credențiale
+            const { resetPrismaClient } = await import('./prisma');
+            if (resetPrismaClient) {
+              await resetPrismaClient();
+            }
+            break;
+          }
+        }
+      }
     }
     
     // Adaugă timeout pentru query
@@ -20,7 +65,7 @@ export async function getAllFields(): Promise<SportsField[]> {
     });
     
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Query timeout')), 5000)
+      setTimeout(() => reject(new Error('Query timeout')), 10000)
     );
     
     const fields = await Promise.race([queryPromise, timeoutPromise]);
