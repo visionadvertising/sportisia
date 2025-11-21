@@ -3,8 +3,9 @@
   "version": "4.0.1",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "build": "rm -rf .next out && next build",
+    "start": "next start",
+    "clean": "rm -rf .next out node_modules/.cache"
   },
   "dependencies": {
     "next": "^14.2.33",
