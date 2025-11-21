@@ -1,383 +1,105 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
-const fields = [
+const sampleFields = [
   {
     name: 'Teren Central de Tenis',
     type: 'tenis',
     location: 'Str. Sportului nr. 10',
     city: 'București',
-    description: 'Teren modern de tenis, bine întreținut, cu iluminat profesional. Suprafață sintetică de înaltă calitate.',
+    description: 'Teren modern de tenis, bine întreținut, cu iluminat profesional.',
     contactName: 'Ion Popescu',
     contactPhone: '0721234567',
     contactEmail: 'contact@terencentral.ro',
-    amenities: JSON.stringify(['Vestiar', 'Dusuri', 'Parcare', 'Iluminat', 'Restaurant']),
+    amenities: JSON.stringify(['Vestiar', 'Dusuri', 'Parcare', 'Iluminat']),
     pricePerHour: 80,
-    imageUrl: 'https://images.unsplash.com/photo-1622163642999-7c297330a160?w=800'
   },
   {
     name: 'Arena Fotbal Premium',
     type: 'fotbal',
     location: 'Bd. Victoriei nr. 25',
     city: 'Cluj-Napoca',
-    description: 'Teren de fotbal premium cu iarbă naturală, perfect pentru antrenamente și meciuri. Facilități complete disponibile.',
+    description: 'Teren de fotbal premium cu iarbă naturală, perfect pentru antrenamente.',
     contactName: 'Maria Ionescu',
     contactPhone: '0722345678',
     contactEmail: 'info@arenafotbal.ro',
     amenities: JSON.stringify(['Vestiar', 'Dusuri', 'Parcare', 'Iluminat', 'Tribune']),
     pricePerHour: 120,
-    imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800'
   },
   {
     name: 'Complex Sportiv Baschet',
     type: 'baschet',
     location: 'Calea Unirii nr. 15',
     city: 'Timișoara',
-    description: 'Sala modernă de baschet cu parchet profesional, ideal pentru antrenamente și competiții. Echipament complet inclus.',
+    description: 'Sala modernă de baschet cu parchet profesional, ideal pentru antrenamente.',
     contactName: 'Alexandru Georgescu',
     contactPhone: '0723456789',
     contactEmail: 'contact@complexbaschet.ro',
-    amenities: JSON.stringify(['Vestiar', 'Dusuri', 'Parcare', 'Iluminat', 'Echipament inclus', 'WiFi']),
+    amenities: JSON.stringify(['Vestiar', 'Dusuri', 'Parcare', 'Iluminat', 'Echipament inclus']),
     pricePerHour: 100,
-    imageUrl: 'https://images.unsplash.com/photo-1519869325934-21d5c8e5e1e3?w=800'
   },
   {
     name: 'Teren Volei Municipal',
     type: 'volei',
     location: 'Str. Libertății nr. 8',
     city: 'Iași',
-    description: 'Teren de volei în aer liber, cu net profesional și iluminat pentru seara. Perfect pentru echipe și antrenamente.',
+    description: 'Teren de volei în aer liber, cu net profesional și iluminat.',
     contactName: 'Elena Radu',
     contactPhone: '0724567890',
     contactEmail: 'info@terenvolei.ro',
     amenities: JSON.stringify(['Vestiar', 'Dusuri', 'Parcare', 'Iluminat']),
     pricePerHour: 60,
-    imageUrl: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=800'
   },
   {
     name: 'Arena Handbal Elite',
     type: 'handbal',
     location: 'Bd. Republicii nr. 42',
     city: 'Constanța',
-    description: 'Sala modernă de handbal cu parchet profesional și tribune. Facilități de top pentru competiții și antrenamente.',
+    description: 'Sala modernă de handbal cu parchet profesional și tribune.',
     contactName: 'Mihai Constantinescu',
     contactPhone: '0725678901',
     contactEmail: 'contact@arenahandbal.ro',
     amenities: JSON.stringify(['Vestiar', 'Dusuri', 'Parcare', 'Iluminat', 'Tribune', 'Aer condiționat']),
     pricePerHour: 90,
-    imageUrl: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=800'
-  }
-];
-
-// Încarcă .env la începutul endpoint-ului
-import { config } from 'dotenv';
-import { resolve } from 'path';
-import { existsSync, readFileSync } from 'fs';
-
-function loadEnvForEndpoint() {
-  const cwd = process.cwd();
-  const possiblePaths = [
-    resolve(cwd, '.env'),
-    resolve(cwd, '.env.local'),
-    resolve(cwd, '.env.production'),
-  ];
-
-  for (const envPath of possiblePaths) {
-    if (existsSync(envPath)) {
-      try {
-        config({ path: envPath, override: true });
-        if (process.env.DATABASE_URL && 
-            !process.env.DATABASE_URL.includes('build_user') &&
-            !process.env.DATABASE_URL.includes('build_db')) {
-          console.log('✅ Loaded .env in /api/setup from:', envPath);
-          return true;
-        }
-      } catch (error: any) {
-        console.log('⚠️ Error loading .env:', error.message);
-      }
-    }
-  }
-  return false;
-}
+  },
+]
 
 export async function GET() {
-  // Forțează încărcarea .env la fiecare request
-  loadEnvForEndpoint();
   try {
-    // Încearcă să încarce .env manual dacă nu este setat
-    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
-      try {
-        const { config } = await import('dotenv');
-        const { resolve } = await import('path');
-        const { existsSync } = await import('fs');
-        
-        const cwd = process.cwd();
-        const possiblePaths = [
-          resolve(cwd, '.env'),
-          resolve(cwd, 'public_html', '.env'),
-          resolve(cwd, '..', '.env'),
-          resolve(cwd, '..', 'public_html', '.env'),
-          resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
-        ];
-
-        for (const envPath of possiblePaths) {
-          if (existsSync(envPath)) {
-            config({ path: envPath });
-            console.log('✅ Loaded .env from setup endpoint:', envPath);
-            break;
-          }
-        }
-      } catch (envError: any) {
-        console.log('⚠️ Could not load .env in setup endpoint:', envError.message);
-      }
-    }
-
-    // Debug: verifică ce variabile de mediu sunt disponibile
-    const allEnvKeys = Object.keys(process.env);
-    const databaseKeys = allEnvKeys.filter(key => 
-      key.includes('DATABASE') || key.includes('DB') || key.includes('MYSQL')
-    );
-    
-    const envDebug = {
-      DATABASE_URL: process.env.DATABASE_URL ? 
-        process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET',
-      DATABASE_URL_LENGTH: process.env.DATABASE_URL?.length || 0,
-      DATABASE_URL_STARTS_WITH: process.env.DATABASE_URL?.substring(0, 10) || 'N/A',
-      DATABASE_URL_FULL: process.env.DATABASE_URL || 'NOT SET',
-      NODE_ENV: process.env.NODE_ENV,
-      ALL_DATABASE_KEYS: databaseKeys,
-      TOTAL_ENV_KEYS: allEnvKeys.length,
-      SAMPLE_ENV_KEYS: allEnvKeys.slice(0, 20),
-      CURRENT_WORKING_DIR: process.cwd()
-    };
-    
-    console.log('🔍 Setup endpoint - Environment check:', envDebug);
-
-    // Asigură-te că baza de date este inițializată
-    const { ensureDatabaseInitialized } = await import('@/lib/prisma');
-    
-    try {
-      await ensureDatabaseInitialized();
-    } catch (initError: any) {
-      // Dacă DATABASE_URL este setat la SQLite sau invalid
-      if (initError.message?.includes('SQLite') || 
-          initError.message?.includes('must start with "mysql://"') ||
-          initError.message?.includes('DATABASE_URL environment variable is not set')) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: 'DATABASE_URL nu este configurat corect pentru MySQL.',
-            error: initError.message,
-            debug: envDebug,
-            instructions: {
-              step1: 'Intră în panoul Hostinger',
-              step2: 'Navighează la: Management > Websites > [site-ul tău] > Environment Variables',
-              step3: 'Verifică că variabila DATABASE_URL este setată corect',
-              step4: 'Valoare corectă: mysql://u328389087_sportisiaro_user:[parola]@localhost:3306/u328389087_sportisiaro',
-              step5: 'IMPORTANT: Pe Hostinger, variabilele din "Deployment settings" sunt doar pentru build time!',
-              step6: 'Caută o secțiune separată pentru "Runtime Environment Variables" sau "Application Settings"',
-              step7: 'Dacă nu există, contactează suportul Hostinger pentru a seta variabilele la runtime',
-              step8: 'Alternativ, verifică dacă trebuie să creezi un fișier .env pe server',
-              documentation: 'Vezi MYSQL_SETUP.md pentru instrucțiuni detaliate'
-            }
-          },
-          { status: 500 }
-        );
-      }
-      
-      // Dacă tabelele nu există, le creează automat
-      if (initError.message?.includes('Database tables not found') || 
-          initError.message?.includes('does not exist') ||
-          initError.code === '42P01' ||
-          initError.code === '42S02' ||
-          initError.code === 'ER_NO_SUCH_TABLE') {
-        console.log('🔄 Tables do not exist, creating them automatically...');
-        
-        try {
-          // Creează tabelele direct aici
-          await prisma.$executeRawUnsafe(`
-            CREATE TABLE IF NOT EXISTS \`SportsField\` (
-              \`id\` VARCHAR(191) NOT NULL,
-              \`name\` VARCHAR(191) NOT NULL,
-              \`type\` VARCHAR(191) NOT NULL,
-              \`location\` VARCHAR(191) NOT NULL,
-              \`city\` VARCHAR(191) NOT NULL,
-              \`description\` VARCHAR(191) NOT NULL DEFAULT '',
-              \`contactName\` VARCHAR(191) NOT NULL,
-              \`contactPhone\` VARCHAR(191) NOT NULL,
-              \`contactEmail\` VARCHAR(191) NOT NULL,
-              \`amenities\` VARCHAR(191) NOT NULL DEFAULT '[]',
-              \`pricePerHour\` DOUBLE,
-              \`imageUrl\` VARCHAR(191),
-              \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-              \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-              PRIMARY KEY (\`id\`)
-            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-          `);
-
-          await prisma.$executeRawUnsafe(`
-            CREATE TABLE IF NOT EXISTS \`Coach\` (
-              \`id\` VARCHAR(191) NOT NULL,
-              \`name\` VARCHAR(191) NOT NULL,
-              \`sport\` VARCHAR(191) NOT NULL,
-              \`city\` VARCHAR(191) NOT NULL,
-              \`location\` VARCHAR(191),
-              \`description\` VARCHAR(191) NOT NULL DEFAULT '',
-              \`experience\` VARCHAR(191) NOT NULL DEFAULT '',
-              \`qualifications\` VARCHAR(191) NOT NULL DEFAULT '[]',
-              \`contactName\` VARCHAR(191) NOT NULL,
-              \`contactPhone\` VARCHAR(191) NOT NULL,
-              \`contactEmail\` VARCHAR(191) NOT NULL,
-              \`pricePerHour\` DOUBLE,
-              \`imageUrl\` VARCHAR(191),
-              \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-              \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-              PRIMARY KEY (\`id\`)
-            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-          `);
-
-          // Creează indexurile
-          await prisma.$executeRawUnsafe(`
-            CREATE INDEX IF NOT EXISTS \`SportsField_type_idx\` ON \`SportsField\`(\`type\`);
-          `);
-          await prisma.$executeRawUnsafe(`
-            CREATE INDEX IF NOT EXISTS \`SportsField_city_idx\` ON \`SportsField\`(\`city\`);
-          `);
-          await prisma.$executeRawUnsafe(`
-            CREATE INDEX IF NOT EXISTS \`Coach_sport_idx\` ON \`Coach\`(\`sport\`);
-          `);
-          await prisma.$executeRawUnsafe(`
-            CREATE INDEX IF NOT EXISTS \`Coach_city_idx\` ON \`Coach\`(\`city\`);
-          `);
-
-          console.log('✅ Tables created successfully');
-          // Continuă cu inițializarea după ce tabelele sunt create
-        } catch (createError: any) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: 'Eroare la crearea tabelelor: ' + createError.message,
-              error: createError.message,
-              instructions: {
-                viaAPI: 'Accesează: https://lavender-cassowary-938357.hostingersite.com/api/db-push',
-                note: 'Endpoint-ul /api/db-push va crea tabelele automat'
-              }
-            },
-            { status: 500 }
-          );
-        }
-      } else {
-        throw initError;
-      }
-    }
-    
-    // Încearcă să creeze tabelele dacă nu există
-    try {
-      // Verifică dacă tabelele există
-      await prisma.$queryRaw`SELECT 1 FROM \`SportsField\` LIMIT 1`;
-    } catch (tableError: any) {
-      // Dacă tabelele nu există, le creează
-      if (tableError.code === '42S02' || tableError.code === 'ER_NO_SUCH_TABLE' || 
-          tableError.message?.includes('does not exist') || tableError.message?.includes('Table')) {
-        console.log('🔄 Creating database tables...');
-        
-        // Creează tabelele manual
-        await prisma.$executeRawUnsafe(`
-          CREATE TABLE IF NOT EXISTS \`SportsField\` (
-            \`id\` VARCHAR(191) NOT NULL,
-            \`name\` VARCHAR(191) NOT NULL,
-            \`type\` VARCHAR(191) NOT NULL,
-            \`location\` VARCHAR(191) NOT NULL,
-            \`city\` VARCHAR(191) NOT NULL,
-            \`description\` VARCHAR(191) NOT NULL DEFAULT '',
-            \`contactName\` VARCHAR(191) NOT NULL,
-            \`contactPhone\` VARCHAR(191) NOT NULL,
-            \`contactEmail\` VARCHAR(191) NOT NULL,
-            \`amenities\` VARCHAR(191) NOT NULL DEFAULT '[]',
-            \`pricePerHour\` DOUBLE,
-            \`imageUrl\` VARCHAR(191),
-            \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-            \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-            PRIMARY KEY (\`id\`)
-          ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        `);
-
-        await prisma.$executeRawUnsafe(`
-          CREATE TABLE IF NOT EXISTS \`Coach\` (
-            \`id\` VARCHAR(191) NOT NULL,
-            \`name\` VARCHAR(191) NOT NULL,
-            \`sport\` VARCHAR(191) NOT NULL,
-            \`city\` VARCHAR(191) NOT NULL,
-            \`location\` VARCHAR(191),
-            \`description\` VARCHAR(191) NOT NULL DEFAULT '',
-            \`experience\` VARCHAR(191) NOT NULL DEFAULT '',
-            \`qualifications\` VARCHAR(191) NOT NULL DEFAULT '[]',
-            \`contactName\` VARCHAR(191) NOT NULL,
-            \`contactPhone\` VARCHAR(191) NOT NULL,
-            \`contactEmail\` VARCHAR(191) NOT NULL,
-            \`pricePerHour\` DOUBLE,
-            \`imageUrl\` VARCHAR(191),
-            \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-            \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-            PRIMARY KEY (\`id\`)
-          ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        `);
-
-        // Creează indexurile
-        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS \`SportsField_type_idx\` ON \`SportsField\`(\`type\`);`);
-        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS \`SportsField_city_idx\` ON \`SportsField\`(\`city\`);`);
-        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS \`Coach_sport_idx\` ON \`Coach\`(\`sport\`);`);
-        await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS \`Coach_city_idx\` ON \`Coach\`(\`city\`);`);
-        
-        console.log('✅ Database tables created successfully');
-      } else {
-        throw tableError;
-      }
-    }
-    
-    // Verifică dacă terenurile există deja
-    const existingFields = await prisma.sportsField.findMany();
+    // Verifică dacă există deja terenuri
+    const existingFields = await prisma.sportsField.findMany()
     
     if (existingFields.length > 0) {
       return NextResponse.json({
         success: true,
-        message: `Baza de date este inițializată și conține deja ${existingFields.length} terenuri.`,
+        message: `Baza de date conține deja ${existingFields.length} terenuri.`,
         fieldsCount: existingFields.length,
-        databaseInitialized: true
-      });
+      })
     }
 
     // Adaugă terenurile
-    const createdFields = [];
-    for (const field of fields) {
-      try {
-        const created = await prisma.sportsField.create({
-          data: field
-        });
-        createdFields.push(created);
-      } catch (error: any) {
-        console.error(`Error creating field ${field.name}:`, error);
-      }
+    const createdFields = []
+    for (const field of sampleFields) {
+      const created = await prisma.sportsField.create({
+        data: field,
+      })
+      createdFields.push(created)
     }
 
     return NextResponse.json({
       success: true,
-      message: `Baza de date a fost inițializată și au fost adăugate ${createdFields.length} terenuri!`,
+      message: `Au fost adăugate ${createdFields.length} terenuri!`,
       fieldsCount: createdFields.length,
-      databaseInitialized: true,
-      fields: createdFields.map(f => ({ id: f.id, name: f.name, type: f.type, city: f.city }))
-    });
+    })
   } catch (error: any) {
-    console.error('Error in setup:', error);
+    console.error('Setup error:', error)
     return NextResponse.json(
       {
         success: false,
-        message: 'Eroare la inițializarea bazei de date: ' + error.message,
+        message: 'Eroare: ' + error.message,
         error: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
       { status: 500 }
-    );
+    )
   }
 }
-

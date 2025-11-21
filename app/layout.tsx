@@ -1,10 +1,9 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Header from '@/components/Header'
 
 export const metadata: Metadata = {
-  title: 'Sportisiaro - Terenuri Sportive',
-  description: 'Găsește și listează terenuri sportive în orașul tău',
+  title: 'Sportisiaro',
+  description: 'Găsește terenuri sportive în România',
 }
 
 export default function RootLayout({
@@ -14,11 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ro">
-      <body>
-        <Header />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
-
