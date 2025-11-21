@@ -1,11 +1,28 @@
 module.exports = {
   reactStrictMode: true,
-  // Forțează regenerarea completă a build-ului
-  generateBuildId: async () => {
-    return 'clean-build-' + Date.now()
-  },
-  // Dezactivează toate optimizările care ar putea folosi cache
-  experimental: {
-    optimizePackageImports: [],
+  // Configurație simplificată pentru Hostinger
+  swcMinify: true,
+  // Asigură că assetPrefix este gol
+  assetPrefix: '',
+  // Configurație webpack pentru a preveni problemele cu chunks
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    // Optimizare pentru chunks
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          default: false,
+          vendors: false,
+        },
+      },
+    };
+    return config;
   },
 }
