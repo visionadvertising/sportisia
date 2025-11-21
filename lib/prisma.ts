@@ -285,16 +285,17 @@ function getPrismaClient(): PrismaClient {
     }
   }
 
-  // Verifică dacă DATABASE_URL s-a schimbat - dacă da, recreăm PrismaClient
-  const currentDatabaseUrl = process.env.DATABASE_URL || '';
+  // Verifică din nou dacă DATABASE_URL s-a schimbat după încărcarea .env
+  // (folosim variabila deja definită la începutul funcției)
   if (prismaInstance && lastDatabaseUrl && lastDatabaseUrl !== currentDatabaseUrl) {
-    console.log('🔄 DATABASE_URL changed, recreating PrismaClient...');
+    console.log('🔄 DATABASE_URL changed after .env load, recreating PrismaClient...');
     // Închide conexiunea veche (fără await - nu blocăm)
     prismaInstance.$disconnect().catch(() => {
       // Ignoră erorile la deconectare
     });
     prismaInstance = null;
     globalForPrisma.prisma = undefined;
+    lastDatabaseUrl = null;
   }
 
   // Verifică din nou după încărcarea .env
@@ -317,7 +318,7 @@ function getPrismaClient(): PrismaClient {
       console.log('🔧 Creating PrismaClient without DATABASE_URL (will fail on connection)');
     }
     prismaInstance = new PrismaClient();
-    lastDatabaseUrl = currentDatabaseUrl;
+    lastDatabaseUrl = process.env.DATABASE_URL || null;
     
     if (process.env.NODE_ENV !== 'production') {
       globalForPrisma.prisma = prismaInstance;
