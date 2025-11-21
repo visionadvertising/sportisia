@@ -12,7 +12,9 @@ function loadEnvFile(): boolean {
   if (process.env.DATABASE_URL && 
       !process.env.DATABASE_URL.startsWith('file:') && 
       !process.env.DATABASE_URL.includes('build_user') &&
-      !process.env.DATABASE_URL.includes('build_db')) {
+      !process.env.DATABASE_URL.includes('build_db') &&
+      process.env.DATABASE_URL.includes('u328389087_sportisiaro')) {
+    console.log('✅ DATABASE_URL already set correctly:', process.env.DATABASE_URL.substring(0, 50) + '...');
     return true;
   }
 
@@ -29,20 +31,29 @@ function loadEnvFile(): boolean {
     resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env.production'),
   ];
 
+  console.log('🔍 Searching for .env file in:', possiblePaths.map(p => p.substring(0, 60) + '...'));
+
   for (const envPath of possiblePaths) {
     if (existsSync(envPath)) {
       try {
+        console.log('🔍 Found .env file at:', envPath);
+        const beforeLoad = process.env.DATABASE_URL;
         config({ path: envPath, override: true }); // override pentru a înlocui build default
+        const afterLoad = process.env.DATABASE_URL;
+        
+        console.log('🔍 Before load:', beforeLoad ? beforeLoad.substring(0, 40) + '...' : 'NOT SET');
+        console.log('🔍 After load:', afterLoad ? afterLoad.substring(0, 40) + '...' : 'NOT SET');
+        
         if (process.env.DATABASE_URL && 
             !process.env.DATABASE_URL.startsWith('file:') && 
             !process.env.DATABASE_URL.includes('build_user') &&
             !process.env.DATABASE_URL.includes('build_db')) {
           console.log('✅ Loaded .env file from:', envPath);
-          console.log('✅ DATABASE_URL loaded:', process.env.DATABASE_URL.substring(0, 40) + '...');
+          console.log('✅ DATABASE_URL loaded:', process.env.DATABASE_URL.substring(0, 50) + '...');
           return true;
         } else {
           console.log('⚠️ .env file found but DATABASE_URL is still invalid:', 
-            process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 30) : 'NOT SET');
+            process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) : 'NOT SET');
         }
       } catch (error: any) {
         console.log('⚠️ Error loading .env from:', envPath, error.message);
@@ -52,6 +63,8 @@ function loadEnvFile(): boolean {
 
   if (process.env.NODE_ENV === 'production') {
     console.log('⚠️ .env file not found. DATABASE_URL will need to be set via environment variables.');
+    console.log('⚠️ Current DATABASE_URL:', process.env.DATABASE_URL ? 
+      process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET');
   }
 
   return false;
