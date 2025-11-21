@@ -249,12 +249,10 @@ function getPrismaClient(): PrismaClient {
   const currentDatabaseUrl = process.env.DATABASE_URL || '';
   if (prismaInstance && lastDatabaseUrl && lastDatabaseUrl !== currentDatabaseUrl) {
     console.log('🔄 DATABASE_URL changed, recreating PrismaClient...');
-    // Închide conexiunea veche
-    try {
-      await prismaInstance.$disconnect();
-    } catch (e) {
+    // Închide conexiunea veche (fără await - nu blocăm)
+    prismaInstance.$disconnect().catch(() => {
       // Ignoră erorile la deconectare
-    }
+    });
     prismaInstance = null;
     globalForPrisma.prisma = undefined;
   }
