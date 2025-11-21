@@ -2,10 +2,17 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 import { existsSync } from 'fs';
 
-// Încarcă .env IMEDIAT la runtime (înainte de orice altceva)
-// Next.js nu încarcă automat .env în producție
-if (typeof window === 'undefined') {
-  // Doar pe server, nu în browser
+// Funcție pentru a încărca .env
+function loadEnvFile(): boolean {
+  if (typeof window !== 'undefined') {
+    return false; // Nu pe client
+  }
+
+  // Dacă DATABASE_URL este deja setat corect, nu mai încărca
+  if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) {
+    return true;
+  }
+
   const cwd = process.cwd();
   const possiblePaths = [
     resolve(cwd, '.env'),
@@ -19,29 +26,29 @@ if (typeof window === 'undefined') {
     resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env.production'),
   ];
 
-  // Încearcă să încarce .env doar dacă DATABASE_URL nu este deja setat
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
-    let loaded = false;
-    for (const envPath of possiblePaths) {
-      if (existsSync(envPath)) {
-        try {
-          config({ path: envPath });
-          if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) {
-            console.log('✅ Loaded .env file from:', envPath);
-            loaded = true;
-            break;
-          }
-        } catch (error: any) {
-          // Continuă să caute în alte locații
+  for (const envPath of possiblePaths) {
+    if (existsSync(envPath)) {
+      try {
+        config({ path: envPath });
+        if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) {
+          console.log('✅ Loaded .env file from:', envPath);
+          return true;
         }
+      } catch (error: any) {
+        // Continuă să caute
       }
     }
-    
-    if (!loaded && process.env.NODE_ENV === 'production') {
-      console.log('⚠️ .env file not found. DATABASE_URL will need to be set via environment variables.');
-    }
   }
+
+  if (process.env.NODE_ENV === 'production') {
+    console.log('⚠️ .env file not found. DATABASE_URL will need to be set via environment variables.');
+  }
+
+  return false;
 }
+
+// Încarcă .env IMEDIAT la import (înainte de Prisma)
+loadEnvFile();
 
 // Import Prisma DUPĂ ce am încărcat .env
 import { PrismaClient } from '@prisma/client';
@@ -88,28 +95,17 @@ function getPrismaClient(): PrismaClient {
 
   // Asigură-te că .env este încărcat înainte de a crea PrismaClient
   if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
-    // Încearcă să încarce .env din nou
-    const cwd = process.cwd();
-    const possiblePaths = [
-      resolve(cwd, '.env'),
-      resolve(cwd, '.env.local'),
-      resolve(cwd, '.env.production'),
-      resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
-    ];
-
-    for (const envPath of possiblePaths) {
-      if (existsSync(envPath)) {
-        try {
-          config({ path: envPath });
-          if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')) {
-            console.log('✅ Loaded .env for PrismaClient from:', envPath);
-            console.log('✅ DATABASE_URL is now set:', process.env.DATABASE_URL.substring(0, 30) + '...');
-            break;
-          }
-        } catch (error: any) {
-          console.log('⚠️ Error loading .env from:', envPath, error.message);
-        }
-      }
+    const loaded = loadEnvFile();
+    
+    if (!loaded) {
+      console.error('❌ DATABASE_URL is still not set after loading .env');
+      console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
+      console.error('❌ Current working directory:', process.cwd());
+      throw new Error(
+        'DATABASE_URL environment variable is not set. ' +
+        'Please create a .env file in /home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html/ ' +
+        'with: DATABASE_URL=mysql://user:password@localhost:3306/database'
+      );
     }
   }
 
@@ -126,6 +122,7 @@ function getPrismaClient(): PrismaClient {
 
   // Acum creează PrismaClient
   try {
+    console.log('🔧 Creating PrismaClient with DATABASE_URL:', process.env.DATABASE_URL.substring(0, 30) + '...');
     prismaInstance = new PrismaClient();
     
     if (process.env.NODE_ENV !== 'production') {
