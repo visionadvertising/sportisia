@@ -83,8 +83,28 @@ export async function getFieldById(id: string): Promise<SportsField | null> {
 
 export async function saveField(field: SportsField): Promise<SportsField> {
   try {
-    // Nu mai apelăm ensureDatabaseInitialized() - lăsăm Prisma să gestioneze direct conexiunea
-    // Dacă tabelele nu există, Prisma va arunca eroarea reală
+    // Forțează încărcarea .env înainte de a folosi Prisma
+    if (typeof window === 'undefined') {
+      const { config } = require('dotenv');
+      const { resolve } = require('path');
+      const { existsSync } = require('fs');
+      
+      const cwd = process.cwd();
+      const possiblePaths = [
+        resolve(cwd, '.env'),
+        resolve(cwd, '.env.local'),
+        resolve(cwd, '.env.production'),
+        resolve('/home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html', '.env'),
+      ];
+      
+      for (const envPath of possiblePaths) {
+        if (existsSync(envPath)) {
+          config({ path: envPath, override: true });
+          console.log('✅ Loaded .env in saveField from:', envPath);
+          break;
+        }
+      }
+    }
     
     const data = {
       name: field.name,
