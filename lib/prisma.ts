@@ -84,15 +84,22 @@ if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
 // Încarcă .env IMEDIAT la import (înainte de Prisma)
 // IMPORTANT: Această funcție trebuie să ruleze înainte de a importa Prisma
 // Dar după ce am setat placeholder-ul pentru build time
-const envLoaded = loadEnvFile();
-
-// Dacă .env a fost încărcat și a suprascris placeholder-ul, e bine
-if (envLoaded && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder')) {
-  console.log('✅ .env loaded successfully at import time');
-} else if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
-  console.error('❌ CRITICAL: .env file not loaded! DATABASE_URL is not set.');
-  console.error('❌ Please create .env file in:', process.cwd());
-  console.error('❌ Or set DATABASE_URL as environment variable in Hostinger panel');
+// În producție, încercăm să încărcăm .env de fiecare dată
+if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+  // În producție, forțăm încărcarea .env la fiecare import
+  const envLoaded = loadEnvFile();
+  if (envLoaded && process.env.DATABASE_URL && 
+      !process.env.DATABASE_URL.includes('build_user') &&
+      !process.env.DATABASE_URL.includes('build_db')) {
+    console.log('✅ .env loaded successfully at import time');
+  } else {
+    console.warn('⚠️ .env not loaded at import time, will retry at runtime');
+  }
+} else {
+  const envLoaded = loadEnvFile();
+  if (envLoaded && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder')) {
+    console.log('✅ .env loaded successfully at import time');
+  }
 }
 
 // Import Prisma DUPĂ ce am setat default
@@ -140,6 +147,7 @@ function getPrismaClient(): PrismaClient {
 
   // Asigură-te că .env este încărcat înainte de a crea PrismaClient
   // Verifică dacă DATABASE_URL este build default sau invalid
+  // FORȚĂM încărcarea .env la fiecare apel în producție
   if (!process.env.DATABASE_URL || 
       process.env.DATABASE_URL.startsWith('file:') || 
       process.env.DATABASE_URL.includes('build_user') ||
@@ -147,28 +155,67 @@ function getPrismaClient(): PrismaClient {
     
     console.log('🔍 DATABASE_URL not set or is build default, loading .env...');
     console.log('🔍 Current DATABASE_URL before load:', process.env.DATABASE_URL ? 
-      process.env.DATABASE_URL.substring(0, 40) + '...' : 'NOT SET');
+      process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET');
+    console.log('🔍 Current working directory:', process.cwd());
     
+    // Încarcă .env cu override pentru a înlocui build default
     const loaded = loadEnvFile();
     
+    console.log('🔍 After loadEnvFile, loaded:', loaded);
     console.log('🔍 After loadEnvFile, DATABASE_URL:', process.env.DATABASE_URL ? 
-      process.env.DATABASE_URL.substring(0, 40) + '...' : 'NOT SET');
+      process.env.DATABASE_URL.substring(0, 50) + '...' : 'NOT SET');
     
+    // Dacă încă este build default, încercăm să citim direct din fișier
     if (!loaded || !process.env.DATABASE_URL || 
         process.env.DATABASE_URL.includes('build_user') ||
         process.env.DATABASE_URL.includes('build_db') ||
         process.env.DATABASE_URL.startsWith('file:')) {
-      console.error('❌ DATABASE_URL is still not set after loading .env');
-      console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
-      console.error('❌ Current working directory:', process.cwd());
-      console.error('❌ Please create .env file with: DATABASE_URL=mysql://user:password@localhost:3306/database');
       
-      throw new Error(
-        'DATABASE_URL environment variable is not set. ' +
-        'Please create a .env file in /home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html/ ' +
-        'with: DATABASE_URL=mysql://u328389087_sportisiaro_user:[password]@localhost:3306/u328389087_sportisiaro. ' +
-        'Current value: ' + (process.env.DATABASE_URL || 'NOT SET')
-      );
+      // Încercăm să citim direct din fișier
+      const fs = require('fs');
+      const path = require('path');
+      const envPath = path.join(process.cwd(), '.env');
+      
+      console.log('🔍 Trying to read .env file directly from:', envPath);
+      
+      if (fs.existsSync(envPath)) {
+        try {
+          const envContent = fs.readFileSync(envPath, 'utf8');
+          console.log('🔍 .env file content (first 200 chars):', envContent.substring(0, 200));
+          
+          // Parsează manual DATABASE_URL
+          const dbUrlMatch = envContent.match(/^DATABASE_URL=(.+)$/m);
+          if (dbUrlMatch && dbUrlMatch[1]) {
+            const dbUrl = dbUrlMatch[1].trim();
+            if (dbUrl && !dbUrl.includes('build_user') && !dbUrl.includes('build_db')) {
+              process.env.DATABASE_URL = dbUrl;
+              console.log('✅ Loaded DATABASE_URL directly from .env file:', dbUrl.substring(0, 50) + '...');
+            }
+          }
+        } catch (error: any) {
+          console.error('❌ Error reading .env file:', error.message);
+        }
+      } else {
+        console.error('❌ .env file does not exist at:', envPath);
+      }
+      
+      // Verifică din nou după citirea directă
+      if (!process.env.DATABASE_URL || 
+          process.env.DATABASE_URL.includes('build_user') ||
+          process.env.DATABASE_URL.includes('build_db') ||
+          process.env.DATABASE_URL.startsWith('file:')) {
+        console.error('❌ DATABASE_URL is still not set after loading .env');
+        console.error('❌ Current DATABASE_URL:', process.env.DATABASE_URL || 'NOT SET');
+        console.error('❌ Current working directory:', process.cwd());
+        console.error('❌ Please create .env file with: DATABASE_URL=mysql://user:password@localhost:3306/database');
+        
+        throw new Error(
+          'DATABASE_URL environment variable is not set. ' +
+          'Please create a .env file in /home/u328389087/domains/lavender-cassowary-938357.hostingersite.com/public_html/ ' +
+          'with: DATABASE_URL=mysql://u328389087_sportisiaro_user:[password]@localhost:3306/u328389087_sportisiaro. ' +
+          'Current value: ' + (process.env.DATABASE_URL || 'NOT SET')
+        );
+      }
     }
   }
 

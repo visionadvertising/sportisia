@@ -69,7 +69,40 @@ const fields = [
   }
 ];
 
+// Încarcă .env la începutul endpoint-ului
+import { config } from 'dotenv';
+import { resolve } from 'path';
+import { existsSync, readFileSync } from 'fs';
+
+function loadEnvForEndpoint() {
+  const cwd = process.cwd();
+  const possiblePaths = [
+    resolve(cwd, '.env'),
+    resolve(cwd, '.env.local'),
+    resolve(cwd, '.env.production'),
+  ];
+
+  for (const envPath of possiblePaths) {
+    if (existsSync(envPath)) {
+      try {
+        config({ path: envPath, override: true });
+        if (process.env.DATABASE_URL && 
+            !process.env.DATABASE_URL.includes('build_user') &&
+            !process.env.DATABASE_URL.includes('build_db')) {
+          console.log('✅ Loaded .env in /api/setup from:', envPath);
+          return true;
+        }
+      } catch (error: any) {
+        console.log('⚠️ Error loading .env:', error.message);
+      }
+    }
+  }
+  return false;
+}
+
 export async function GET() {
+  // Forțează încărcarea .env la fiecare request
+  loadEnvForEndpoint();
   try {
     // Încearcă să încarce .env manual dacă nu este setat
     if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
