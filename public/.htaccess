@@ -1,26 +1,13 @@
-# Enable rewrite engine
-RewriteEngine On
-
-# Serve static files from _next directory
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^_next/(.*)$ /_next/$1 [L]
-
-# Cache static assets
-<IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresByType text/css "access plus 1 year"
-  ExpiresByType application/javascript "access plus 1 year"
-  ExpiresByType image/png "access plus 1 year"
-  ExpiresByType image/jpg "access plus 1 year"
-  ExpiresByType image/jpeg "access plus 1 year"
-  ExpiresByType image/gif "access plus 1 year"
-  ExpiresByType image/svg+xml "access plus 1 year"
+# Proxy pentru API requests către backend Node.js
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Proxy pentru /api/* către backend
+  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteRule ^api/(.*)$ http://localhost:3001/api/$1 [P,L]
+  
+  # Serve static files pentru Vite
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ /index.html [L]
 </IfModule>
-
-# Set proper MIME types
-<IfModule mod_mime.c>
-  AddType application/javascript js
-  AddType text/css css
-</IfModule>
-
