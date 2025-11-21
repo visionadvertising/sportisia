@@ -22,9 +22,16 @@ export default function Home() {
         </h1>
         <p style={{
           fontSize: '1.5rem',
-          opacity: 0.9
+          opacity: 0.9,
+          marginBottom: '20px'
         }}>
           We're working on something amazing. Check back soon!
+        </p>
+        <p style={{
+          fontSize: '0.9rem',
+          opacity: 0.7
+        }}>
+          Version 2.0 - {new Date().toLocaleDateString()}
         </p>
       </div>
     </div>
