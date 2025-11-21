@@ -47,22 +47,25 @@ function loadEnvFile(): boolean {
   return false;
 }
 
-// Încarcă .env IMEDIAT la import (înainte de Prisma)
-// IMPORTANT: Această funcție trebuie să ruleze înainte de a importa Prisma
-const envLoaded = loadEnvFile();
-
-// Dacă .env nu a fost încărcat și suntem în producție, logăm un warning
-if (!envLoaded && process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
-  console.error('❌ CRITICAL: .env file not loaded! DATABASE_URL is not set.');
-  console.error('❌ Please create .env file in:', process.cwd());
-  console.error('❌ Or set DATABASE_URL as environment variable in Hostinger panel');
-}
-
 // Setează DATABASE_URL default pentru build time (dacă nu este setat)
 // Aceasta permite build-ul să treacă chiar dacă .env nu este disponibil
 // IMPORTANT: Trebuie setat ÎNAINTE de a importa Prisma
 if (typeof window === 'undefined' && !process.env.DATABASE_URL) {
   process.env.DATABASE_URL = 'mysql://placeholder:placeholder@localhost:3306/placeholder';
+}
+
+// Încarcă .env IMEDIAT la import (înainte de Prisma)
+// IMPORTANT: Această funcție trebuie să ruleze înainte de a importa Prisma
+// Dar după ce am setat placeholder-ul pentru build time
+const envLoaded = loadEnvFile();
+
+// Dacă .env a fost încărcat și a suprascris placeholder-ul, e bine
+if (envLoaded && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder')) {
+  console.log('✅ .env loaded successfully at import time');
+} else if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+  console.error('❌ CRITICAL: .env file not loaded! DATABASE_URL is not set.');
+  console.error('❌ Please create .env file in:', process.cwd());
+  console.error('❌ Or set DATABASE_URL as environment variable in Hostinger panel');
 }
 
 // Import Prisma DUPĂ ce am setat default
