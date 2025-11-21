@@ -7,6 +7,10 @@ const nextConfig = {
   trailingSlash: false,
   // Nu folosim standalone pe Hostinger - cauzează probleme cu chunks
   // output: 'standalone',
+  // Dezactivează optimizările care pot cauza probleme cu chunks
+  experimental: {
+    optimizePackageImports: [],
+  },
   // Asigură-te că chunk-urile sunt generate corect
   webpack: (config, { isServer }) => {
     if (!isServer) {
