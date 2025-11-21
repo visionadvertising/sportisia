@@ -29,11 +29,33 @@ export async function POST(request: NextRequest) {
       await ensureDatabaseInitialized();
     } catch (initError: any) {
       console.error('Database initialization error:', initError);
+      
+      // Dacă eroarea este despre DATABASE_URL, oferă instrucțiuni clare
+      if (initError.message?.includes('DATABASE_URL') || 
+          initError.message?.includes('not set') ||
+          initError.message?.includes('SQLite')) {
+        return NextResponse.json(
+          { 
+            error: 'Database configuration error',
+            message: initError.message || 'Database initialization failed',
+            details: 'DATABASE_URL nu este configurat corect. Verifică variabilele de mediu pe Hostinger sau fișierul .env',
+            instructions: {
+              step1: 'Verifică că DATABASE_URL este setat în Environment Variables pe Hostinger',
+              step2: 'Sau creează un fișier .env pe server cu: DATABASE_URL=mysql://user:password@localhost:3306/database',
+              step3: 'După configurare, accesează /api/setup pentru a crea tabelele'
+            }
+          },
+          { status: 500 }
+        );
+      }
+      
+      // Pentru alte erori, oferă mesaj generic
       return NextResponse.json(
         { 
           error: 'Failed to initialize database',
           message: initError.message || 'Database initialization failed',
-          details: 'Please try accessing /api/setup first to initialize the database'
+          details: 'Please try accessing /api/setup first to initialize the database',
+          errorCode: initError.code || 'UNKNOWN'
         },
         { status: 500 }
       );

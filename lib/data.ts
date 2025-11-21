@@ -89,7 +89,52 @@ export async function saveField(field: SportsField): Promise<SportsField> {
       await ensureDatabaseInitialized();
     } catch (initError: any) {
       console.error('Database initialization error in saveField:', initError);
-      throw new Error('Baza de date nu a putut fi inițializată: ' + (initError.message || 'Unknown error'));
+      
+      // Dacă tabelele nu există, încearcă să le creeze automat
+      if (initError.message?.includes('does not exist') || 
+          initError.message?.includes('Table') ||
+          initError.code === '42S02' ||
+          initError.code === 'ER_NO_SUCH_TABLE') {
+        console.log('🔄 Tables do not exist, creating them automatically...');
+        
+        try {
+          // Creează tabelele direct
+          await prisma.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS \`SportsField\` (
+              \`id\` VARCHAR(191) NOT NULL,
+              \`name\` VARCHAR(191) NOT NULL,
+              \`type\` VARCHAR(191) NOT NULL,
+              \`location\` VARCHAR(191) NOT NULL,
+              \`city\` VARCHAR(191) NOT NULL,
+              \`description\` VARCHAR(191) NOT NULL DEFAULT '',
+              \`contactName\` VARCHAR(191) NOT NULL,
+              \`contactPhone\` VARCHAR(191) NOT NULL,
+              \`contactEmail\` VARCHAR(191) NOT NULL,
+              \`amenities\` VARCHAR(191) NOT NULL DEFAULT '[]',
+              \`pricePerHour\` DOUBLE,
+              \`imageUrl\` VARCHAR(191),
+              \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+              \`updatedAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+              PRIMARY KEY (\`id\`)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          `);
+
+          await prisma.$executeRawUnsafe(`
+            CREATE INDEX IF NOT EXISTS \`SportsField_type_idx\` ON \`SportsField\`(\`type\`);
+          `);
+
+          await prisma.$executeRawUnsafe(`
+            CREATE INDEX IF NOT EXISTS \`SportsField_city_idx\` ON \`SportsField\`(\`city\`);
+          `);
+
+          console.log('✅ Tables created successfully, retrying save...');
+        } catch (createError: any) {
+          console.error('❌ Failed to create tables:', createError);
+          throw new Error('Baza de date nu a putut fi inițializată. Te rugăm să accesezi /api/setup pentru a crea tabelele: ' + createError.message);
+        }
+      } else {
+        throw new Error('Baza de date nu a putut fi inițializată: ' + (initError.message || 'Unknown error'));
+      }
     }
     
     const data = {
