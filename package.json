@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "db:add-fields": "tsx scripts/add-fields.ts"
+    "db:add-fields": "tsx scripts/add-fields.ts",
+    "db:test-connection": "tsx scripts/test-connection.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.7.0",
