@@ -1,0 +1,24 @@
+# Next.js configuration for Hostinger
+# Asigură-te că fișierele statice sunt servite corect
+
+# Dezactivează cache pentru chunks-urile Next.js
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+</IfModule>
+
+# Asigură-te că Next.js poate servi fișierele statice
+RewriteEngine On
+RewriteBase /
+
+# Serve static files from .next/static
+RewriteRule ^_next/static/(.*)$ .next/static/$1 [L]
+
+# Serve other Next.js files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.html [L]
+
