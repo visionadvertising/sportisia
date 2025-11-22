@@ -36,6 +36,10 @@ function Register() {
   const [newCity, setNewCity] = useState('')
   const [newCityCounty, setNewCityCounty] = useState('')
   const [customCities, setCustomCities] = useState<Array<{city: string, county: string}>>([]) // Orașe adăugate de utilizator
+  const [citySearch, setCitySearch] = useState('')
+  const [showCityDropdown, setShowCityDropdown] = useState(false)
+  const [sportSearch, setSportSearch] = useState('')
+  const [showSportDropdown, setShowSportDropdown] = useState(false)
 
   // Step 3: Branding
   const [name, setName] = useState('')
@@ -869,69 +873,143 @@ function Register() {
                   />
                 </div>
               </div>
-              <div style={{ marginBottom: '2.5rem' }}>
+              <div style={{ marginBottom: '2.5rem', position: 'relative' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',
-                  color: '#1a1a1a',
-                  fontWeight: '400',
+                  color: '#0f172a',
+                  fontWeight: '600',
                   fontSize: '0.875rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
+                  letterSpacing: '0.01em'
                 }}>Oraș *</label>
                 {!showAddCityInput ? (
-                  <select
-                    value={city}
-                    onChange={(e) => {
-                      if (e.target.value === '__add_new__') {
-                        setShowAddCityInput(true)
-                        setCity('')
-                        setCounty('')
-                      } else {
-                        const selectedCity = availableCities.find(c => c.city === e.target.value) || 
-                                            customCities.find(c => c.city === e.target.value)
-                        setCity(e.target.value)
-                        setCounty(selectedCity?.county || '')
-                      }
-                    }}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#0f172a'
-                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e2e8f0'
-                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
-                  >
-                    <option value="">Selectează oraș</option>
-                    {availableCities.map(cityOption => (
-                      <option key={cityOption.city} value={cityOption.city}>
-                        {cityOption.city}{cityOption.county ? `, ${cityOption.county}` : ''}
-                      </option>
-                    ))}
-                    {customCities.filter(c => !availableCities.some(ac => ac.city === c.city)).map(cityOption => (
-                      <option key={cityOption.city} value={cityOption.city}>
-                        {cityOption.city}{cityOption.county ? `, ${cityOption.county}` : ''}
-                      </option>
-                    ))}
-                    <option value="__add_new__">+ Adaugă oraș nou</option>
-                  </select>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={city || citySearch}
+                      onChange={(e) => {
+                        setCitySearch(e.target.value)
+                        setShowCityDropdown(true)
+                        if (!e.target.value) {
+                          setCity('')
+                          setCounty('')
+                        }
+                      }}
+                      onFocus={() => setShowCityDropdown(true)}
+                      placeholder="Caută sau selectează oraș"
+                      required={!city}
+                      style={{
+                        width: '100%',
+                        padding: '0.875rem 1rem',
+                        paddingRight: '2.5rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      }}
+                      onBlur={(e) => {
+                        setTimeout(() => setShowCityDropdown(false), 200)
+                      }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none'
+                    }}>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                        <path d="M5 7.5l5 5 5-5"/>
+                      </svg>
+                    </div>
+                    {showCityDropdown && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: '0.25rem',
+                        background: '#ffffff',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        maxHeight: '300px',
+                        overflowY: 'auto',
+                        zIndex: 1000
+                      }}>
+                        {[...availableCities, ...customCities.filter(c => !availableCities.some(ac => ac.city === c.city))]
+                          .filter(cityOption => 
+                            !citySearch || 
+                            cityOption.city.toLowerCase().includes(citySearch.toLowerCase()) ||
+                            (cityOption.county && cityOption.county.toLowerCase().includes(citySearch.toLowerCase()))
+                          )
+                          .slice(0, 20)
+                          .map(cityOption => (
+                            <div
+                              key={cityOption.city}
+                              onClick={() => {
+                                setCity(cityOption.city)
+                                setCounty(cityOption.county)
+                                setCitySearch('')
+                                setShowCityDropdown(false)
+                              }}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #f1f5f9',
+                                color: '#0f172a',
+                                fontSize: '0.9375rem',
+                                transition: 'background 0.15s'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f8fafc'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#ffffff'
+                              }}
+                            >
+                              <div style={{ fontWeight: '600' }}>{cityOption.city}</div>
+                              {cityOption.county && (
+                                <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
+                                  {cityOption.county}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        <div
+                          onClick={() => {
+                            setShowAddCityInput(true)
+                            setShowCityDropdown(false)
+                            setCitySearch('')
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            cursor: 'pointer',
+                            color: '#0f172a',
+                            fontSize: '0.9375rem',
+                            fontWeight: '600',
+                            borderTop: '1.5px solid #f1f5f9',
+                            background: '#f8fafc',
+                            transition: 'background 0.15s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#f1f5f9'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#f8fafc'
+                          }}
+                        >
+                          + Adaugă oraș nou
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -1076,35 +1154,59 @@ function Register() {
                     letterSpacing: '0.05em',
                     margin: 0
                   }}>Adresă completă {!locationNotSpecified && '*'}</label>
-                  <label style={{ 
+                  <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: '0.5rem', 
-                    cursor: 'pointer', 
-                    marginLeft: 'auto',
-                    fontSize: '0.875rem',
-                    color: '#666',
-                    fontWeight: '400'
+                    gap: '0.75rem', 
+                    marginLeft: 'auto'
                   }}>
-                    <input
-                      type="checkbox"
-                      checked={locationNotSpecified}
-                      onChange={(e) => {
-                        setLocationNotSpecified(e.target.checked)
-                        if (e.target.checked) {
+                    <span style={{
+                      fontSize: '0.875rem',
+                      color: '#64748b',
+                      fontWeight: '500'
+                    }}>Nespecificat</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newValue = !locationNotSpecified
+                        setLocationNotSpecified(newValue)
+                        if (newValue) {
                           setLocation('')
                           setMapCoordinates(null)
                         }
                       }}
-                      style={{ 
+                      style={{
+                        position: 'relative',
+                        width: '44px',
+                        height: '24px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: locationNotSpecified ? '#10b981' : '#cbd5e1',
                         cursor: 'pointer',
-                        width: '16px',
-                        height: '16px',
-                        accentColor: '#1a1a1a'
+                        transition: 'background 0.2s ease',
+                        outline: 'none',
+                        padding: 0
                       }}
-                    />
-                    <span>Nespecificat</span>
-                  </label>
+                      onFocus={(e) => {
+                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)'
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: '2px',
+                        left: locationNotSpecified ? '22px' : '2px',
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: '#ffffff',
+                        transition: 'left 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                      }} />
+                    </button>
+                  </div>
                 </div>
                 {!locationNotSpecified && (
                   <>
@@ -1116,24 +1218,28 @@ function Register() {
                       rows={3}
                       style={{
                         width: '100%',
-                        padding: '0.875rem 0',
-                        border: 'none',
-                        borderBottom: '1px solid #e5e5e5',
-                        borderRadius: '0',
+                        padding: '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
                         fontSize: '1rem',
                         outline: 'none',
                         fontFamily: 'inherit',
                         resize: 'vertical',
-                        marginBottom: '2rem',
-                        background: 'transparent',
-                        color: '#1a1a1a',
-                        transition: 'border-color 0.2s'
+                        marginBottom: '1.5rem',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                       }}
                       onFocus={(e) => {
-                        e.target.style.borderBottomColor = '#1a1a1a'
+                        e.target.style.borderColor = '#0f172a'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                       }}
                       onBlur={(e) => {
-                        e.target.style.borderBottomColor = '#e5e5e5'
+                        e.target.style.borderColor = '#e2e8f0'
+                        e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                       }}
                     />
                     <MapSelector
@@ -1822,61 +1928,136 @@ function Register() {
                     letterSpacing: '-0.01em',
                     lineHeight: '1.3'
                   }}>Detalii Teren</h3>
-                  <div style={{ marginBottom: '2.5rem' }}>
+                  <div style={{ marginBottom: '2.5rem', position: 'relative' }}>
                     <label style={{
                       display: 'block',
                       marginBottom: '0.75rem',
-                      color: '#1a1a1a',
-                      fontWeight: '400',
+                      color: '#0f172a',
+                      fontWeight: '600',
                       fontSize: '0.875rem',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em'
+                      letterSpacing: '0.01em'
                     }}>Sport *</label>
                     {!showAddSportInput ? (
-                      <select
-                        value={sport}
-                        onChange={(e) => {
-                          if (e.target.value === '__add_new__') {
-                            setShowAddSportInput(true)
-                            setSport('')
-                          } else {
-                            setSport(e.target.value)
-                          }
-                        }}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '0.875rem 0',
-                          border: 'none',
-                          borderBottom: '1px solid #e5e5e5',
-                          borderRadius: '0',
-                          fontSize: '1rem',
-                          outline: 'none',
-                          cursor: 'pointer',
-                          background: 'transparent',
-                          color: '#1a1a1a',
-                          transition: 'border-color 0.2s'
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderBottomColor = '#1a1a1a'
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderBottomColor = '#e5e5e5'
-                        }}
-                      >
-                        <option value="">Selectează sport</option>
-                        {availableSports.map(sportOption => (
-                          <option key={sportOption} value={sportOption}>
-                            {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
-                          </option>
-                        ))}
-                        {customSports.filter(s => !availableSports.includes(s)).map(sportOption => (
-                          <option key={sportOption} value={sportOption}>
-                            {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
-                          </option>
-                        ))}
-                        <option value="__add_new__">+ Adaugă sport nou</option>
-                      </select>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type="text"
+                          value={sport || sportSearch}
+                          onChange={(e) => {
+                            setSportSearch(e.target.value)
+                            setShowSportDropdown(true)
+                            if (!e.target.value) {
+                              setSport('')
+                            }
+                          }}
+                          onFocus={() => setShowSportDropdown(true)}
+                          placeholder="Caută sau selectează sport"
+                          required={!sport}
+                          style={{
+                            width: '100%',
+                            padding: '0.875rem 1rem',
+                            paddingRight: '2.5rem',
+                            border: '1.5px solid #e2e8f0',
+                            borderRadius: '8px',
+                            fontSize: '1rem',
+                            outline: 'none',
+                            background: '#ffffff',
+                            color: '#0f172a',
+                            transition: 'all 0.2s ease',
+                            fontWeight: '400',
+                            lineHeight: '1.5',
+                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                          }}
+                          onBlur={(e) => {
+                            setTimeout(() => setShowSportDropdown(false), 200)
+                          }}
+                        />
+                        <div style={{
+                          position: 'absolute',
+                          right: '0.75rem',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          pointerEvents: 'none'
+                        }}>
+                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                            <path d="M5 7.5l5 5 5-5"/>
+                          </svg>
+                        </div>
+                        {showSportDropdown && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            marginTop: '0.25rem',
+                            background: '#ffffff',
+                            border: '1.5px solid #e2e8f0',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            maxHeight: '300px',
+                            overflowY: 'auto',
+                            zIndex: 1000
+                          }}>
+                            {[...availableSports, ...customSports.filter(s => !availableSports.includes(s))]
+                              .filter(sportOption => 
+                                !sportSearch || 
+                                sportOption.toLowerCase().includes(sportSearch.toLowerCase())
+                              )
+                              .slice(0, 20)
+                              .map(sportOption => (
+                                <div
+                                  key={sportOption}
+                                  onClick={() => {
+                                    setSport(sportOption)
+                                    setSportSearch('')
+                                    setShowSportDropdown(false)
+                                  }}
+                                  style={{
+                                    padding: '0.75rem 1rem',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid #f1f5f9',
+                                    color: '#0f172a',
+                                    fontSize: '0.9375rem',
+                                    fontWeight: '500',
+                                    transition: 'background 0.15s'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = '#f8fafc'
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = '#ffffff'
+                                  }}
+                                >
+                                  {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
+                                </div>
+                              ))}
+                            <div
+                              onClick={() => {
+                                setShowAddSportInput(true)
+                                setShowSportDropdown(false)
+                                setSportSearch('')
+                              }}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                cursor: 'pointer',
+                                color: '#0f172a',
+                                fontSize: '0.9375rem',
+                                fontWeight: '600',
+                                borderTop: '1.5px solid #f1f5f9',
+                                background: '#f8fafc',
+                                transition: 'background 0.15s'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f1f5f9'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#f8fafc'
+                              }}
+                            >
+                              + Adaugă sport nou
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <div style={{ display: 'flex', gap: '1rem' }}>
                         <input
@@ -1887,21 +2068,25 @@ function Register() {
                           required
                           style={{
                             flex: 1,
-                            padding: '0.875rem 0',
-                            border: 'none',
-                            borderBottom: '1px solid #e5e5e5',
-                            borderRadius: '0',
+                            padding: '0.875rem 1rem',
+                            border: '1.5px solid #e2e8f0',
+                            borderRadius: '8px',
                             fontSize: '1rem',
                             outline: 'none',
-                            background: 'transparent',
-                            color: '#1a1a1a',
-                            transition: 'border-color 0.2s'
+                            background: '#ffffff',
+                            color: '#0f172a',
+                            transition: 'all 0.2s ease',
+                            fontWeight: '400',
+                            lineHeight: '1.5',
+                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                           }}
                           onFocus={(e) => {
-                            e.target.style.borderBottomColor = '#1a1a1a'
+                            e.target.style.borderColor = '#0f172a'
+                            e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                           }}
                           onBlur={(e) => {
-                            e.target.style.borderBottomColor = '#e5e5e5'
+                            e.target.style.borderColor = '#e2e8f0'
+                            e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                           }}
                         />
                         <button
@@ -1921,22 +2106,27 @@ function Register() {
                           }}
                           style={{
                             padding: '0.875rem 2rem',
-                            background: '#1a1a1a',
+                            background: '#0f172a',
                             color: 'white',
-                            border: '1px solid #1a1a1a',
-                            borderRadius: '0',
+                            border: '1.5px solid #0f172a',
+                            borderRadius: '8px',
                             fontSize: '0.875rem',
-                            fontWeight: '400',
+                            fontWeight: '600',
                             cursor: 'pointer',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            transition: 'opacity 0.2s'
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.opacity = '0.8'
+                            e.currentTarget.style.background = '#1e293b'
+                            e.currentTarget.style.borderColor = '#1e293b'
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(15, 23, 42, 0.3)'
+                            e.currentTarget.style.transform = 'translateY(-1px)'
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.opacity = '1'
+                            e.currentTarget.style.background = '#0f172a'
+                            e.currentTarget.style.borderColor = '#0f172a'
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(15, 23, 42, 0.2)'
+                            e.currentTarget.style.transform = 'translateY(0)'
                           }}
                         >
                           Adaugă
