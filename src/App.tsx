@@ -98,8 +98,8 @@ function AppContent() {
         <Route path="/toate" element={<AllFacilities />} />
         {/* SEO-friendly routes - must be before simple routes */}
         <Route path="/:city/:sport/:type" element={<SEOFacilityPage />} />
-        <Route path="/:city/:sport" element={<AllFacilitiesByCityAndSport />} />
         <Route path="/:city/:type" element={<SEOFacilityPage />} />
+        <Route path="/:city/:sport" element={<AllFacilitiesByCityAndSport />} />
         <Route path="/:sport/:type" element={<SEOFacilityPage />} />
         {/* City or sport pages - must be after type routes to avoid conflicts */}
         <Route path="/:cityOrSport" element={<AllFacilitiesByCityOrSport />} />

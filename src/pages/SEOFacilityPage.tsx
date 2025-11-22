@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, Navigate } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { 
   citySlugToName, 
@@ -10,6 +10,12 @@ import {
   generateSportURL
 } from '../utils/seo'
 import FacilityFilters from '../components/FacilityFilters'
+
+// List of known sport slugs
+const KNOWN_SPORTS = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans']
+
+// List of facility type slugs
+const FACILITY_TYPE_SLUGS = ['terenuri', 'antrenori', 'magazine-reparatii', 'magazine-articole']
 
 interface Facility {
   id: number
@@ -70,6 +76,16 @@ function SEOFacilityPage() {
   // If we have city param, first segment is city
   // If we have sport param, it could be second segment (after city) or first segment (no city)
   // If we have type param, it's always the last segment
+  
+  // Check if we have /:city/:type format but the second param is actually a sport
+  // In this case, React Router matched /:city/:type but we need to redirect to /:city/:sport
+  if (citySlug && typeSlug && !sportSlug) {
+    // Check if typeSlug is actually a sport (not a facility type)
+    if (KNOWN_SPORTS.includes(typeSlug.toLowerCase()) && !FACILITY_TYPE_SLUGS.includes(typeSlug.toLowerCase())) {
+      // It's a sport, redirect to /:city/:sport
+      return <Navigate to={`/${citySlug}/${typeSlug}`} replace />
+    }
+  }
   
   let city = ''
   let sportName = '' // For display
