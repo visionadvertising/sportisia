@@ -88,7 +88,7 @@ function FacilityDetails() {
 
   const loadCities = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/cities`)
+      const response = await fetch(`${API_BASE_URL}/api/cities`)
       const data = await response.json()
       if (data.success && data.data) {
         const cities = data.data.map((item: any) => item.city)
