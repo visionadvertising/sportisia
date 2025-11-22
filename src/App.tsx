@@ -9,7 +9,7 @@ function App() {
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'white',
         fontFamily: 'Arial, sans-serif'
       }}>
         {/* Header */}
@@ -35,25 +35,38 @@ function App() {
               textDecoration: 'none'
             }}>
               <div style={{
-                width: '40px',
-                height: '40px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '8px'
-              }}></div>
+                width: '32px',
+                height: '32px',
+                background: '#10b981',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '1.2rem'
+              }}>◆</div>
               <h1 style={{
                 margin: 0,
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
-                color: '#333'
-              }}>SPORTISIARO</h1>
+                color: '#333',
+                letterSpacing: '0.5px'
+              }}>SPORTISIA</h1>
             </Link>
             <nav style={{
               display: 'flex',
-              gap: '2rem'
+              gap: '1.5rem',
+              alignItems: 'center'
             }}>
-              <Link to="/" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>Home</Link>
-              <Link to="/tereni" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>Terenuri</Link>
-              <Link to="/antrenori" style={{ textDecoration: 'none', color: '#333', fontWeight: '500' }}>Antrenori</Link>
+              <Link to="/" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Home</Link>
+              <Link to="/sports" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Sports</Link>
+              <Link to="/coaches" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Coaches</Link>
+              <Link to="/courts" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Courts & Fields</Link>
+              <Link to="/mates" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Find sport mates</Link>
+              <Link to="/repair" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Repair services</Link>
+              <Link to="/for-coaches" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>For coaches</Link>
+              <Link to="/for-clubs" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>For clubs</Link>
             </nav>
           </div>
         </header>
