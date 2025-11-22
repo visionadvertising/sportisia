@@ -218,13 +218,38 @@ function FacilityFilters({
     navigate(newURL)
   }
 
+  // Get display value for city
+  const getCityDisplayValue = () => {
+    if (city || selectedCity) {
+      const cityObj = availableCities.find(c => c.city === (city || selectedCity))
+      return cityObj ? (cityObj.county ? `${cityObj.city} • ${cityObj.county}` : cityObj.city) : (city || selectedCity)
+    }
+    return citySearch
+  }
+
+  // Get display value for sport
+  const getSportDisplayValue = () => {
+    if (sport || selectedSport) {
+      return (sport || selectedSport).charAt(0).toUpperCase() + (sport || selectedSport).slice(1)
+    }
+    return sportSearch
+  }
+
+  // Get display value for type
+  const getTypeDisplayValue = () => {
+    if (type || selectedType) {
+      const typeObj = FACILITY_TYPES.find(t => t.value === (type || selectedType))
+      return typeObj ? typeObj.label : ''
+    }
+    return typeSearch
+  }
+
   return (
     <div style={{
       background: 'white',
       borderRadius: '12px',
       padding: isMobile ? '1.25rem' : '1.75rem',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-      border: '1px solid #f1f5f9',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
       marginBottom: isMobile ? '2rem' : '3rem'
     }}>
       <div style={{
@@ -236,32 +261,41 @@ function FacilityFilters({
             : 'repeat(2, 1fr)',
         gap: isMobile ? '1rem' : '1.25rem'
       }}>
-        <div>
+        {/* City Searchable Dropdown */}
+        <div style={{ position: 'relative' }}>
           <label style={{
             display: 'block',
-            marginBottom: isMobile ? '0.5rem' : '0.5rem',
+            marginBottom: '0.75rem',
             color: '#0f172a',
             fontWeight: '600',
-            fontSize: isMobile ? '0.875rem' : '0.9rem'
+            fontSize: '0.875rem'
           }}>Oraș</label>
-          <select
-            value={selectedCity || city || ''}
-            onChange={(e) => handleCityChange(e.target.value)}
+          <input
+            type="text"
+            value={getCityDisplayValue()}
+            onChange={(e) => {
+              setCitySearch(e.target.value)
+              setShowCityDropdown(true)
+              if (!e.target.value) {
+                setCity('')
+                setCitySearch('')
+              }
+            }}
+            onFocus={() => setShowCityDropdown(true)}
+            placeholder="Caută sau selectează oraș"
             style={{
               width: '100%',
-              padding: isMobile ? '0.875rem 1rem' : '0.75rem',
+              padding: '0.875rem 1rem',
               paddingRight: '2.5rem',
               border: '1.5px solid #e2e8f0',
-              borderRadius: isMobile ? '8px' : '10px',
-              fontSize: isMobile ? '16px' : '0.95rem',
+              borderRadius: '8px',
+              fontSize: '1rem',
               outline: 'none',
-              cursor: 'pointer',
-              background: 'white',
+              background: '#ffffff',
+              color: '#0f172a',
               transition: 'all 0.2s ease',
-              appearance: 'none',
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 0.75rem center',
+              fontWeight: '400',
+              lineHeight: '1.5',
               boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
             }}
             onFocus={(e) => {
@@ -271,107 +305,320 @@ function FacilityFilters({
             onBlur={(e) => {
               e.target.style.borderColor = '#e2e8f0'
               e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+              setTimeout(() => setShowCityDropdown(false), 200)
             }}
-          >
-            <option value="">Toate orașele</option>
-            {availableCities.map(cityOption => (
-              <option key={cityOption.city} value={cityOption.city}>
-                {cityOption.county 
-                  ? `${cityOption.city} • ${cityOption.county}` 
-                  : cityOption.city}
-              </option>
-            ))}
-          </select>
-        </div>
-        
-        <div>
-          <label style={{
-            display: 'block',
-            marginBottom: isMobile ? '0.5rem' : '0.5rem',
-            color: '#0f172a',
-            fontWeight: '600',
-            fontSize: isMobile ? '0.875rem' : '0.9rem'
-          }}>Sport</label>
-          <select
-            value={selectedSport || sport || ''}
-            onChange={(e) => handleSportChange(e.target.value)}
-            style={{
-              width: '100%',
-              padding: isMobile ? '0.875rem 1rem' : '0.75rem',
-              paddingRight: '2.5rem',
+          />
+          <div style={{
+            position: 'absolute',
+            right: '0.75rem',
+            top: '2.75rem',
+            pointerEvents: 'none'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+              <path d="M5 7.5l5 5 5-5"/>
+            </svg>
+          </div>
+          {showCityDropdown && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              marginTop: '0.25rem',
+              background: '#ffffff',
               border: '1.5px solid #e2e8f0',
-              borderRadius: isMobile ? '8px' : '10px',
-              fontSize: isMobile ? '16px' : '0.95rem',
-              outline: 'none',
-              cursor: 'pointer',
-              background: 'white',
-              transition: 'all 0.2s ease',
-              appearance: 'none',
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 0.75rem center',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#10b981'
-              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = '#e2e8f0'
-              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-            }}
-          >
-            <option value="">Toate sporturile</option>
-            {availableSports.map(sportOption => (
-              <option key={sportOption} value={sportOption}>
-                {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
-              </option>
-            ))}
-          </select>
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              maxHeight: '300px',
+              overflowY: 'auto',
+              zIndex: 1000
+            }}>
+              <div
+                onClick={() => handleCityChange('')}
+                style={{
+                  padding: '0.75rem 1rem',
+                  cursor: 'pointer',
+                  borderBottom: '1px solid #f1f5f9',
+                  color: '#0f172a',
+                  fontSize: '0.9375rem',
+                  fontWeight: '500',
+                  transition: 'background 0.15s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#f0fdf4'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#ffffff'
+                }}
+              >
+                Toate orașele
+              </div>
+              {availableCities
+                .filter(cityOption => 
+                  !citySearch || 
+                  cityOption.city.toLowerCase().includes(citySearch.toLowerCase()) ||
+                  (cityOption.county && cityOption.county.toLowerCase().includes(citySearch.toLowerCase()))
+                )
+                .slice(0, 20)
+                .map(cityOption => (
+                  <div
+                    key={cityOption.city}
+                    onClick={() => handleCityChange(cityOption.city)}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid #f1f5f9',
+                      color: '#0f172a',
+                      fontSize: '0.9375rem',
+                      transition: 'background 0.15s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f0fdf4'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#ffffff'
+                    }}
+                  >
+                    <div style={{ fontWeight: '600' }}>{cityOption.city}</div>
+                    {cityOption.county && (
+                      <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
+                        {cityOption.county}
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
 
+        {/* Sport Searchable Dropdown */}
+        <div style={{ position: 'relative' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '0.75rem',
+            color: '#0f172a',
+            fontWeight: '600',
+            fontSize: '0.875rem'
+          }}>Sport</label>
+          <input
+            type="text"
+            value={getSportDisplayValue()}
+            onChange={(e) => {
+              setSportSearch(e.target.value)
+              setShowSportDropdown(true)
+              if (!e.target.value) {
+                setSport('')
+                setSportSearch('')
+              }
+            }}
+            onFocus={() => setShowSportDropdown(true)}
+            placeholder="Caută sau selectează sport"
+            style={{
+              width: '100%',
+              padding: '0.875rem 1rem',
+              paddingRight: '2.5rem',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              outline: 'none',
+              background: '#ffffff',
+              color: '#0f172a',
+              transition: 'all 0.2s ease',
+              fontWeight: '400',
+              lineHeight: '1.5',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#10b981'
+              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#e2e8f0'
+              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+              setTimeout(() => setShowSportDropdown(false), 200)
+            }}
+          />
+          <div style={{
+            position: 'absolute',
+            right: '0.75rem',
+            top: '2.75rem',
+            pointerEvents: 'none'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+              <path d="M5 7.5l5 5 5-5"/>
+            </svg>
+          </div>
+          {showSportDropdown && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              marginTop: '0.25rem',
+              background: '#ffffff',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              maxHeight: '300px',
+              overflowY: 'auto',
+              zIndex: 1000
+            }}>
+              <div
+                onClick={() => handleSportChange('')}
+                style={{
+                  padding: '0.75rem 1rem',
+                  cursor: 'pointer',
+                  borderBottom: '1px solid #f1f5f9',
+                  color: '#0f172a',
+                  fontSize: '0.9375rem',
+                  fontWeight: '500',
+                  transition: 'background 0.15s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#f0fdf4'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#ffffff'
+                }}
+              >
+                Toate sporturile
+              </div>
+              {availableSports
+                .filter(sportOption => 
+                  !sportSearch || 
+                  sportOption.toLowerCase().includes(sportSearch.toLowerCase())
+                )
+                .slice(0, 20)
+                .map(sportOption => (
+                  <div
+                    key={sportOption}
+                    onClick={() => handleSportChange(sportOption)}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid #f1f5f9',
+                      color: '#0f172a',
+                      fontSize: '0.9375rem',
+                      fontWeight: '500',
+                      transition: 'background 0.15s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f0fdf4'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#ffffff'
+                    }}
+                  >
+                    {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+
+        {/* Type Searchable Dropdown */}
         {showTypeFilter && (
-          <div>
+          <div style={{ position: 'relative' }}>
             <label style={{
               display: 'block',
-              marginBottom: isMobile ? '0.5rem' : '0.5rem',
+              marginBottom: '0.75rem',
               color: '#0f172a',
               fontWeight: '600',
-              fontSize: isMobile ? '0.875rem' : '0.9rem'
+              fontSize: '0.875rem'
             }}>Tip serviciu</label>
-            <select
-              value={selectedType || type || ''}
-              onChange={(e) => handleTypeChange(e.target.value)}
+            <input
+              type="text"
+              value={getTypeDisplayValue()}
+              onChange={(e) => {
+                setTypeSearch(e.target.value)
+                setShowTypeDropdown(true)
+                if (!e.target.value) {
+                  setType('')
+                  setTypeSearch('')
+                }
+              }}
+              onFocus={() => setShowTypeDropdown(true)}
+              placeholder="Caută sau selectează tip"
               style={{
                 width: '100%',
-                padding: isMobile ? '0.875rem 1rem' : '0.75rem',
+                padding: '0.875rem 1rem',
                 paddingRight: '2.5rem',
                 border: '1.5px solid #e2e8f0',
-                borderRadius: isMobile ? '8px' : '10px',
-                fontSize: isMobile ? '16px' : '0.95rem',
+                borderRadius: '8px',
+                fontSize: '1rem',
                 outline: 'none',
-                cursor: 'pointer',
-                background: 'white',
+                background: '#ffffff',
+                color: '#0f172a',
                 transition: 'all 0.2s ease',
-                appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.75rem center',
+                fontWeight: '400',
+                lineHeight: '1.5',
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
               }}
               onFocus={(e) => {
                 e.target.style.borderColor = '#10b981'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e5e7eb'
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                setTimeout(() => setShowTypeDropdown(false), 200)
               }}
-            >
-              {FACILITY_TYPES.map(typeOption => (
-                <option key={typeOption.value} value={typeOption.value}>
-                  {typeOption.label}
-                </option>
-              ))}
-            </select>
+            />
+            <div style={{
+              position: 'absolute',
+              right: '0.75rem',
+              top: '2.75rem',
+              pointerEvents: 'none'
+            }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                <path d="M5 7.5l5 5 5-5"/>
+              </svg>
+            </div>
+            {showTypeDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: '0.25rem',
+                background: '#ffffff',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                zIndex: 1000
+              }}>
+                {FACILITY_TYPES
+                  .filter(typeOption => 
+                    !typeSearch || 
+                    typeOption.label.toLowerCase().includes(typeSearch.toLowerCase())
+                  )
+                  .map(typeOption => (
+                    <div
+                      key={typeOption.value}
+                      onClick={() => handleTypeChange(typeOption.value)}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f1f5f9',
+                        color: '#0f172a',
+                        fontSize: '0.9375rem',
+                        fontWeight: '500',
+                        transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f0fdf4'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#ffffff'
+                      }}
+                    >
+                      {typeOption.label}
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         )}
       </div>
