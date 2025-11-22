@@ -9,6 +9,9 @@ function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Debug: verifică dacă componenta se încarcă
+  console.log('AdminLogin component loaded')
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
