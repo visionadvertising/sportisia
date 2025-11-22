@@ -3,7 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { 
   citySlugToName, 
-  sportSlugToName, 
+  sportSlugToName,
+  sportNameToSlug,
   slugToFacilityType,
   generateFacilityURL,
   generateSportURL
@@ -64,15 +65,18 @@ function SEOFacilityPage() {
 
   // If we have city param, it's a city. Otherwise, sport param might be the sport (without city)
   let city = ''
-  let sport = ''
+  let sportName = '' // For display
+  let sportSlugValue = '' // For dropdown value (slug)
   
   if (hasCity) {
     // Format: /:city/:sport/:type or /:city/:type
     city = citySlug ? citySlugToName(citySlug) : ''
-    sport = sportSlug ? sportSlugToName(sportSlug) : ''
+    sportName = sportSlug ? sportSlugToName(sportSlug) : ''
+    sportSlugValue = sportSlug || '' // Keep slug for dropdown
   } else {
     // Format: /:sport/:type (sport without city)
-    sport = sportSlug ? sportSlugToName(sportSlug) : ''
+    sportName = sportSlug ? sportSlugToName(sportSlug) : ''
+    sportSlugValue = sportSlug || '' // Keep slug for dropdown
   }
   
   const facilityType = typeSlug ? slugToFacilityType(typeSlug) : ''
@@ -82,22 +86,21 @@ function SEOFacilityPage() {
       if (city) {
         setSelectedCity(city)
       }
-      if (sport) {
-        setSelectedSport(sport)
+      if (sportSlugValue) {
+        setSelectedSport(sportSlugValue) // Use slug, not name
       }
       fetchFacilities()
     }
-  }, [city, sport, facilityType])
+  }, [city, sportSlugValue, facilityType])
 
   const fetchFacilities = async () => {
     setLoading(true)
     try {
       const queryParams = new URLSearchParams({ type: facilityType, status: 'active' })
       if (city) queryParams.append('city', city)
-      if (sport && (facilityType === 'field' || facilityType === 'coach')) {
-        // Convert sport name back to slug for API
-        const sportSlug = sport.toLowerCase()
-        queryParams.append('sport', sportSlug)
+      if (sportSlugValue && (facilityType === 'field' || facilityType === 'coach')) {
+        // Use slug directly for API
+        queryParams.append('sport', sportSlugValue)
       }
 
       const response = await fetch(`${API_BASE_URL}/facilities?${queryParams}`)
@@ -115,8 +118,8 @@ function SEOFacilityPage() {
   const handleCityChange = (newCity: string) => {
     setSelectedCity(newCity)
     if (newCity) {
-      if (sport) {
-        const url = generateFacilityURL(newCity, sport, facilityType)
+      if (sportSlugValue) {
+        const url = generateFacilityURL(newCity, sportSlugValue, facilityType)
         navigate(url)
       } else {
         const url = generateFacilityURL(newCity, null, facilityType)
@@ -124,8 +127,8 @@ function SEOFacilityPage() {
       }
     } else {
       // Navigate to sport-only URL if we have sport
-      if (sport) {
-        const url = generateSportURL(sport, facilityType)
+      if (sportSlugValue) {
+        const url = generateSportURL(sportSlugValue, facilityType)
         navigate(url)
       } else {
         // Navigate to base page
@@ -141,7 +144,7 @@ function SEOFacilityPage() {
   }
 
   const handleSportChange = (newSport: string) => {
-    setSelectedSport(newSport)
+    setSelectedSport(newSport) // newSport is already a slug from dropdown
     if (newSport) {
       if (city) {
         const url = generateFacilityURL(city, newSport, facilityType)
@@ -169,23 +172,23 @@ function SEOFacilityPage() {
   }
 
   const getPageTitle = () => {
-    if (sport && city) {
-      return `${FACILITY_TYPE_TITLES[facilityType]} - ${sport} în ${city}`
+    if (sportName && city) {
+      return `${FACILITY_TYPE_TITLES[facilityType]} - ${sportName} în ${city}`
     } else if (city) {
       return `${FACILITY_TYPE_TITLES[facilityType]} în ${city}`
-    } else if (sport) {
-      return `${FACILITY_TYPE_TITLES[facilityType]} - ${sport}`
+    } else if (sportName) {
+      return `${FACILITY_TYPE_TITLES[facilityType]} - ${sportName}`
     }
     return FACILITY_TYPE_TITLES[facilityType] || 'Facilități'
   }
 
   const getEmptyMessage = () => {
-    if (sport && city) {
-      return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} pentru ${sport.toLowerCase()} în ${city}.`
+    if (sportName && city) {
+      return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} pentru ${sportName.toLowerCase()} în ${city}.`
     } else if (city) {
       return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} în ${city}.`
-    } else if (sport) {
-      return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} pentru ${sport.toLowerCase()}.`
+    } else if (sportName) {
+      return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} pentru ${sportName.toLowerCase()}.`
     }
     return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} disponibile.`
   }
@@ -230,7 +233,7 @@ function SEOFacilityPage() {
 
         <FacilityFilters
           selectedCity={city}
-          selectedSport={sport}
+          selectedSport={sportSlugValue}
           selectedType={facilityType}
           showTypeFilter={true}
         />

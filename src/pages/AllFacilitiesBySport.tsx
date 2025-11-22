@@ -50,7 +50,8 @@ const SPORT_NAMES: Record<string, string> = {
 function AllFacilitiesBySport() {
   const params = useParams<{ sport: string }>()
   const sportSlug = params.sport || ''
-  const sport = sportSlug ? sportSlugToName(sportSlug) : ''
+  const sport = sportSlug ? sportSlugToName(sportSlug) : '' // For display
+  const sportSlugValue = sportSlug || '' // For filters (keep as slug)
   
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(true)
@@ -134,7 +135,7 @@ function AllFacilitiesBySport() {
         }}>Toate facilitățile pentru {sport}</h1>
 
         <FacilityFilters
-          selectedSport={sport}
+          selectedSport={sportSlugValue}
           showTypeFilter={true}
           onFiltersChange={(filters) => {
             // Handle filter changes - could navigate or update state
