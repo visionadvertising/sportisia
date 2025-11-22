@@ -48,8 +48,9 @@ const SPORT_NAMES: Record<string, string> = {
 }
 
 function AllFacilitiesBySport() {
-  const params = useParams<{ sport: string }>()
-  const sportSlug = params.sport || ''
+  const params = useParams<{ sport?: string; cityOrSport?: string }>()
+  // Support both /sport/:sport and /:sport formats
+  const sportSlug = params.sport || params.cityOrSport || ''
   const sport = sportSlug ? sportSlugToName(sportSlug) : '' // For display
   const sportSlugValue = sportSlug || '' // For filters (keep as slug)
   

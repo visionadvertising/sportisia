@@ -92,12 +92,12 @@ function FacilityFilters({
     
     // 4. Only City
     if (city && !sport && !type) {
-      return `/oras/${cityNameToSlug(city)}`
+      return `/${cityNameToSlug(city)}`
     }
     
     // 5. Only Sport
     if (sport && !city && !type) {
-      return `/sport/${sportNameToSlug(sport)}`
+      return `/${sportNameToSlug(sport)}`
     }
     
     // 6. Only Type

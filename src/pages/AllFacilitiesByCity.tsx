@@ -48,8 +48,9 @@ const SPORT_NAMES: Record<string, string> = {
 }
 
 function AllFacilitiesByCity() {
-  const params = useParams<{ city: string }>()
-  const citySlug = params.city || ''
+  const params = useParams<{ city?: string; cityOrSport?: string }>()
+  // Support both /oras/:city and /:city formats
+  const citySlug = params.city || params.cityOrSport || ''
   const city = citySlug ? citySlugToName(citySlug) : ''
   
   const [facilities, setFacilities] = useState<Facility[]>([])

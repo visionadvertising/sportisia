@@ -10,6 +10,7 @@ import FacilitiesList from './pages/FacilitiesList'
 import SEOFacilityPage from './pages/SEOFacilityPage'
 import AllFacilitiesBySport from './pages/AllFacilitiesBySport'
 import AllFacilitiesByCity from './pages/AllFacilitiesByCity'
+import AllFacilitiesByCityOrSport from './pages/AllFacilitiesByCityOrSport'
 
 function AppContent() {
   const location = useLocation()
@@ -92,13 +93,12 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        {/* All facilities by sport or city - must be before other dynamic routes */}
-        <Route path="/sport/:sport" element={<AllFacilitiesBySport />} />
-        <Route path="/oras/:city" element={<AllFacilitiesByCity />} />
         {/* SEO-friendly routes - must be before simple routes */}
         <Route path="/:city/:sport/:type" element={<SEOFacilityPage />} />
         <Route path="/:city/:type" element={<SEOFacilityPage />} />
         <Route path="/:sport/:type" element={<SEOFacilityPage />} />
+        {/* City or sport pages - must be after type routes to avoid conflicts */}
+        <Route path="/:cityOrSport" element={<AllFacilitiesByCityOrSport />} />
         {/* Simple routes (fallback) */}
         <Route path="/terenuri" element={<FacilitiesList type="field" title="Terenuri Sportive" />} />
         <Route path="/antrenori" element={<FacilitiesList type="coach" title="Antrenori" />} />
