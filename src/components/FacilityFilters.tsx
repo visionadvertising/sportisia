@@ -71,53 +71,36 @@ function FacilityFilters({
       return
     }
 
-    // Default navigation logic
-    const path = location.pathname
+    // Standard navigation logic - always use the same format regardless of current path
+    // Format: /:city/:sport/:type or /:sport/:type or /:city/:type
     
-    // Determine the new URL based on current path
-    if (path.startsWith('/sport/')) {
-      // On sport page, navigate to sport page with filters
-      if (newCity && newType) {
-        navigate(`/${cityNameToSlug(newCity)}/${sportNameToSlug(newSport || selectedSport)}/${facilityTypeToSlug(newType)}`)
-      } else if (newCity) {
-        navigate(`/oras/${cityNameToSlug(newCity)}`)
-      } else if (newType) {
-        navigate(`/${sportNameToSlug(newSport || selectedSport)}/${facilityTypeToSlug(newType)}`)
-      } else {
-        navigate(`/sport/${sportNameToSlug(newSport || selectedSport)}`)
+    if (newCity && newSport && newType) {
+      // City + Sport + Type: /city/sport/type
+      navigate(`/${cityNameToSlug(newCity)}/${sportNameToSlug(newSport)}/${facilityTypeToSlug(newType)}`)
+    } else if (newCity && newType) {
+      // City + Type (no sport): /city/type
+      navigate(`/${cityNameToSlug(newCity)}/${facilityTypeToSlug(newType)}`)
+    } else if (newCity) {
+      // Only city: /oras/city
+      navigate(`/oras/${cityNameToSlug(newCity)}`)
+    } else if (newSport && newType) {
+      // Sport + Type (no city): /sport/type
+      navigate(`/${sportNameToSlug(newSport)}/${facilityTypeToSlug(newType)}`)
+    } else if (newSport) {
+      // Only sport: /sport/sport
+      navigate(`/sport/${sportNameToSlug(newSport)}`)
+    } else if (newType) {
+      // Only type: base URL
+      const baseUrls: Record<string, string> = {
+        'field': '/terenuri',
+        'coach': '/antrenori',
+        'repair_shop': '/magazine-reparatii',
+        'equipment_shop': '/magazine-articole'
       }
-    } else if (path.startsWith('/oras/')) {
-      // On city page, navigate to city page with filters
-      if (newSport && newType) {
-        navigate(`/${cityNameToSlug(newCity || selectedCity)}/${sportNameToSlug(newSport)}/${facilityTypeToSlug(newType)}`)
-      } else if (newType) {
-        navigate(`/${cityNameToSlug(newCity || selectedCity)}/${facilityTypeToSlug(newType)}`)
-      } else if (newSport) {
-        navigate(`/${cityNameToSlug(newCity || selectedCity)}/${sportNameToSlug(newSport)}/${facilityTypeToSlug('field')}`)
-      } else {
-        navigate(`/oras/${cityNameToSlug(newCity || selectedCity)}`)
-      }
+      navigate(baseUrls[newType] || '/')
     } else {
-      // On other pages, use standard navigation
-      if (newCity && newSport && newType) {
-        navigate(`/${cityNameToSlug(newCity)}/${sportNameToSlug(newSport)}/${facilityTypeToSlug(newType)}`)
-      } else if (newCity && newType) {
-        navigate(`/${cityNameToSlug(newCity)}/${facilityTypeToSlug(newType)}`)
-      } else if (newCity) {
-        navigate(`/oras/${cityNameToSlug(newCity)}`)
-      } else if (newSport && newType) {
-        navigate(`/${sportNameToSlug(newSport)}/${facilityTypeToSlug(newType)}`)
-      } else if (newSport) {
-        navigate(`/sport/${sportNameToSlug(newSport)}`)
-      } else if (newType) {
-        const baseUrls: Record<string, string> = {
-          'field': '/terenuri',
-          'coach': '/antrenori',
-          'repair_shop': '/magazine-reparatii',
-          'equipment_shop': '/magazine-articole'
-        }
-        navigate(baseUrls[newType] || '/')
-      }
+      // No filters - stay on current page or go to home
+      // Don't navigate if nothing is selected
     }
   }
 
