@@ -33,6 +33,26 @@ function SEOPageEdit() {
     description: ''
   })
 
+  // Memorez modules și formats pentru ReactQuill
+  const quillModules = useMemo(() => ({
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link'],
+      [{ 'color': [] }, { 'background': [] }],
+      ['clean']
+    ]
+  }), [])
+
+  const quillFormats = useMemo(() => [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'link',
+    'color', 'background'
+  ], [])
+
   useEffect(() => {
     if (isEditByUrl && urlParam) {
       setFormData(prev => ({ ...prev, url: decodeURIComponent(urlParam) }))
@@ -524,23 +544,8 @@ function SEOPageEdit() {
                 theme="snow"
                 value={formData.description}
                 onChange={(value) => setFormData({ ...formData, description: value })}
-                modules={useMemo(() => ({
-                  toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    ['clean']
-                  ]
-                }), [])}
-                formats={useMemo(() => [
-                  'header',
-                  'bold', 'italic', 'underline', 'strike',
-                  'list', 'bullet',
-                  'link',
-                  'color', 'background'
-                ], [])}
+                modules={quillModules}
+                formats={quillFormats}
                 style={{
                   background: 'white',
                   minHeight: '300px'
