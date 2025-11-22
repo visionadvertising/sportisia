@@ -4,22 +4,9 @@ import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug } from '../utils/seo'
 
-interface Field {
-  id: number
-  name: string
-  city: string
-  location: string
-  sport: string
-  price: number
-  description?: string
-  image_url?: string
-}
 
 function Home() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'fields' | 'coaches'>('fields')
-  const [fields, setFields] = useState<Field[]>([])
-  const [loading, setLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   
   // Search filters
@@ -52,8 +39,6 @@ function Home() {
   }, [])
 
   useEffect(() => {
-    fetchFields()
-    
     // Load cities and sports from backend
     const loadCities = async () => {
       try {
@@ -99,19 +84,6 @@ function Home() {
     loadSports()
   }, [])
 
-  const fetchFields = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/fields`)
-      const data = await response.json()
-      if (data.success) {
-        setFields(data.data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching fields:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Generate URL from filters (same logic as FacilityFilters)
   const generateURLFromFilters = (city: string, sport: string, type: string): string => {
@@ -158,15 +130,17 @@ function Home() {
     <>
       {/* Hero Section */}
       <div style={{
-        background: '#0f172a',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
         padding: isMobile ? '4rem 1rem 3rem' : '6rem 2rem 5rem',
         textAlign: 'center',
-        color: 'white'
+        color: 'white',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
         <h1 style={{
           margin: 0,
-          fontSize: isMobile ? '2rem' : '3rem',
-          fontWeight: '600',
+          fontSize: isMobile ? '2rem' : '3.5rem',
+          fontWeight: '700',
           marginBottom: isMobile ? '0.75rem' : '1rem',
           lineHeight: '1.2',
           padding: isMobile ? '0 0.5rem' : '0',
@@ -175,7 +149,7 @@ function Home() {
         <p style={{
           margin: 0,
           fontSize: isMobile ? '1rem' : '1.25rem',
-          opacity: 0.8,
+          opacity: 0.9,
           marginBottom: isMobile ? '2rem' : '3rem',
           padding: isMobile ? '0 0.5rem' : '0',
           fontWeight: '400'
@@ -570,348 +544,145 @@ function Home() {
         </div>
       </div>
 
-      {/* Fields and Coaches Tabs Section */}
+
+      {/* Features Section */}
       <div style={{
-        maxWidth: '1200px',
-        margin: isMobile ? '2rem auto' : '4rem auto',
-        padding: isMobile ? '0 1rem' : '0 2rem'
-      }}>
-        {/* Tabs */}
-        <div style={{
-          display: 'flex',
-          gap: isMobile ? '0.5rem' : '1rem',
-          marginBottom: isMobile ? '1.5rem' : '2rem',
-          borderBottom: '2px solid #e0e0e0',
-          overflowX: isMobile ? 'auto' : 'visible'
-        }}>
-          <button
-            onClick={() => setActiveTab('fields')}
-            style={{
-              padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === 'fields' ? '3px solid #10b981' : '3px solid transparent',
-              color: activeTab === 'fields' ? '#10b981' : '#666',
-              fontWeight: activeTab === 'fields' ? 'bold' : 'normal',
-              cursor: 'pointer',
-              fontSize: isMobile ? '0.9375rem' : '1.1rem',
-              transition: 'all 0.3s',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Terenuri
-          </button>
-          <button
-            onClick={() => setActiveTab('coaches')}
-            style={{
-              padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === 'coaches' ? '3px solid #10b981' : '3px solid transparent',
-              color: activeTab === 'coaches' ? '#10b981' : '#666',
-              fontWeight: activeTab === 'coaches' ? 'bold' : 'normal',
-              cursor: 'pointer',
-              fontSize: isMobile ? '0.9375rem' : '1.1rem',
-              transition: 'all 0.3s',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Antrenori
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'fields' && (
-          <div>
-            <div style={{
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              justifyContent: 'space-between',
-              alignItems: isMobile ? 'flex-start' : 'center',
-              gap: isMobile ? '1rem' : '0',
-              marginBottom: isMobile ? '1.5rem' : '2rem'
-            }}>
-              <h2 style={{
-                fontSize: isMobile ? '1.5rem' : '2rem',
-                color: '#333',
-                margin: 0
-              }}>Terenuri disponibile</h2>
-              <Link
-                to="/register"
-                style={{
-                  padding: isMobile ? '0.875rem 1.5rem' : '0.75rem 2rem',
-                  background: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: isMobile ? '0.9375rem' : '1rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  textDecoration: 'none',
-                  display: 'inline-block',
-                  width: isMobile ? '100%' : 'auto',
-                  textAlign: isMobile ? 'center' : 'left',
-                  minHeight: isMobile ? '44px' : 'auto',
-                  touchAction: 'manipulation'
-                }}
-              >
-                + Adaugă Teren
-              </Link>
-            </div>
-
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: '3rem', color: '#666' }}>
-                Se încarcă...
-              </div>
-            ) : fields.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '3rem',
-                background: '#f9fafb',
-                borderRadius: '12px',
-                color: '#666'
-              }}>
-                <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Nu există terenuri disponibile momentan.</p>
-                <Link
-                  to="/register"
-                  style={{
-                    padding: '0.75rem 2rem',
-                    background: '#10b981',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '8px',
-                    display: 'inline-block'
-                  }}
-                >
-                  Adaugă primul teren
-                </Link>
-              </div>
-            ) : (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: isMobile ? '1rem' : '2rem'
-              }}>
-                {fields.map((field) => (
-                  <div
-                    key={field.id}
-                    style={{
-                      background: 'white',
-                      borderRadius: isMobile ? '8px' : '12px',
-                      overflow: 'hidden',
-                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      cursor: 'pointer'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isMobile) {
-                        e.currentTarget.style.transform = 'translateY(-4px)'
-                        e.currentTarget.style.boxShadow = '0 8px 12px rgba(0,0,0,0.15)'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isMobile) {
-                        e.currentTarget.style.transform = 'translateY(0)'
-                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'
-                      }
-                    }}
-                  >
-                    {field.image_url && (
-                      <div style={{
-                        width: '100%',
-                        height: isMobile ? '180px' : '200px',
-                        background: `url(${field.image_url}) center/cover`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                      }} />
-                    )}
-                    <div style={{ padding: isMobile ? '1rem' : '1.5rem' }}>
-                      <h3 style={{
-                        margin: '0 0 0.5rem 0',
-                        fontSize: isMobile ? '1.125rem' : '1.3rem',
-                        color: '#333',
-                        fontWeight: '600'
-                      }}>{field.name}</h3>
-                      <p style={{
-                        margin: '0 0 0.5rem 0',
-                        color: '#666',
-                        fontSize: isMobile ? '0.8125rem' : '0.9rem'
-                      }}>📍 {field.city}, {field.location}</p>
-                      <p style={{
-                        margin: '0 0 0.5rem 0',
-                        color: '#10b981',
-                        fontWeight: '600',
-                        fontSize: isMobile ? '0.875rem' : '0.9375rem'
-                      }}>🎾 {field.sport}</p>
-                      <p style={{
-                        margin: '0 0 1rem 0',
-                        color: '#333',
-                        fontSize: isMobile ? '1rem' : '1.1rem',
-                        fontWeight: '600'
-                      }}>De la {field.price} RON/oră</p>
-                      {field.description && (
-                        <p style={{
-                          margin: 0,
-                          color: '#666',
-                          fontSize: '0.9rem',
-                          lineHeight: '1.5'
-                        }}>{field.description.substring(0, 100)}...</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'coaches' && (
-          <div>
-            <h2 style={{
-              fontSize: '2rem',
-              color: '#333',
-              marginBottom: '2rem'
-            }}>Antrenori disponibili</h2>
-            <div style={{
-              textAlign: 'center',
-              padding: '3rem',
-              background: '#f9fafb',
-              borderRadius: '12px',
-              color: '#666'
-            }}>
-              <p style={{ fontSize: '1.2rem' }}>Secțiunea de antrenori va fi disponibilă în curând.</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* SPORT MADE SIMPLE Section */}
-      <div style={{
-        background: '#f9fafb',
-        padding: '5rem 2rem',
-        marginTop: '4rem'
+        background: '#ffffff',
+        padding: isMobile ? '4rem 1rem' : '6rem 2rem',
+        marginTop: isMobile ? '2rem' : '4rem'
       }}>
         <div style={{
           maxWidth: '1200px',
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '4rem',
-          alignItems: 'center'
+          margin: '0 auto'
         }}>
-          <div>
-            <h2 style={{
-              fontSize: '3rem',
-              fontWeight: 'bold',
-              color: '#1e3c72',
-              marginBottom: '2rem',
-              lineHeight: '1.2'
-            }}>SPORT MADE SIMPLE</h2>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div>
-                <h3 style={{
-                  color: '#10b981',
-                  fontSize: '1.3rem',
-                  fontWeight: 'bold',
-                  marginBottom: '0.5rem'
-                }}>Discover top sports facilities nearby</h3>
-                <p style={{
-                  color: '#1e3c72',
-                  lineHeight: '1.6',
-                  fontSize: '1rem'
-                }}>Find detailed information about the best sports venues, from tennis courts to football fields, all in your area.</p>
-              </div>
-
-              <div>
-                <h3 style={{
-                  color: '#10b981',
-                  fontSize: '1.3rem',
-                  fontWeight: 'bold',
-                  marginBottom: '0.5rem'
-                }}>Connect with expert trainers</h3>
-                <p style={{
-                  color: '#1e3c72',
-                  lineHeight: '1.6',
-                  fontSize: '1rem'
-                }}>Search for certified coaches and trainers who can help you improve your skills and achieve your goals.</p>
-              </div>
-
-              <div>
-                <h3 style={{
-                  color: '#10b981',
-                  fontSize: '1.3rem',
-                  fontWeight: 'bold',
-                  marginBottom: '0.5rem'
-                }}>Access reliable equipment services</h3>
-                <p style={{
-                  color: '#1e3c72',
-                  lineHeight: '1.6',
-                  fontSize: '1rem'
-                }}>Whether you need equipment repairs or maintenance, locate trusted sports service providers near you.</p>
-              </div>
-
-              <div>
-                <h3 style={{
-                  color: '#10b981',
-                  fontSize: '1.3rem',
-                  fontWeight: 'bold',
-                  marginBottom: '0.5rem'
-                }}>Comprehensive and easy-to-use</h3>
-                <p style={{
-                  color: '#1e3c72',
-                  lineHeight: '1.6',
-                  fontSize: '1rem'
-                }}>Explore a wide range of options with clear details like location, contact info, and facilities offered—all in one place.</p>
-              </div>
-
-              <div>
-                <h3 style={{
-                  color: '#10b981',
-                  fontSize: '1.3rem',
-                  fontWeight: 'bold',
-                  marginBottom: '0.5rem'
-                }}>Your personal sports network</h3>
-                <p style={{
-                  color: '#1e3c72',
-                  lineHeight: '1.6',
-                  fontSize: '1rem'
-                }}>Stay informed and connected to the sports community, whether you're seeking advice, guidance, or simply looking for new opportunities.</p>
-              </div>
-            </div>
-          </div>
-
+          <h2 style={{
+            fontSize: isMobile ? '2rem' : '2.5rem',
+            fontWeight: '700',
+            color: '#0f172a',
+            marginBottom: isMobile ? '2rem' : '3rem',
+            textAlign: 'center',
+            lineHeight: '1.2'
+          }}>De ce să folosești Sportisia?</h2>
+          
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '1rem'
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            gap: isMobile ? '2rem' : '2.5rem'
           }}>
-            {/* Placeholder pentru imagini sport - poți adăuga imagini reale mai târziu */}
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-              <div
-                key={i}
-                style={{
-                  aspectRatio: '1',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '2rem'
-                }}
-              >
-                🏃
+            <div style={{
+              padding: isMobile ? '1.5rem' : '2rem',
+              background: '#f8fafc',
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                background: '#10b981',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1.5rem'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
               </div>
-            ))}
+              <h3 style={{
+                color: '#0f172a',
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem'
+              }}>Găsește facilități aproape</h3>
+              <p style={{
+                color: '#64748b',
+                lineHeight: '1.6',
+                fontSize: '0.9375rem',
+                margin: 0
+              }}>Descoperă terenuri, antrenori și servicii sportive din orașul tău sau din apropiere.</p>
+            </div>
+
+            <div style={{
+              padding: isMobile ? '1.5rem' : '2rem',
+              background: '#f8fafc',
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                background: '#10b981',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1.5rem'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <line x1="20" y1="8" x2="20" y2="14"></line>
+                  <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg>
+              </div>
+              <h3 style={{
+                color: '#0f172a',
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem'
+              }}>Conectează-te cu antrenori</h3>
+              <p style={{
+                color: '#64748b',
+                lineHeight: '1.6',
+                fontSize: '0.9375rem',
+                margin: 0
+              }}>Găsește antrenori certificați care te pot ajuta să îți îmbunătățești performanțele.</p>
+            </div>
+
+            <div style={{
+              padding: isMobile ? '1.5rem' : '2rem',
+              background: '#f8fafc',
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                background: '#10b981',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '1.5rem'
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                </svg>
+              </div>
+              <h3 style={{
+                color: '#0f172a',
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem'
+              }}>Servicii de reparații</h3>
+              <p style={{
+                color: '#64748b',
+                lineHeight: '1.6',
+                fontSize: '0.9375rem',
+                margin: 0
+              }}>Localizează magazine și servicii de reparații pentru echipamentele tale sportive.</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* For Sport Businesses Section */}
       <div style={{
-        background: 'white',
-        padding: '5rem 2rem'
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+        padding: isMobile ? '4rem 1rem' : '6rem 2rem',
+        color: 'white'
       }}>
         <div style={{
           maxWidth: '1200px',
@@ -919,176 +690,199 @@ function Home() {
         }}>
           {/* Statistics */}
           <div style={{
-            background: 'white',
+            background: 'rgba(255, 255, 255, 0.05)',
             borderRadius: '16px',
-            padding: '3rem',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-            marginBottom: '4rem',
+            padding: isMobile ? '2rem 1rem' : '3rem 2rem',
+            marginBottom: isMobile ? '3rem' : '4rem',
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '2rem',
-            textAlign: 'center'
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+            gap: isMobile ? '1.5rem' : '2rem',
+            textAlign: 'center',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
             <div>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👨‍🏫</div>
-              <h3 style={{ fontSize: '1.5rem', color: '#333', marginBottom: '0.5rem' }}>Over 300</h3>
-              <p style={{ color: '#666' }}>Trainers & Coaches</p>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                background: 'rgba(16, 185, 129, 0.2)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: isMobile ? '1.25rem' : '1.75rem', color: 'white', marginBottom: '0.5rem', fontWeight: '700' }}>Peste 300</h3>
+              <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9375rem' }}>Antrenori</p>
             </div>
             <div>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚽</div>
-              <h3 style={{ fontSize: '1.5rem', color: '#333', marginBottom: '0.5rem' }}>Over 100</h3>
-              <p style={{ color: '#666' }}>Courts & Fields</p>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                background: 'rgba(16, 185, 129, 0.2)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: isMobile ? '1.25rem' : '1.75rem', color: 'white', marginBottom: '0.5rem', fontWeight: '700' }}>Peste 100</h3>
+              <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9375rem' }}>Terenuri</p>
             </div>
             <div>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔧</div>
-              <h3 style={{ fontSize: '1.5rem', color: '#333', marginBottom: '0.5rem' }}>Over 150</h3>
-              <p style={{ color: '#666' }}>Repair services</p>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                background: 'rgba(16, 185, 129, 0.2)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: isMobile ? '1.25rem' : '1.75rem', color: 'white', marginBottom: '0.5rem', fontWeight: '700' }}>Peste 150</h3>
+              <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9375rem' }}>Servicii reparații</p>
             </div>
             <div>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏪</div>
-              <h3 style={{ fontSize: '1.5rem', color: '#333', marginBottom: '0.5rem' }}>Over 20</h3>
-              <p style={{ color: '#666' }}>Equipment stores</p>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                background: 'rgba(16, 185, 129, 0.2)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: isMobile ? '1.25rem' : '1.75rem', color: 'white', marginBottom: '0.5rem', fontWeight: '700' }}>Peste 20</h3>
+              <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9375rem' }}>Magazine</p>
             </div>
           </div>
 
           {/* Main Content */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '4rem',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: isMobile ? '3rem' : '4rem',
             alignItems: 'start'
           }}>
-            {/* Left: Visual Diagram */}
+            {/* Left: Title */}
             <div>
-              <div style={{
-                marginBottom: '2rem'
-              }}>
-                <p style={{
-                  color: '#10b981',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  marginBottom: '0.5rem'
-                }}>For sport businesses</p>
-                <h2 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 'bold',
-                  color: '#1e3c72',
-                  lineHeight: '1.2'
-                }}>BE WHERE ATHLETES LOOK FIRST</h2>
-              </div>
-
-              {/* Visual diagram placeholder */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '1rem'
-              }}>
-                {['Coaches', 'Sport courts', 'Sport mates', 'Repair services', 'Equipment shops', 'Nutritionists'].map((item, i) => (
-                  <div key={i} style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.5rem'
-                  }}>
-                    <div style={{
-                      background: '#10b981',
-                      padding: '1rem',
-                      borderRadius: '8px',
-                      color: 'white',
-                      textAlign: 'center',
-                      fontWeight: 'bold'
-                    }}>{item}</div>
-                    <div style={{
-                      background: '#1e3c72',
-                      padding: '1rem',
-                      borderRadius: '8px',
-                      color: 'white',
-                      textAlign: 'center',
-                      fontWeight: 'bold'
-                    }}>User</div>
-                  </div>
-                ))}
-              </div>
+              <p style={{
+                color: '#10b981',
+                fontSize: '1rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>Pentru afaceri sportive</p>
+              <h2 style={{
+                fontSize: isMobile ? '2rem' : '2.5rem',
+                fontWeight: '700',
+                color: 'white',
+                lineHeight: '1.2',
+                marginBottom: isMobile ? '2rem' : '3rem'
+              }}>Fii acolo unde caută sportivii</h2>
             </div>
 
             {/* Right: Benefits List */}
             <div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '1.5rem' : '2rem' }}>
                 <div>
                   <h3 style={{
                     color: '#10b981',
-                    fontSize: '1.3rem',
-                    fontWeight: 'bold',
+                    fontSize: '1.125rem',
+                    fontWeight: '600',
                     marginBottom: '0.5rem'
-                  }}>Boost Your Visibility</h3>
+                  }}>Crește-ți vizibilitatea</h3>
                   <p style={{
-                    color: '#666',
-                    lineHeight: '1.6'
-                  }}>Get your sports facility, coaching services, or equipment shop in front of thousands of potential clients.</p>
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    lineHeight: '1.6',
+                    fontSize: '0.9375rem',
+                    margin: 0
+                  }}>Prezintă-ți facilitățile, serviciile de antrenament sau magazinul tău în fața a mii de clienți potențiali.</p>
                 </div>
 
                 <div>
                   <h3 style={{
                     color: '#10b981',
-                    fontSize: '1.3rem',
-                    fontWeight: 'bold',
+                    fontSize: '1.125rem',
+                    fontWeight: '600',
                     marginBottom: '0.5rem'
-                  }}>Connect with Local Athletes</h3>
+                  }}>Conectează-te cu sportivii locali</h3>
                   <p style={{
-                    color: '#666',
-                    lineHeight: '1.6'
-                  }}>Sportisia brings you closer to your target audience, from amateurs to semi-professional athletes.</p>
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    lineHeight: '1.6',
+                    fontSize: '0.9375rem',
+                    margin: 0
+                  }}>Sportisia te aduce mai aproape de publicul țintă, de la amatori la sportivi semi-profesioniști.</p>
                 </div>
 
                 <div>
                   <h3 style={{
                     color: '#10b981',
-                    fontSize: '1.3rem',
-                    fontWeight: 'bold',
+                    fontSize: '1.125rem',
+                    fontWeight: '600',
                     marginBottom: '0.5rem'
-                  }}>Showcase Your Expertise</h3>
+                  }}>Prezintă-ți expertiza</h3>
                   <p style={{
-                    color: '#666',
-                    lineHeight: '1.6'
-                  }}>Highlight your services, expertise, and unique offerings with a dedicated profile.</p>
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    lineHeight: '1.6',
+                    fontSize: '0.9375rem',
+                    margin: 0
+                  }}>Evidențiază serviciile, expertiza și ofertele tale unice cu un profil dedicat.</p>
                 </div>
 
                 <div>
                   <h3 style={{
                     color: '#10b981',
-                    fontSize: '1.3rem',
-                    fontWeight: 'bold',
+                    fontSize: '1.125rem',
+                    fontWeight: '600',
                     marginBottom: '0.5rem'
-                  }}>Expand Your Client Base</h3>
+                  }}>Extinde-ți baza de clienți</h3>
                   <p style={{
-                    color: '#666',
-                    lineHeight: '1.6'
-                  }}>Our platform allows athletes to easily discover and contact you, leading to more inquiries.</p>
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    lineHeight: '1.6',
+                    fontSize: '0.9375rem',
+                    margin: 0
+                  }}>Platforma noastră permite sportivilor să te descopere și să te contacteze ușor, ducând la mai multe solicitări.</p>
                 </div>
 
                 <div>
                   <h3 style={{
                     color: '#10b981',
-                    fontSize: '1.3rem',
-                    fontWeight: 'bold',
+                    fontSize: '1.125rem',
+                    fontWeight: '600',
                     marginBottom: '0.5rem'
-                  }}>It's Free to Join</h3>
+                  }}>Este gratuit</h3>
                   <p style={{
-                    color: '#666',
-                    lineHeight: '1.6'
-                  }}>There's no cost to list your services. Simply sign up and start showcasing what you offer.</p>
-                </div>
-
-                <div>
-                  <h3 style={{
-                    color: '#10b981',
-                    fontSize: '1.3rem',
-                    fontWeight: 'bold',
-                    marginBottom: '0.5rem'
-                  }}>Simple Setup and Support</h3>
-                  <p style={{
-                    color: '#666',
-                    lineHeight: '1.6'
-                  }}>We create your profile, add your services, and you start connecting with clients.</p>
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    lineHeight: '1.6',
+                    fontSize: '0.9375rem',
+                    margin: 0
+                  }}>Nu există costuri pentru a-ți lista serviciile. Înregistrează-te și începe să-ți prezinți oferta.</p>
                 </div>
               </div>
 
@@ -1096,21 +890,33 @@ function Home() {
                 to="/register"
                 style={{
                   marginTop: '2rem',
-                  padding: '1rem 2rem',
+                  padding: isMobile ? '1rem 1.5rem' : '1.125rem 2rem',
                   background: '#10b981',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
+                  fontSize: '1rem',
+                  fontWeight: '600',
                   cursor: 'pointer',
                   width: '100%',
                   display: 'block',
                   textAlign: 'center',
-                  textDecoration: 'none'
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#059669'
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(16, 185, 129, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#10b981'
+                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.2)'
+                  e.currentTarget.style.transform = 'translateY(0)'
                 }}
               >
-                Become member
+                Devino membru
               </Link>
             </div>
           </div>
@@ -1119,15 +925,15 @@ function Home() {
 
       {/* Footer */}
       <footer style={{
-        background: '#1e3c72',
-        padding: '3rem 2rem',
+        background: '#0f172a',
+        padding: isMobile ? '2rem 1rem' : '3rem 2rem',
         textAlign: 'center',
-        color: 'white'
+        color: 'rgba(255, 255, 255, 0.8)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
       }}>
         <p style={{
           margin: 0,
-          opacity: 0.9,
-          fontSize: '1rem'
+          fontSize: '0.9375rem'
         }}>©2024 Sportisia. Toate drepturile rezervate.</p>
       </footer>
     </>
