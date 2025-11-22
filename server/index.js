@@ -521,17 +521,17 @@ app.post('/api/register', async (req, res) => {
         'pending' // status
       ]
 
-      // Verify values count - MUST BE 38 (added county, contactPerson, locationNotSpecified, mapCoordinates)
-      if (values.length !== 38) {
-        const errorMsg = `Values array must have 38 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
+      // Verify values count - MUST BE 37 (37 columns in INSERT)
+      if (values.length !== 37) {
+        const errorMsg = `Values array must have 37 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
         console.error(`[REGISTER ERROR] ${errorMsg}`)
         throw new Error(errorMsg)
       }
 
       // Debug: log values count
       console.log(`[REGISTER] Inserting facility: ${name}`)
-      console.log(`[REGISTER] Values count: ${values.length}, expected: 38`)
-      console.log(`[REGISTER] Last value (status): ${values[37]}`)
+      console.log(`[REGISTER] Values count: ${values.length}, expected: 37`)
+      console.log(`[REGISTER] Last value (status): ${values[36]}`)
 
       // Insert facility
       const [facilityResult] = await connection.query(

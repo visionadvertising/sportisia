@@ -63,11 +63,33 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
         })
     })
 
-    // If coordinates exist, set marker
+    // If coordinates exist, set marker (draggable)
     if (coordinates) {
-      const marker = L.marker([coordinates.lat, coordinates.lng]).addTo(map)
+      const marker = L.marker([coordinates.lat, coordinates.lng], {
+        draggable: true
+      }).addTo(map)
       markerRef.current = marker
       map.setView([coordinates.lat, coordinates.lng], 15)
+      
+      // Handle marker drag
+      marker.on('dragend', (e) => {
+        const { lat, lng } = e.target.getLatLng()
+        onCoordinatesChange({ lat, lng })
+        
+        // Reverse geocode to get address
+        setIsGeocoding(true)
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.display_name) {
+              onLocationChange(data.display_name)
+            }
+            setIsGeocoding(false)
+          })
+          .catch(() => {
+            setIsGeocoding(false)
+          })
+      })
     }
 
     return () => {
@@ -83,7 +105,30 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
       if (markerRef.current) {
         markerRef.current.setLatLng([coordinates.lat, coordinates.lng])
       } else {
-        markerRef.current = L.marker([coordinates.lat, coordinates.lng]).addTo(mapInstanceRef.current)
+        const marker = L.marker([coordinates.lat, coordinates.lng], {
+          draggable: true
+        }).addTo(mapInstanceRef.current)
+        markerRef.current = marker
+        
+        // Handle marker drag
+        marker.on('dragend', (e) => {
+          const { lat, lng } = e.target.getLatLng()
+          onCoordinatesChange({ lat, lng })
+          
+          // Reverse geocode to get address
+          setIsGeocoding(true)
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.display_name) {
+                onLocationChange(data.display_name)
+              }
+              setIsGeocoding(false)
+            })
+            .catch(() => {
+              setIsGeocoding(false)
+            })
+        })
       }
       mapInstanceRef.current.setView([coordinates.lat, coordinates.lng], 15)
     } else {
@@ -93,6 +138,17 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
       }
     }
   }, [coordinates])
+
+  // Auto-geocode when location changes (debounced)
+  useEffect(() => {
+    if (!location.trim() || !mapInstanceRef.current) return
+    
+    const timeoutId = setTimeout(() => {
+      handleGeocode()
+    }, 1000) // Wait 1 second after user stops typing
+    
+    return () => clearTimeout(timeoutId)
+  }, [location])
 
   // Geocode address when location changes
   const handleGeocode = async () => {

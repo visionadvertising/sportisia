@@ -525,30 +525,31 @@ function Register() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem'
+      background: '#fafafa',
+      padding: '0'
     }}>
       <div style={{
-        maxWidth: '900px',
+        maxWidth: '1400px',
         margin: '0 auto',
-        background: 'white',
-        borderRadius: '16px',
-        padding: '3rem',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+        padding: '4rem 2rem',
+        width: '100%'
       }}>
         <h1 style={{
-          fontSize: '2.5rem',
-          color: '#1e3c72',
-          marginBottom: '0.5rem',
-          textAlign: 'center'
+          fontSize: '2rem',
+          color: '#1a1a1a',
+          marginBottom: '3rem',
+          fontWeight: '300',
+          letterSpacing: '-0.02em'
         }}>Înregistrare Facilitate</h1>
 
         {/* Progress Steps */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginBottom: '3rem',
-          position: 'relative'
+          marginBottom: '4rem',
+          position: 'relative',
+          paddingBottom: '2rem',
+          borderBottom: '1px solid #e5e5e5'
         }}>
           {steps.map((step, index) => (
             <div key={step.number} style={{ flex: 1, position: 'relative', zIndex: 1 }}>
@@ -556,38 +557,40 @@ function Register() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '0.5rem'
+                gap: '0.75rem'
               }}>
                 <div style={{
-                  width: '50px',
-                  height: '50px',
+                  width: '32px',
+                  height: '32px',
                   borderRadius: '50%',
-                  background: currentStep >= step.number ? '#10b981' : '#e5e7eb',
-                  color: currentStep >= step.number ? 'white' : '#666',
+                  background: currentStep >= step.number ? '#1a1a1a' : '#e5e5e5',
+                  color: currentStep >= step.number ? 'white' : '#999',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontWeight: 'bold',
-                  fontSize: '1.2rem',
-                  transition: 'all 0.3s'
+                  fontWeight: '400',
+                  fontSize: '0.875rem',
+                  transition: 'all 0.2s'
                 }}>
                   {currentStep > step.number ? '✓' : step.number}
                 </div>
                 <span style={{
-                  fontSize: '0.85rem',
-                  color: currentStep >= step.number ? '#10b981' : '#666',
-                  fontWeight: currentStep === step.number ? 'bold' : 'normal',
-                  textAlign: 'center'
+                  fontSize: '0.75rem',
+                  color: currentStep >= step.number ? '#1a1a1a' : '#999',
+                  fontWeight: currentStep === step.number ? '500' : '400',
+                  textAlign: 'center',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>{step.title}</span>
               </div>
               {index < steps.length - 1 && (
                 <div style={{
                   position: 'absolute',
-                  top: '25px',
-                  left: '60%',
-                  width: '80%',
-                  height: '2px',
-                  background: currentStep > step.number ? '#10b981' : '#e5e7eb',
+                  top: '16px',
+                  left: 'calc(50% + 16px)',
+                  right: 'calc(-50% + 16px)',
+                  height: '1px',
+                  background: currentStep > step.number ? '#1a1a1a' : '#e5e5e5',
                   zIndex: 0
                 }} />
               )}
@@ -612,19 +615,25 @@ function Register() {
           {/* Step 1: Facility Type */}
           {currentStep === 1 && (
             <div>
-              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                color: '#1a1a1a', 
+                marginBottom: '2rem',
+                fontWeight: '400',
+                letterSpacing: '-0.01em'
+              }}>
                 Alege tipul facilității
               </h2>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1.5rem'
+                gap: '1rem'
               }}>
                 {[
-                  { value: 'field', label: 'Teren Sportiv', icon: '⚽' },
-                  { value: 'coach', label: 'Antrenor', icon: '👨‍🏫' },
-                  { value: 'repair_shop', label: 'Magazin Reparații', icon: '🔧' },
-                  { value: 'equipment_shop', label: 'Magazin Articole', icon: '🏪' }
+                  { value: 'field', label: 'Teren Sportiv' },
+                  { value: 'coach', label: 'Antrenor' },
+                  { value: 'repair_shop', label: 'Magazin Reparații' },
+                  { value: 'equipment_shop', label: 'Magazin Articole' }
                 ].map((type) => (
                   <button
                     key={type.value}
@@ -632,24 +641,20 @@ function Register() {
                     onClick={() => setFacilityType(type.value as FacilityType)}
                     style={{
                       padding: '2rem',
-                      border: facilityType === type.value ? '3px solid #10b981' : '2px solid #e0e0e0',
-                      borderRadius: '12px',
-                      background: facilityType === type.value ? '#f0fdf4' : 'white',
+                      border: facilityType === type.value ? '2px solid #1a1a1a' : '1px solid #e5e5e5',
+                      borderRadius: '0',
+                      background: facilityType === type.value ? '#1a1a1a' : 'transparent',
+                      color: facilityType === type.value ? 'white' : '#1a1a1a',
                       cursor: 'pointer',
-                      fontSize: '3rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '1rem',
-                      transition: 'all 0.3s'
+                      fontSize: '1rem',
+                      fontWeight: '400',
+                      textAlign: 'left',
+                      transition: 'all 0.2s',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
                     }}
                   >
-                    <span>{type.icon}</span>
-                    <span style={{
-                      fontSize: '1.1rem',
-                      fontWeight: 'bold',
-                      color: '#333'
-                    }}>{type.label}</span>
+                    {type.label}
                   </button>
                 ))}
               </div>
@@ -1919,17 +1924,26 @@ function Register() {
                 type="button"
                 onClick={prevStep}
                 style={{
-                  padding: '1rem 2rem',
-                  background: '#e5e7eb',
-                  color: '#333',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
+                  padding: '0.875rem 2rem',
+                  background: 'transparent',
+                  color: '#1a1a1a',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '0',
+                  fontSize: '0.875rem',
+                  fontWeight: '400',
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#1a1a1a'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e5e5'
                 }}
               >
-                ← Înapoi
+                Înapoi
               </button>
             )}
             <div style={{ flex: 1 }} />
@@ -1937,34 +1951,46 @@ function Register() {
               <button
                 type="submit"
                 style={{
-                  padding: '1rem 2rem',
-                  background: '#10b981',
+                  padding: '0.875rem 2rem',
+                  background: '#1a1a1a',
                   color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
+                  border: '1px solid #1a1a1a',
+                  borderRadius: '0',
+                  fontSize: '0.875rem',
+                  fontWeight: '400',
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.8'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1'
                 }}
               >
-                Următorul →
+                Următorul
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={loading}
                 style={{
-                  padding: '1rem 2rem',
-                  background: loading ? '#9ca3af' : '#10b981',
+                  padding: '0.875rem 2rem',
+                  background: loading ? '#999' : '#1a1a1a',
                   color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  cursor: loading ? 'not-allowed' : 'pointer'
+                  border: '1px solid ' + (loading ? '#999' : '#1a1a1a'),
+                  borderRadius: '0',
+                  fontSize: '0.875rem',
+                  fontWeight: '400',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  transition: 'all 0.2s'
                 }}
               >
-                {loading ? 'Se înregistrează...' : 'Finalizează înregistrarea'}
+                {loading ? 'Se înregistrează...' : 'Finalizează'}
               </button>
             )}
           </div>
