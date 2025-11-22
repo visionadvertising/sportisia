@@ -379,6 +379,27 @@ app.post('/api/register', async (req, res) => {
     await connection.beginTransaction()
 
     try {
+      // Prepare values array
+      const values = [
+        facilityType, name, city, location, phone, email || null, description || null, imageUrl || null,
+        logoUrl || null, 
+        socialMedia ? JSON.stringify(socialMedia) : null,
+        gallery ? JSON.stringify(gallery) : null,
+        sport || null, pricePerHour ? parseFloat(pricePerHour) : null,
+        pricingDetails ? JSON.stringify(pricingDetails) : null,
+        hasParking || false, hasShower || false, hasChangingRoom || false,
+        hasAirConditioning || false, hasLighting || false,
+        specialization || null, experienceYears || null, pricePerLesson ? parseFloat(pricePerLesson) : null,
+        certifications || null, languages || null,
+        servicesOffered || null, brandsServiced || null, averageRepairTime || null,
+        productsCategories || null, brandsAvailable || null, deliveryAvailable || false,
+        website || null, openingHours || null,
+        'pending' // status
+      ]
+
+      // Debug: log values count
+      console.log(`Inserting facility: ${name}, values count: ${values.length}, expected: 33`)
+
       // Insert facility
       const [facilityResult] = await connection.query(
         `INSERT INTO facilities (
@@ -390,23 +411,8 @@ app.post('/api/register', async (req, res) => {
           services_offered, brands_serviced, average_repair_time,
           products_categories, brands_available, delivery_available,
           website, opening_hours, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          facilityType, name, city, location, phone, email || null, description || null, imageUrl || null,
-          logoUrl || null, 
-          socialMedia ? JSON.stringify(socialMedia) : null,
-          gallery ? JSON.stringify(gallery) : null,
-          sport || null, pricePerHour ? parseFloat(pricePerHour) : null,
-          pricingDetails ? JSON.stringify(pricingDetails) : null,
-          hasParking || false, hasShower || false, hasChangingRoom || false,
-          hasAirConditioning || false, hasLighting || false,
-          specialization || null, experienceYears || null, pricePerLesson ? parseFloat(pricePerLesson) : null,
-          certifications || null, languages || null,
-          servicesOffered || null, brandsServiced || null, averageRepairTime || null,
-          productsCategories || null, brandsAvailable || null, deliveryAvailable || false,
-          website || null, openingHours || null,
-          'pending' // status
-        ]
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        values
       )
 
       const facilityId = facilityResult.insertId
