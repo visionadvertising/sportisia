@@ -664,21 +664,30 @@ function Register() {
           {/* Step 2: Contact Details */}
           {currentStep === 2 && (
             <div>
-              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                color: '#1a1a1a', 
+                marginBottom: '2rem',
+                fontWeight: '400',
+                letterSpacing: '-0.01em'
+              }}>
                 Date de contact
               </h2>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1rem',
-                marginBottom: '1rem'
+                gap: '2rem',
+                marginBottom: '2rem'
               }}>
                 <div>
                   <label style={{
                     display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
+                    marginBottom: '0.75rem',
+                    color: '#1a1a1a',
+                    fontWeight: '400',
+                    fontSize: '0.875rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
                   }}>Telefon *</label>
                   <input
                     type="tel"
@@ -687,20 +696,33 @@ function Register() {
                     required
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      outline: 'none'
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   />
                 </div>
                 <div>
                   <label style={{
                     display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
+                    marginBottom: '0.75rem',
+                    color: '#1a1a1a',
+                    fontWeight: '400',
+                    fontSize: '0.875rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
                   }}>Email *</label>
                   <input
                     type="email"
@@ -709,20 +731,33 @@ function Register() {
                     required
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      outline: 'none'
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   />
                 </div>
                 <div>
                   <label style={{
                     display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
+                    marginBottom: '0.75rem',
+                    color: '#1a1a1a',
+                    fontWeight: '400',
+                    fontSize: '0.875rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
                   }}>Persoană de contact</label>
                   <input
                     type="text"
@@ -731,21 +766,34 @@ function Register() {
                     placeholder="Numele persoanei de contact"
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      outline: 'none'
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   />
                 </div>
               </div>
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
+                  marginBottom: '0.75rem',
+                  color: '#1a1a1a',
+                  fontWeight: '400',
+                  fontSize: '0.875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>Oraș *</label>
                 {!showAddCityInput ? (
                   <select
@@ -765,12 +813,22 @@ function Register() {
                     required
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
                       outline: 'none',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   >
                     <option value="">Selectează oraș</option>
@@ -797,11 +855,21 @@ function Register() {
                         required
                         style={{
                           flex: 1,
-                          padding: '0.75rem',
-                          border: '2px solid #e0e0e0',
-                          borderRadius: '8px',
+                          padding: '0.875rem 0',
+                          border: 'none',
+                          borderBottom: '1px solid #e5e5e5',
+                          borderRadius: '0',
                           fontSize: '1rem',
-                          outline: 'none'
+                          outline: 'none',
+                          background: 'transparent',
+                          color: '#1a1a1a',
+                          transition: 'border-color 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderBottomColor = '#1a1a1a'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderBottomColor = '#e5e5e5'
                         }}
                       />
                       <select
@@ -810,12 +878,22 @@ function Register() {
                         required
                         style={{
                           flex: 1,
-                          padding: '0.75rem',
-                          border: '2px solid #e0e0e0',
-                          borderRadius: '8px',
+                          padding: '0.875rem 0',
+                          border: 'none',
+                          borderBottom: '1px solid #e5e5e5',
+                          borderRadius: '0',
                           fontSize: '1rem',
                           outline: 'none',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          background: 'transparent',
+                          color: '#1a1a1a',
+                          transition: 'border-color 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderBottomColor = '#1a1a1a'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderBottomColor = '#e5e5e5'
                         }}
                       >
                         <option value="">Selectează județul</option>
@@ -824,7 +902,7 @@ function Register() {
                         ))}
                       </select>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                       <button
                         type="button"
                         onClick={() => {
@@ -843,14 +921,23 @@ function Register() {
                           }
                         }}
                       style={{
-                        padding: '0.75rem 1.5rem',
-                        background: '#10b981',
+                        padding: '0.875rem 2rem',
+                        background: '#1a1a1a',
                         color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
+                        border: '1px solid #1a1a1a',
+                        borderRadius: '0',
+                        fontSize: '0.875rem',
+                        fontWeight: '400',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.opacity = '0.8'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = '1'
                       }}
                     >
                       Adaugă
@@ -865,14 +952,23 @@ function Register() {
                         setCounty('')
                       }}
                       style={{
-                        padding: '0.75rem 1.5rem',
-                        background: '#e5e7eb',
-                        color: '#333',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
+                        padding: '0.875rem 2rem',
+                        background: 'transparent',
+                        color: '#1a1a1a',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '0',
+                        fontSize: '0.875rem',
+                        fontWeight: '400',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        transition: 'border-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#1a1a1a'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e5e5e5'
                       }}
                     >
                       Anulează
@@ -881,15 +977,27 @@ function Register() {
                   </div>
                 )}
               </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
                   <label style={{
                     display: 'block',
-                    color: '#333',
-                    fontWeight: '500',
+                    color: '#1a1a1a',
+                    fontWeight: '400',
+                    fontSize: '0.875rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
                     margin: 0
                   }}>Adresă completă {!locationNotSpecified && '*'}</label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginLeft: 'auto' }}>
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem', 
+                    cursor: 'pointer', 
+                    marginLeft: 'auto',
+                    fontSize: '0.875rem',
+                    color: '#666',
+                    fontWeight: '400'
+                  }}>
                     <input
                       type="checkbox"
                       checked={locationNotSpecified}
@@ -900,9 +1008,14 @@ function Register() {
                           setMapCoordinates(null)
                         }
                       }}
-                      style={{ cursor: 'pointer' }}
+                      style={{ 
+                        cursor: 'pointer',
+                        width: '16px',
+                        height: '16px',
+                        accentColor: '#1a1a1a'
+                      }}
                     />
-                    <span style={{ fontSize: '0.9rem', color: '#666' }}>Nespecificat</span>
+                    <span>Nespecificat</span>
                   </label>
                 </div>
                 {!locationNotSpecified && (
@@ -915,14 +1028,24 @@ function Register() {
                       rows={3}
                       style={{
                         width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
+                        padding: '0.875rem 0',
+                        border: 'none',
+                        borderBottom: '1px solid #e5e5e5',
+                        borderRadius: '0',
                         fontSize: '1rem',
                         outline: 'none',
                         fontFamily: 'inherit',
                         resize: 'vertical',
-                        marginBottom: '1rem'
+                        marginBottom: '2rem',
+                        background: 'transparent',
+                        color: '#1a1a1a',
+                        transition: 'border-color 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderBottomColor = '#1a1a1a'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderBottomColor = '#e5e5e5'
                       }}
                     />
                     <MapSelector
@@ -940,15 +1063,24 @@ function Register() {
           {/* Step 3: Branding */}
           {currentStep === 3 && (
             <div>
-              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                color: '#1a1a1a', 
+                marginBottom: '2rem',
+                fontWeight: '400',
+                letterSpacing: '-0.01em'
+              }}>
                 Branding și prezentare
               </h2>
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
+                  marginBottom: '0.75rem',
+                  color: '#1a1a1a',
+                  fontWeight: '400',
+                  fontSize: '0.875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>Denumire facilitate *</label>
                 <input
                   type="text"
@@ -957,20 +1089,33 @@ function Register() {
                   required
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
+                    padding: '0.875rem 0',
+                    border: 'none',
+                    borderBottom: '1px solid #e5e5e5',
+                    borderRadius: '0',
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    background: 'transparent',
+                    color: '#1a1a1a',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderBottomColor = '#1a1a1a'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderBottomColor = '#e5e5e5'
                   }}
                 />
               </div>
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
+                  marginBottom: '0.75rem',
+                  color: '#1a1a1a',
+                  fontWeight: '400',
+                  fontSize: '0.875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>Descriere</label>
                 <textarea
                   value={description}
@@ -979,22 +1124,35 @@ function Register() {
                   rows={5}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
+                    padding: '0.875rem 0',
+                    border: 'none',
+                    borderBottom: '1px solid #e5e5e5',
+                    borderRadius: '0',
                     fontSize: '1rem',
                     outline: 'none',
                     fontFamily: 'inherit',
-                    resize: 'vertical'
+                    resize: 'vertical',
+                    background: 'transparent',
+                    color: '#1a1a1a',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderBottomColor = '#1a1a1a'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderBottomColor = '#e5e5e5'
                   }}
                 />
               </div>
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
+                  marginBottom: '0.75rem',
+                  color: '#1a1a1a',
+                  fontWeight: '400',
+                  fontSize: '0.875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>Logo (max 2MB)</label>
                 <input
                   type="file"
@@ -1002,11 +1160,22 @@ function Register() {
                   onChange={handleLogoUpload}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
+                    padding: '0.875rem 0',
+                    border: 'none',
+                    borderBottom: '1px solid #e5e5e5',
+                    borderRadius: '0',
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    background: 'transparent',
+                    color: '#1a1a1a',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderBottomColor = '#1a1a1a'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderBottomColor = '#e5e5e5'
                   }}
                 />
                 {logoPreview && (
@@ -1028,12 +1197,15 @@ function Register() {
                   </div>
                 )}
               </div>
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
+                  marginBottom: '0.75rem',
+                  color: '#1a1a1a',
+                  fontWeight: '400',
+                  fontSize: '0.875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>Website</label>
                 <input
                   type="url"
@@ -1042,25 +1214,38 @@ function Register() {
                   placeholder="https://example.com"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
+                    padding: '0.875rem 0',
+                    border: 'none',
+                    borderBottom: '1px solid #e5e5e5',
+                    borderRadius: '0',
                     fontSize: '1rem',
-                    outline: 'none'
+                    outline: 'none',
+                    background: 'transparent',
+                    color: '#1a1a1a',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderBottomColor = '#1a1a1a'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderBottomColor = '#e5e5e5'
                   }}
                 />
               </div>
               <div>
                 <label style={{
                   display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
+                  marginBottom: '0.75rem',
+                  color: '#1a1a1a',
+                  fontWeight: '400',
+                  fontSize: '0.875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>Rețele sociale</label>
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '1rem'
+                  gap: '2rem'
                 }}>
                   <input
                     type="url"
@@ -1069,11 +1254,21 @@ function Register() {
                     placeholder="Facebook URL"
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      outline: 'none'
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   />
                   <input
@@ -1083,25 +1278,45 @@ function Register() {
                     placeholder="Instagram URL"
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      outline: 'none'
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   />
                   <input
                     type="url"
                     value={socialMedia.x}
                     onChange={(e) => setSocialMedia({ ...socialMedia, x: e.target.value })}
-                    placeholder="X.com (Twitter) URL"
+                    placeholder="X.com URL"
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      outline: 'none'
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   />
                   <input
@@ -1111,11 +1326,21 @@ function Register() {
                     placeholder="TikTok URL"
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      outline: 'none'
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   />
                   <input
@@ -1125,11 +1350,21 @@ function Register() {
                     placeholder="YouTube URL"
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      outline: 'none'
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   />
                   <input
@@ -1139,11 +1374,21 @@ function Register() {
                     placeholder="LinkedIn URL"
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
+                      padding: '0.875rem 0',
+                      border: 'none',
+                      borderBottom: '1px solid #e5e5e5',
+                      borderRadius: '0',
                       fontSize: '1rem',
-                      outline: 'none'
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#1a1a1a',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderBottomColor = '#e5e5e5'
                     }}
                   />
                 </div>
@@ -1154,15 +1399,24 @@ function Register() {
           {/* Step 4: Gallery */}
           {currentStep === 4 && (
             <div>
-              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                color: '#1a1a1a', 
+                marginBottom: '2rem',
+                fontWeight: '400',
+                letterSpacing: '-0.01em'
+              }}>
                 Galerie imagini
               </h2>
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
+                  marginBottom: '0.75rem',
+                  color: '#1a1a1a',
+                  fontWeight: '400',
+                  fontSize: '0.875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>
                   Încarcă imagini (max 10, 5MB/fișier)
                 </label>
@@ -1174,16 +1428,29 @@ function Register() {
                   disabled={galleryFiles.length >= 10}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
+                    padding: '0.875rem 0',
+                    border: 'none',
+                    borderBottom: '1px solid #e5e5e5',
+                    borderRadius: '0',
                     fontSize: '1rem',
                     outline: 'none',
-                    cursor: galleryFiles.length >= 10 ? 'not-allowed' : 'pointer'
+                    background: 'transparent',
+                    color: '#1a1a1a',
+                    cursor: galleryFiles.length >= 10 ? 'not-allowed' : 'pointer',
+                    transition: 'border-color 0.2s',
+                    opacity: galleryFiles.length >= 10 ? 0.5 : 1
+                  }}
+                  onFocus={(e) => {
+                    if (galleryFiles.length < 10) {
+                      e.target.style.borderBottomColor = '#1a1a1a'
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderBottomColor = '#e5e5e5'
                   }}
                 />
                 {galleryFiles.length > 0 && (
-                  <p style={{ marginTop: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
+                  <p style={{ marginTop: '0.75rem', color: '#666', fontSize: '0.875rem', fontWeight: '400' }}>
                     {galleryFiles.length} / 10 imagini selectate
                   </p>
                 )}
@@ -1191,9 +1458,9 @@ function Register() {
               {galleryPreviews.length > 0 && (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                  gap: '1rem',
-                  marginTop: '1rem'
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '1.5rem',
+                  marginTop: '2rem'
                 }}>
                   {galleryPreviews.map((preview, index) => (
                     <div key={index} style={{ position: 'relative' }}>
@@ -1202,10 +1469,9 @@ function Register() {
                         alt={`Gallery ${index + 1}`}
                         style={{
                           width: '100%',
-                          height: '150px',
+                          height: '200px',
                           objectFit: 'cover',
-                          borderRadius: '8px',
-                          border: '1px solid #e0e0e0'
+                          border: '1px solid #e5e5e5'
                         }}
                       />
                       <button
@@ -1215,17 +1481,24 @@ function Register() {
                           position: 'absolute',
                           top: '0.5rem',
                           right: '0.5rem',
-                          background: '#ef4444',
+                          background: '#1a1a1a',
                           color: 'white',
                           border: 'none',
-                          borderRadius: '50%',
-                          width: '30px',
-                          height: '30px',
+                          width: '32px',
+                          height: '32px',
                           cursor: 'pointer',
-                          fontSize: '1.2rem',
+                          fontSize: '1rem',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center'
+                          justifyContent: 'center',
+                          fontWeight: '300',
+                          transition: 'opacity 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = '0.8'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '1'
                         }}
                       >
                         ×
@@ -1235,7 +1508,13 @@ function Register() {
                 </div>
               )}
               {galleryPreviews.length === 0 && (
-                <p style={{ color: '#666', fontStyle: 'italic', textAlign: 'center', padding: '2rem' }}>
+                <p style={{ 
+                  color: '#999', 
+                  textAlign: 'center', 
+                  padding: '3rem 0',
+                  fontSize: '0.875rem',
+                  fontWeight: '400'
+                }}>
                   Nu ai adăugat imagini încă. Poți sări peste acest pas.
                 </p>
               )}
@@ -1245,45 +1524,28 @@ function Register() {
           {/* Step 5: Specific Details */}
           {currentStep === 5 && (
             <div>
-              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                color: '#1a1a1a', 
+                marginBottom: '2rem',
+                fontWeight: '400',
+                letterSpacing: '-0.01em'
+              }}>
                 Detalii specifice
               </h2>
-              
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>Descriere</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={5}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none',
-                    fontFamily: 'inherit'
-                  }}
-                />
-              </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ marginBottom: '3rem' }}>
                 <label style={{
                   display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
+                  marginBottom: '0.75rem',
+                  color: '#1a1a1a',
+                  fontWeight: '400',
+                  fontSize: '0.875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
                 }}>Program</label>
                 <div style={{
-                  background: '#f9fafb',
-                  padding: '1.5rem',
-                  borderRadius: '8px',
-                  border: '1px solid #e0e0e0'
+                  padding: '0'
                 }}>
                   {[
                     { key: 'monday', label: 'Luni' },
@@ -1299,15 +1561,22 @@ function Register() {
                       <div key={day.key} style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '1rem',
-                        marginBottom: '1rem',
-                        paddingBottom: '1rem',
-                        borderBottom: '1px solid #e0e0e0'
+                        gap: '2rem',
+                        marginBottom: '1.5rem',
+                        paddingBottom: '1.5rem',
+                        borderBottom: '1px solid #e5e5e5'
                       }}>
-                        <div style={{ width: '100px', fontWeight: '500', color: '#333' }}>
+                        <div style={{ 
+                          width: '120px', 
+                          fontWeight: '400', 
+                          color: '#1a1a1a',
+                          fontSize: '0.875rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
                           {day.label}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
                           <select
                             value={dayData.isOpen === null ? 'not_specified' : dayData.isOpen ? 'open' : 'closed'}
                             onChange={(e) => {
@@ -1321,11 +1590,21 @@ function Register() {
                               })
                             }}
                             style={{
-                              padding: '0.5rem',
-                              border: '2px solid #e0e0e0',
-                              borderRadius: '6px',
-                              fontSize: '0.9rem',
-                              cursor: 'pointer'
+                              padding: '0.5rem 0',
+                              border: 'none',
+                              borderBottom: '1px solid #e5e5e5',
+                              borderRadius: '0',
+                              fontSize: '0.875rem',
+                              cursor: 'pointer',
+                              background: 'transparent',
+                              color: '#1a1a1a',
+                              transition: 'border-color 0.2s'
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderBottomColor = '#1a1a1a'
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderBottomColor = '#e5e5e5'
                             }}
                           >
                             <option value="not_specified">Nu specifică</option>
@@ -1347,13 +1626,23 @@ function Register() {
                                   })
                                 }}
                                 style={{
-                                  padding: '0.5rem',
-                                  border: '2px solid #e0e0e0',
-                                  borderRadius: '6px',
-                                  fontSize: '0.9rem'
+                                  padding: '0.5rem 0',
+                                  border: 'none',
+                                  borderBottom: '1px solid #e5e5e5',
+                                  borderRadius: '0',
+                                  fontSize: '0.875rem',
+                                  background: 'transparent',
+                                  color: '#1a1a1a',
+                                  transition: 'border-color 0.2s'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderBottomColor = '#1a1a1a'
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderBottomColor = '#e5e5e5'
                                 }}
                               />
-                              <span style={{ color: '#666' }}>-</span>
+                              <span style={{ color: '#999', fontSize: '0.875rem' }}>—</span>
                               <input
                                 type="time"
                                 value={dayData.closeTime}
@@ -1367,10 +1656,20 @@ function Register() {
                                   })
                                 }}
                                 style={{
-                                  padding: '0.5rem',
-                                  border: '2px solid #e0e0e0',
-                                  borderRadius: '6px',
-                                  fontSize: '0.9rem'
+                                  padding: '0.5rem 0',
+                                  border: 'none',
+                                  borderBottom: '1px solid #e5e5e5',
+                                  borderRadius: '0',
+                                  fontSize: '0.875rem',
+                                  background: 'transparent',
+                                  color: '#1a1a1a',
+                                  transition: 'border-color 0.2s'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderBottomColor = '#1a1a1a'
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderBottomColor = '#e5e5e5'
                                 }}
                               />
                             </>
@@ -1385,18 +1684,27 @@ function Register() {
               {/* Field Specific */}
               {facilityType === 'field' && (
                 <div style={{
-                  background: '#f9fafb',
-                  padding: '1.5rem',
-                  borderRadius: '8px',
-                  marginBottom: '1.5rem'
+                  padding: '0',
+                  marginBottom: '3rem',
+                  borderTop: '1px solid #e5e5e5',
+                  paddingTop: '3rem'
                 }}>
-                  <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Teren</h3>
-                  <div style={{ marginBottom: '1rem' }}>
+                  <h3 style={{ 
+                    color: '#1a1a1a', 
+                    marginBottom: '2rem',
+                    fontSize: '1.25rem',
+                    fontWeight: '400',
+                    letterSpacing: '-0.01em'
+                  }}>Detalii Teren</h3>
+                  <div style={{ marginBottom: '2rem' }}>
                     <label style={{
                       display: 'block',
-                      marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
+                      marginBottom: '0.75rem',
+                      color: '#1a1a1a',
+                      fontWeight: '400',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
                     }}>Sport *</label>
                     {!showAddSportInput ? (
                       <select
@@ -1412,12 +1720,22 @@ function Register() {
                         required
                         style={{
                           width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e0e0e0',
-                          borderRadius: '8px',
+                          padding: '0.875rem 0',
+                          border: 'none',
+                          borderBottom: '1px solid #e5e5e5',
+                          borderRadius: '0',
                           fontSize: '1rem',
                           outline: 'none',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          background: 'transparent',
+                          color: '#1a1a1a',
+                          transition: 'border-color 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderBottomColor = '#1a1a1a'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderBottomColor = '#e5e5e5'
                         }}
                       >
                         <option value="">Selectează sport</option>
@@ -1434,7 +1752,7 @@ function Register() {
                         <option value="__add_new__">+ Adaugă sport nou</option>
                       </select>
                     ) : (
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', gap: '1rem' }}>
                         <input
                           type="text"
                           value={newSport}
@@ -1443,11 +1761,21 @@ function Register() {
                           required
                           style={{
                             flex: 1,
-                            padding: '0.75rem',
-                            border: '2px solid #e0e0e0',
-                            borderRadius: '8px',
+                            padding: '0.875rem 0',
+                            border: 'none',
+                            borderBottom: '1px solid #e5e5e5',
+                            borderRadius: '0',
                             fontSize: '1rem',
-                            outline: 'none'
+                            outline: 'none',
+                            background: 'transparent',
+                            color: '#1a1a1a',
+                            transition: 'border-color 0.2s'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderBottomColor = '#1a1a1a'
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderBottomColor = '#e5e5e5'
                           }}
                         />
                         <button
@@ -1466,14 +1794,23 @@ function Register() {
                             }
                           }}
                           style={{
-                            padding: '0.75rem 1.5rem',
-                            background: '#10b981',
+                            padding: '0.875rem 2rem',
+                            background: '#1a1a1a',
                             color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
+                            border: '1px solid #1a1a1a',
+                            borderRadius: '0',
+                            fontSize: '0.875rem',
+                            fontWeight: '400',
+                            cursor: 'pointer',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            transition: 'opacity 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.opacity = '0.8'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.opacity = '1'
                           }}
                         >
                           Adaugă
@@ -1486,14 +1823,23 @@ function Register() {
                             setSport('')
                           }}
                           style={{
-                            padding: '0.75rem 1.5rem',
-                            background: '#e5e7eb',
-                            color: '#333',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
+                            padding: '0.875rem 2rem',
+                            background: 'transparent',
+                            color: '#1a1a1a',
+                            border: '1px solid #e5e5e5',
+                            borderRadius: '0',
+                            fontSize: '0.875rem',
+                            fontWeight: '400',
+                            cursor: 'pointer',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            transition: 'border-color 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#1a1a1a'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = '#e5e5e5'
                           }}
                         >
                           Anulează
@@ -1502,52 +1848,82 @@ function Register() {
                     )}
                   </div>
 
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <label style={{ color: '#333', fontWeight: '500' }}>Prețuri</label>
+                  <div style={{ marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                      <label style={{ 
+                        color: '#1a1a1a', 
+                        fontWeight: '400',
+                        fontSize: '0.875rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>Prețuri</label>
                       <button
                         type="button"
                         onClick={addPricingDetail}
                         style={{
                           padding: '0.5rem 1rem',
-                          background: '#10b981',
+                          background: '#1a1a1a',
                           color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontSize: '0.9rem',
-                          cursor: 'pointer'
+                          border: '1px solid #1a1a1a',
+                          borderRadius: '0',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          fontWeight: '400',
+                          transition: 'opacity 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = '0.8'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '1'
                         }}
                       >
-                        + Adaugă preț
+                        Adaugă preț
                       </button>
                     </div>
                     {pricingDetails.map((detail, index) => (
                       <div key={index} style={{
-                        background: 'white',
-                        padding: '1rem',
-                        borderRadius: '8px',
-                        marginBottom: '1rem',
-                        border: '1px solid #e0e0e0'
+                        padding: '1.5rem 0',
+                        marginBottom: '2rem',
+                        borderBottom: '1px solid #e5e5e5'
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                          <span style={{ fontWeight: 'bold' }}>Preț #{index + 1}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                          <span style={{ 
+                            fontWeight: '400',
+                            fontSize: '0.875rem',
+                            color: '#666',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em'
+                          }}>Preț #{index + 1}</span>
                           <button
                             type="button"
                             onClick={() => removePricingDetail(index)}
                             style={{
-                              background: '#ef4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              padding: '0.25rem 0.5rem',
+                              background: 'transparent',
+                              color: '#1a1a1a',
+                              border: '1px solid #e5e5e5',
+                              borderRadius: '0',
+                              padding: '0.375rem 0.75rem',
                               cursor: 'pointer',
-                              fontSize: '0.85rem'
+                              fontSize: '0.75rem',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              fontWeight: '400',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = '#1a1a1a'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = '#e5e5e5'
                             }}
                           >
                             Șterge
                           </button>
                         </div>
-                        <div style={{ marginBottom: '0.5rem' }}>
+                        <div style={{ marginBottom: '1.5rem' }}>
                           <input
                             type="text"
                             placeholder="Titlu (ex: Preț pe oră, Preț pentru 2 ore)"
@@ -1555,15 +1931,25 @@ function Register() {
                             onChange={(e) => updatePricingDetail(index, 'title', e.target.value)}
                             style={{
                               width: '100%',
-                              padding: '0.5rem',
-                              border: '1px solid #e0e0e0',
-                              borderRadius: '6px',
-                              fontSize: '0.9rem',
-                              outline: 'none'
+                              padding: '0.875rem 0',
+                              border: 'none',
+                              borderBottom: '1px solid #e5e5e5',
+                              borderRadius: '0',
+                              fontSize: '1rem',
+                              outline: 'none',
+                              background: 'transparent',
+                              color: '#1a1a1a',
+                              transition: 'border-color 0.2s'
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderBottomColor = '#1a1a1a'
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderBottomColor = '#e5e5e5'
                             }}
                           />
                         </div>
-                        <div style={{ marginBottom: '0.5rem' }}>
+                        <div style={{ marginBottom: '1.5rem' }}>
                           <textarea
                             placeholder="Descriere preț"
                             value={detail.description}
@@ -1571,12 +1957,23 @@ function Register() {
                             rows={2}
                             style={{
                               width: '100%',
-                              padding: '0.5rem',
-                              border: '1px solid #e0e0e0',
-                              borderRadius: '6px',
-                              fontSize: '0.9rem',
+                              padding: '0.875rem 0',
+                              border: 'none',
+                              borderBottom: '1px solid #e5e5e5',
+                              borderRadius: '0',
+                              fontSize: '1rem',
                               outline: 'none',
-                              fontFamily: 'inherit'
+                              fontFamily: 'inherit',
+                              resize: 'vertical',
+                              background: 'transparent',
+                              color: '#1a1a1a',
+                              transition: 'border-color 0.2s'
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderBottomColor = '#1a1a1a'
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderBottomColor = '#e5e5e5'
                             }}
                           />
                         </div>
@@ -1590,18 +1987,34 @@ function Register() {
                             step="0.01"
                             style={{
                               width: '100%',
-                              padding: '0.5rem',
-                              border: '1px solid #e0e0e0',
-                              borderRadius: '6px',
-                              fontSize: '0.9rem',
-                              outline: 'none'
+                              padding: '0.875rem 0',
+                              border: 'none',
+                              borderBottom: '1px solid #e5e5e5',
+                              borderRadius: '0',
+                              fontSize: '1rem',
+                              outline: 'none',
+                              background: 'transparent',
+                              color: '#1a1a1a',
+                              transition: 'border-color 0.2s'
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderBottomColor = '#1a1a1a'
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderBottomColor = '#e5e5e5'
                             }}
                           />
                         </div>
                       </div>
                     ))}
                     {pricingDetails.length === 0 && (
-                      <p style={{ color: '#666', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>
+                      <p style={{ 
+                        color: '#999', 
+                        textAlign: 'center', 
+                        padding: '2rem 0',
+                        fontSize: '0.875rem',
+                        fontWeight: '400'
+                      }}>
                         Adaugă cel puțin un preț
                       </p>
                     )}
@@ -1610,45 +2023,116 @@ function Register() {
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '1rem'
+                    gap: '2rem',
+                    marginTop: '2rem'
                   }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem', 
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '400',
+                      color: '#1a1a1a'
+                    }}>
                       <input
                         type="checkbox"
                         checked={hasParking}
                         onChange={(e) => setHasParking(e.target.checked)}
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#1a1a1a',
+                          cursor: 'pointer'
+                        }}
                       />
                       <span>Parcare</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem', 
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '400',
+                      color: '#1a1a1a'
+                    }}>
                       <input
                         type="checkbox"
                         checked={hasShower}
                         onChange={(e) => setHasShower(e.target.checked)}
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#1a1a1a',
+                          cursor: 'pointer'
+                        }}
                       />
                       <span>Dusuri</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem', 
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '400',
+                      color: '#1a1a1a'
+                    }}>
                       <input
                         type="checkbox"
                         checked={hasChangingRoom}
                         onChange={(e) => setHasChangingRoom(e.target.checked)}
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#1a1a1a',
+                          cursor: 'pointer'
+                        }}
                       />
                       <span>Vestiar</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem', 
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '400',
+                      color: '#1a1a1a'
+                    }}>
                       <input
                         type="checkbox"
                         checked={hasAirConditioning}
                         onChange={(e) => setHasAirConditioning(e.target.checked)}
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#1a1a1a',
+                          cursor: 'pointer'
+                        }}
                       />
                       <span>Aer condiționat</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem', 
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '400',
+                      color: '#1a1a1a'
+                    }}>
                       <input
                         type="checkbox"
                         checked={hasLighting}
                         onChange={(e) => setHasLighting(e.target.checked)}
+                        style={{
+                          width: '18px',
+                          height: '18px',
+                          accentColor: '#1a1a1a',
+                          cursor: 'pointer'
+                        }}
                       />
                       <span>Iluminat</span>
                     </label>
@@ -1659,24 +2143,33 @@ function Register() {
               {/* Coach Specific */}
               {facilityType === 'coach' && (
                 <div style={{
-                  background: '#f9fafb',
-                  padding: '1.5rem',
-                  borderRadius: '8px',
-                  marginBottom: '1.5rem'
+                  padding: '0',
+                  marginBottom: '3rem',
+                  borderTop: '1px solid #e5e5e5',
+                  paddingTop: '3rem'
                 }}>
-                  <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Antrenor</h3>
+                  <h3 style={{ 
+                    color: '#1a1a1a', 
+                    marginBottom: '2rem',
+                    fontSize: '1.25rem',
+                    fontWeight: '400',
+                    letterSpacing: '-0.01em'
+                  }}>Detalii Antrenor</h3>
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '1rem',
-                    marginBottom: '1rem'
+                    gap: '2rem',
+                    marginBottom: '2rem'
                   }}>
                     <div>
                       <label style={{
                         display: 'block',
-                        marginBottom: '0.5rem',
-                        color: '#333',
-                        fontWeight: '500'
+                        marginBottom: '0.75rem',
+                        color: '#1a1a1a',
+                        fontWeight: '400',
+                        fontSize: '0.875rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
                       }}>Specializare *</label>
                       <input
                         type="text"
@@ -1685,20 +2178,33 @@ function Register() {
                         required
                         style={{
                           width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e0e0e0',
-                          borderRadius: '8px',
+                          padding: '0.875rem 0',
+                          border: 'none',
+                          borderBottom: '1px solid #e5e5e5',
+                          borderRadius: '0',
                           fontSize: '1rem',
-                          outline: 'none'
+                          outline: 'none',
+                          background: 'transparent',
+                          color: '#1a1a1a',
+                          transition: 'border-color 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderBottomColor = '#1a1a1a'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderBottomColor = '#e5e5e5'
                         }}
                       />
                     </div>
                     <div>
                       <label style={{
                         display: 'block',
-                        marginBottom: '0.5rem',
-                        color: '#333',
-                        fontWeight: '500'
+                        marginBottom: '0.75rem',
+                        color: '#1a1a1a',
+                        fontWeight: '400',
+                        fontSize: '0.875rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
                       }}>Ani experiență</label>
                       <input
                         type="number"
@@ -1707,21 +2213,34 @@ function Register() {
                         min="0"
                         style={{
                           width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e0e0e0',
-                          borderRadius: '8px',
+                          padding: '0.875rem 0',
+                          border: 'none',
+                          borderBottom: '1px solid #e5e5e5',
+                          borderRadius: '0',
                           fontSize: '1rem',
-                          outline: 'none'
+                          outline: 'none',
+                          background: 'transparent',
+                          color: '#1a1a1a',
+                          transition: 'border-color 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderBottomColor = '#1a1a1a'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderBottomColor = '#e5e5e5'
                         }}
                       />
                     </div>
                   </div>
-                  <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ marginBottom: '2rem' }}>
                     <label style={{
                       display: 'block',
-                      marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
+                      marginBottom: '0.75rem',
+                      color: '#1a1a1a',
+                      fontWeight: '400',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
                     }}>Certificări</label>
                     <textarea
                       value={certifications}
@@ -1729,21 +2248,35 @@ function Register() {
                       rows={3}
                       style={{
                         width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
+                        padding: '0.875rem 0',
+                        border: 'none',
+                        borderBottom: '1px solid #e5e5e5',
+                        borderRadius: '0',
                         fontSize: '1rem',
                         outline: 'none',
-                        fontFamily: 'inherit'
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        background: 'transparent',
+                        color: '#1a1a1a',
+                        transition: 'border-color 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderBottomColor = '#1a1a1a'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderBottomColor = '#e5e5e5'
                       }}
                     />
                   </div>
                   <div>
                     <label style={{
                       display: 'block',
-                      marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
+                      marginBottom: '0.75rem',
+                      color: '#1a1a1a',
+                      fontWeight: '400',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
                     }}>Limbi vorbite</label>
                     <input
                       type="text"
@@ -1752,11 +2285,21 @@ function Register() {
                       placeholder="ex: Română, Engleză"
                       style={{
                         width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
+                        padding: '0.875rem 0',
+                        border: 'none',
+                        borderBottom: '1px solid #e5e5e5',
+                        borderRadius: '0',
                         fontSize: '1rem',
-                        outline: 'none'
+                        outline: 'none',
+                        background: 'transparent',
+                        color: '#1a1a1a',
+                        transition: 'border-color 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderBottomColor = '#1a1a1a'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderBottomColor = '#e5e5e5'
                       }}
                     />
                   </div>
@@ -1766,18 +2309,27 @@ function Register() {
               {/* Repair Shop Specific */}
               {facilityType === 'repair_shop' && (
                 <div style={{
-                  background: '#f9fafb',
-                  padding: '1.5rem',
-                  borderRadius: '8px',
-                  marginBottom: '1.5rem'
+                  padding: '0',
+                  marginBottom: '3rem',
+                  borderTop: '1px solid #e5e5e5',
+                  paddingTop: '3rem'
                 }}>
-                  <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Magazin Reparații</h3>
-                  <div style={{ marginBottom: '1rem' }}>
+                  <h3 style={{ 
+                    color: '#1a1a1a', 
+                    marginBottom: '2rem',
+                    fontSize: '1.25rem',
+                    fontWeight: '400',
+                    letterSpacing: '-0.01em'
+                  }}>Detalii Magazin Reparații</h3>
+                  <div style={{ marginBottom: '2rem' }}>
                     <label style={{
                       display: 'block',
-                      marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
+                      marginBottom: '0.75rem',
+                      color: '#1a1a1a',
+                      fontWeight: '400',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
                     }}>Servicii oferite</label>
                     <textarea
                       value={servicesOffered}
@@ -1785,26 +2337,40 @@ function Register() {
                       rows={4}
                       style={{
                         width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
+                        padding: '0.875rem 0',
+                        border: 'none',
+                        borderBottom: '1px solid #e5e5e5',
+                        borderRadius: '0',
                         fontSize: '1rem',
                         outline: 'none',
-                        fontFamily: 'inherit'
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        background: 'transparent',
+                        color: '#1a1a1a',
+                        transition: 'border-color 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderBottomColor = '#1a1a1a'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderBottomColor = '#e5e5e5'
                       }}
                     />
                   </div>
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '1rem'
+                    gap: '2rem'
                   }}>
                     <div>
                       <label style={{
                         display: 'block',
-                        marginBottom: '0.5rem',
-                        color: '#333',
-                        fontWeight: '500'
+                        marginBottom: '0.75rem',
+                        color: '#1a1a1a',
+                        fontWeight: '400',
+                        fontSize: '0.875rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
                       }}>Mărci deservite</label>
                       <input
                         type="text"
@@ -1812,20 +2378,33 @@ function Register() {
                         onChange={(e) => setBrandsServiced(e.target.value)}
                         style={{
                           width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e0e0e0',
-                          borderRadius: '8px',
+                          padding: '0.875rem 0',
+                          border: 'none',
+                          borderBottom: '1px solid #e5e5e5',
+                          borderRadius: '0',
                           fontSize: '1rem',
-                          outline: 'none'
+                          outline: 'none',
+                          background: 'transparent',
+                          color: '#1a1a1a',
+                          transition: 'border-color 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderBottomColor = '#1a1a1a'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderBottomColor = '#e5e5e5'
                         }}
                       />
                     </div>
                     <div>
                       <label style={{
                         display: 'block',
-                        marginBottom: '0.5rem',
-                        color: '#333',
-                        fontWeight: '500'
+                        marginBottom: '0.75rem',
+                        color: '#1a1a1a',
+                        fontWeight: '400',
+                        fontSize: '0.875rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
                       }}>Timp mediu reparație</label>
                       <input
                         type="text"
@@ -1834,11 +2413,21 @@ function Register() {
                         placeholder="ex: 2-3 zile"
                         style={{
                           width: '100%',
-                          padding: '0.75rem',
-                          border: '2px solid #e0e0e0',
-                          borderRadius: '8px',
+                          padding: '0.875rem 0',
+                          border: 'none',
+                          borderBottom: '1px solid #e5e5e5',
+                          borderRadius: '0',
                           fontSize: '1rem',
-                          outline: 'none'
+                          outline: 'none',
+                          background: 'transparent',
+                          color: '#1a1a1a',
+                          transition: 'border-color 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderBottomColor = '#1a1a1a'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderBottomColor = '#e5e5e5'
                         }}
                       />
                     </div>
@@ -1849,18 +2438,27 @@ function Register() {
               {/* Equipment Shop Specific */}
               {facilityType === 'equipment_shop' && (
                 <div style={{
-                  background: '#f9fafb',
-                  padding: '1.5rem',
-                  borderRadius: '8px',
-                  marginBottom: '1.5rem'
+                  padding: '0',
+                  marginBottom: '3rem',
+                  borderTop: '1px solid #e5e5e5',
+                  paddingTop: '3rem'
                 }}>
-                  <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Magazin Articole Sportive</h3>
-                  <div style={{ marginBottom: '1rem' }}>
+                  <h3 style={{ 
+                    color: '#1a1a1a', 
+                    marginBottom: '2rem',
+                    fontSize: '1.25rem',
+                    fontWeight: '400',
+                    letterSpacing: '-0.01em'
+                  }}>Detalii Magazin Articole Sportive</h3>
+                  <div style={{ marginBottom: '2rem' }}>
                     <label style={{
                       display: 'block',
-                      marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
+                      marginBottom: '0.75rem',
+                      color: '#1a1a1a',
+                      fontWeight: '400',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
                     }}>Categorii produse</label>
                     <textarea
                       value={productsCategories}
@@ -1868,21 +2466,35 @@ function Register() {
                       rows={4}
                       style={{
                         width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
+                        padding: '0.875rem 0',
+                        border: 'none',
+                        borderBottom: '1px solid #e5e5e5',
+                        borderRadius: '0',
                         fontSize: '1rem',
                         outline: 'none',
-                        fontFamily: 'inherit'
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        background: 'transparent',
+                        color: '#1a1a1a',
+                        transition: 'border-color 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderBottomColor = '#1a1a1a'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderBottomColor = '#e5e5e5'
                       }}
                     />
                   </div>
                   <div>
                     <label style={{
                       display: 'block',
-                      marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
+                      marginBottom: '0.75rem',
+                      color: '#1a1a1a',
+                      fontWeight: '400',
+                      fontSize: '0.875rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
                     }}>Mărci disponibile</label>
                     <input
                       type="text"
@@ -1890,25 +2502,44 @@ function Register() {
                       onChange={(e) => setBrandsAvailable(e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
+                        padding: '0.875rem 0',
+                        border: 'none',
+                        borderBottom: '1px solid #e5e5e5',
+                        borderRadius: '0',
                         fontSize: '1rem',
-                        outline: 'none'
+                        outline: 'none',
+                        background: 'transparent',
+                        color: '#1a1a1a',
+                        transition: 'border-color 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderBottomColor = '#1a1a1a'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderBottomColor = '#e5e5e5'
                       }}
                     />
                   </div>
                   <label style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem',
+                    gap: '0.75rem',
                     cursor: 'pointer',
-                    marginTop: '1rem'
+                    marginTop: '2rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '400',
+                    color: '#1a1a1a'
                   }}>
                     <input
                       type="checkbox"
                       checked={deliveryAvailable}
                       onChange={(e) => setDeliveryAvailable(e.target.checked)}
+                      style={{
+                        width: '18px',
+                        height: '18px',
+                        accentColor: '#1a1a1a',
+                        cursor: 'pointer'
+                      }}
                     />
                     <span>Livrare disponibilă</span>
                   </label>
