@@ -102,7 +102,6 @@ async function initDatabase() {
         specialization TEXT,
         experience_years INT,
         price_per_lesson DECIMAL(10, 2),
-        pricing_details JSON,
         certifications TEXT,
         languages VARCHAR(255),
         
@@ -155,9 +154,52 @@ async function initDatabase() {
     `)
 
     console.log('✅ Tables created or already exist')
+
+    // Check and add missing columns to facilities table
+    await addMissingColumns()
   } catch (error) {
     console.error('❌ Database initialization error:', error)
     // Nu aruncă eroarea, lasă serverul să pornească chiar dacă DB nu funcționează
+  }
+}
+
+async function addMissingColumns() {
+  try {
+    if (!pool) return
+
+    // Check if columns exist and add them if missing
+    const [columns] = await pool.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'facilities'
+    `)
+    
+    const existingColumns = columns.map((col: any) => col.COLUMN_NAME)
+    
+    // Add missing columns
+    if (!existingColumns.includes('logo_url')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN logo_url VARCHAR(500) AFTER image_url`)
+      console.log('✅ Added logo_url column')
+    }
+    
+    if (!existingColumns.includes('social_media')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN social_media JSON AFTER logo_url`)
+      console.log('✅ Added social_media column')
+    }
+    
+    if (!existingColumns.includes('gallery')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN gallery JSON AFTER social_media`)
+      console.log('✅ Added gallery column')
+    }
+    
+    if (!existingColumns.includes('pricing_details')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN pricing_details JSON AFTER price_per_hour`)
+      console.log('✅ Added pricing_details column')
+    }
+  } catch (error) {
+    console.error('❌ Error adding missing columns:', error)
+    // Don't throw, just log the error
   }
 }
 
@@ -301,18 +343,30 @@ app.post('/api/register', async (req, res) => {
     }
 
     // Validate facility type specific fields
-    if (facilityType === 'field' && (!sport || !pricePerHour)) {
+    // For fields, check if sport is provided and if pricingDetails has at least one entry
+    if (facilityType === 'field' && (!sport || (pricingDetails && pricingDetails.length === 0 && !pricePerHour))) {
       return res.status(400).json({
         success: false,
-        error: 'Pentru terenuri, sport și preț pe oră sunt obligatorii'
+        error: 'Pentru terenuri, sport și cel puțin un preț sunt obligatorii'
       })
     }
 
-    if (facilityType === 'coach' && (!specialization || !pricePerLesson)) {
+    // For coaches, check specialization and pricing
+    if (facilityType === 'coach' && (!specialization || (pricingDetails && pricingDetails.length === 0 && !pricePerLesson))) {
       return res.status(400).json({
         success: false,
-        error: 'Pentru antrenori, specializare și preț pe lecție sunt obligatorii'
+        error: 'Pentru antrenori, specializare și cel puțin un preț sunt obligatorii'
       })
+    }
+
+    // Extract pricePerHour from pricingDetails if not provided directly
+    if (facilityType === 'field' && !pricePerHour && pricingDetails && pricingDetails.length > 0) {
+      pricePerHour = pricingDetails[0].price
+    }
+
+    // Extract pricePerLesson from pricingDetails if not provided directly
+    if (facilityType === 'coach' && !pricePerLesson && pricingDetails && pricingDetails.length > 0) {
+      pricePerLesson = pricingDetails[0].price
     }
 
     // Generate username and password
@@ -383,7 +437,12 @@ app.post('/api/register', async (req, res) => {
     }
   } catch (error) {
     console.error('Error registering facility:', error)
-    res.status(500).json({ success: false, error: error.message })
+    console.error('Error stack:', error.stack)
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    })
   }
 })
 
