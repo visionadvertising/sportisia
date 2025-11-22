@@ -307,31 +307,32 @@ function AppContent() {
         <Route path="/magazine-reparatii" element={<FacilitiesList type="repair_shop" title="Magazine Reparații Articole Sportive" />} />
         <Route path="/magazine-articole" element={<FacilitiesList type="equipment_shop" title="Magazine Articole Sportive" />} />
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route index element={<PendingSportsBases />} /> {/* Default admin route */}
-        {/* Baze Sportive */}
-        <Route path="pending-sports-bases" element={<PendingSportsBases />} />
-        <Route path="approved-sports-bases" element={<ApprovedSportsBases />} />
-        {/* Antrenori */}
-        <Route path="pending-coaches" element={<PendingCoaches />} />
-        <Route path="approved-coaches" element={<ApprovedCoaches />} />
-        {/* Magazine Reparații */}
-        <Route path="pending-repair-shops" element={<PendingRepairShops />} />
-        <Route path="approved-repair-shops" element={<ApprovedRepairShops />} />
-        {/* Magazine Articole */}
-        <Route path="pending-equipment-shops" element={<PendingEquipmentShops />} />
-        <Route path="approved-equipment-shops" element={<ApprovedEquipmentShops />} />
-        {/* Legacy routes - kept for backward compatibility */}
-        <Route path="pending" element={<PendingFacilities />} />
-        <Route path="approved" element={<ApprovedFacilities />} />
-        {/* Common routes */}
-        <Route path="facilities/:id" element={<FacilityDetails />} />
-        <Route path="/admin/suggestions" element={<Suggestions />} />
-        <Route path="/admin/seo-pages" element={<SEOPages />} />
-        <Route path="/admin/seo-pages/edit" element={<SEOPageEdit />} />
-        <Route path="/admin/seo-pages/:id" element={<SEOPageEdit />} />
-        <Route path="/admin/users" element={<AdminDashboard />} />
-        <Route path="/admin/settings" element={<AdminDashboard />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route index element={<PendingSportsBases />} /> {/* Default admin route */}
+          {/* Baze Sportive */}
+          <Route path="pending-sports-bases" element={<PendingSportsBases />} />
+          <Route path="approved-sports-bases" element={<ApprovedSportsBases />} />
+          {/* Antrenori */}
+          <Route path="pending-coaches" element={<PendingCoaches />} />
+          <Route path="approved-coaches" element={<ApprovedCoaches />} />
+          {/* Magazine Reparații */}
+          <Route path="pending-repair-shops" element={<PendingRepairShops />} />
+          <Route path="approved-repair-shops" element={<ApprovedRepairShops />} />
+          {/* Magazine Articole */}
+          <Route path="pending-equipment-shops" element={<PendingEquipmentShops />} />
+          <Route path="approved-equipment-shops" element={<ApprovedEquipmentShops />} />
+          {/* Legacy routes - kept for backward compatibility */}
+          <Route path="pending" element={<PendingFacilities />} />
+          <Route path="approved" element={<ApprovedFacilities />} />
+          {/* Common routes */}
+          <Route path="facilities/:id" element={<FacilityDetails />} />
+          <Route path="suggestions" element={<Suggestions />} />
+          <Route path="seo-pages" element={<SEOPages />} />
+          <Route path="seo-pages/edit" element={<SEOPageEdit />} />
+          <Route path="seo-pages/:id" element={<SEOPageEdit />} />
+          <Route path="users" element={<AdminDashboard />} />
+          <Route path="settings" element={<AdminDashboard />} />
+        </Route>
       </Routes>
     </div>
   )

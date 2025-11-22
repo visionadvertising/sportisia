@@ -24,10 +24,10 @@ function AdminLayout({ children }: AdminLayoutProps) {
     navigate('/admin/login')
   }
 
-  // Redirect /admin to /admin/pending
+  // Redirect /admin to /admin/pending-sports-bases
   useEffect(() => {
-    if (location.pathname === '/admin') {
-      navigate('/admin/pending', { replace: true })
+    if (location.pathname === '/admin' || location.pathname === '/admin/') {
+      navigate('/admin/pending-sports-bases', { replace: true })
     }
   }, [location.pathname, navigate])
 
