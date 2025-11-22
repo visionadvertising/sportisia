@@ -390,7 +390,7 @@ app.post('/api/register', async (req, res) => {
           services_offered, brands_serviced, average_repair_time,
           products_categories, brands_available, delivery_available,
           website, opening_hours, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           facilityType, name, city, location, phone, email || null, description || null, imageUrl || null,
           logoUrl || null, 
@@ -404,7 +404,8 @@ app.post('/api/register', async (req, res) => {
           certifications || null, languages || null,
           servicesOffered || null, brandsServiced || null, averageRepairTime || null,
           productsCategories || null, brandsAvailable || null, deliveryAvailable || false,
-          website || null, openingHours || null
+          website || null, openingHours || null,
+          'pending' // status
         ]
       )
 
