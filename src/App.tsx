@@ -6,6 +6,9 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
+import PendingFacilities from './pages/admin/PendingFacilities'
+import ApprovedFacilities from './pages/admin/ApprovedFacilities'
+import FacilityDetails from './pages/admin/FacilityDetails'
 import FacilitiesList from './pages/FacilitiesList'
 import AllFacilities from './pages/AllFacilities'
 
@@ -101,6 +104,11 @@ function AppContent() {
         <Route path="/magazine-reparatii" element={<FacilitiesList type="repair_shop" title="Magazine Reparații Articole Sportive" />} />
         <Route path="/magazine-articole" element={<FacilitiesList type="equipment_shop" title="Magazine Articole Sportive" />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/pending" element={<PendingFacilities />} />
+        <Route path="/admin/approved" element={<ApprovedFacilities />} />
+        <Route path="/admin/facilities/:id" element={<FacilityDetails />} />
+        <Route path="/admin/users" element={<AdminDashboard />} />
+        <Route path="/admin/settings" element={<AdminDashboard />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </div>
