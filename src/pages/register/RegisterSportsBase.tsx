@@ -996,7 +996,7 @@ function RegisterSportsBase() {
             </div>
           )}
 
-          {/* Step 2: Branding - Same as RegisterRepairShop */}
+          {/* Step 2: Branding - Identical to RegisterRepairShop */}
           {currentStep === 2 && (
             <div>
               <h2 style={{ 
@@ -1009,15 +1009,386 @@ function RegisterSportsBase() {
               }}>
                 Branding și prezentare
               </h2>
-              {/* Branding fields - identical to RegisterRepairShop Step 2 */}
-              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
-                Câmpurile de branding sunt identice cu cele din RegisterRepairShop.
-                Implementarea completă va include toate câmpurile (denumire, descriere, logo, website, rețele sociale).
-              </p>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Denumire facilitate *</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0f172a'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Descriere</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Descrie baza ta sportivă..."
+                  rows={5}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0f172a'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Logo (max 2MB)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0f172a'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+                {logoPreview && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      style={{
+                        marginTop: '0.5rem',
+                        maxWidth: '200px',
+                        maxHeight: '200px',
+                        borderRadius: '8px',
+                        border: '1px solid #e0e0e0'
+                      }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Website</label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://example.com"
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0f172a'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Rețele sociale</label>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                  gap: isMobile ? '1.5rem' : '2rem'
+                }}>
+                  <input
+                    type="url"
+                    value={socialMedia.facebook}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, facebook: e.target.value })}
+                    placeholder="Facebook URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.instagram}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, instagram: e.target.value })}
+                    placeholder="Instagram URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.x}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, x: e.target.value })}
+                    placeholder="X.com URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.tiktok}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, tiktok: e.target.value })}
+                    placeholder="TikTok URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.youtube}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, youtube: e.target.value })}
+                    placeholder="YouTube URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.linkedin}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, linkedin: e.target.value })}
+                    placeholder="LinkedIn URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Step 3: Gallery - Same as RegisterRepairShop */}
+          {/* Step 3: Gallery - Identical to RegisterRepairShop */}
           {currentStep === 3 && (
             <div>
               <h2 style={{ 
@@ -1030,11 +1401,124 @@ function RegisterSportsBase() {
               }}>
                 Galerie imagini
               </h2>
-              {/* Gallery fields - identical to RegisterRepairShop Step 3 */}
-              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
-                Câmpurile de galerie sunt identice cu cele din RegisterRepairShop.
-                Implementarea completă va include upload-ul de imagini (max 10, 5MB/fișier).
-              </p>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>
+                  Încarcă imagini (max 10, 5MB/fișier)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleGalleryChange}
+                  disabled={galleryFiles.length >= 10}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation',
+                    cursor: galleryFiles.length >= 10 ? 'not-allowed' : 'pointer',
+                    opacity: galleryFiles.length >= 10 ? 0.5 : 1
+                  }}
+                  onFocus={(e) => {
+                    if (galleryFiles.length < 10) {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+                {galleryFiles.length > 0 && (
+                  <p style={{ marginTop: '0.75rem', color: '#64748b', fontSize: '0.875rem', fontWeight: '400' }}>
+                    {galleryFiles.length} / 10 imagini selectate
+                  </p>
+                )}
+              </div>
+              {galleryPreviews.length > 0 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: isMobile ? '0.75rem' : '1.5rem',
+                  marginTop: isMobile ? '1.5rem' : '2rem'
+                }}>
+                  {galleryPreviews.map((preview, index) => (
+                    <div key={index} style={{ position: 'relative' }}>
+                      <img
+                        src={preview}
+                        alt={`Gallery ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: isMobile ? '150px' : '200px',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(index)}
+                        style={{
+                          position: 'absolute',
+                          top: '0.5rem',
+                          right: '0.5rem',
+                          background: '#dc2626',
+                          color: 'white',
+                          border: 'none',
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          cursor: 'pointer',
+                          fontSize: '1.25rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '600',
+                          transition: 'opacity 0.2s',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = '0.8'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '1'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {galleryPreviews.length === 0 && (
+                <p style={{ 
+                  color: '#64748b', 
+                  textAlign: 'center', 
+                  padding: '3rem 0',
+                  fontSize: '0.875rem',
+                  fontWeight: '400'
+                }}>
+                  Nu ai adăugat imagini încă. Poți sări peste acest pas.
+                </p>
+              )}
             </div>
           )}
 
