@@ -532,7 +532,10 @@ function SEOPageEdit() {
                     ['link'],
                     [{ 'color': [] }, { 'background': [] }],
                     ['clean']
-                  ]
+                  ],
+                  link: {
+                    defaultProtocol: 'https'
+                  }
                 }}
                 formats={[
                   'header',
@@ -545,7 +548,7 @@ function SEOPageEdit() {
                   background: 'white',
                   minHeight: '300px'
                 }}
-                placeholder="Scrie descrierea aici. Poți adăuga link-uri interne folosind butonul de link din toolbar."
+                placeholder="Scrie descrierea aici. Poți adăuga link-uri interne folosind butonul de link din toolbar. Folosește link-uri relative (ex: /iasi/tenis/antrenori) pentru link-uri interne."
               />
             </div>
             <p style={{
