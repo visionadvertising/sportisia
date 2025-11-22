@@ -66,7 +66,7 @@ function FacilityFilters({
   useEffect(() => {
     const loadCities = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/cities`)
+        const response = await fetch(`${API_BASE_URL}/cities`)
         const data = await response.json()
         if (data.success && data.data) {
           // Combine standard cities with approved cities from backend
@@ -95,7 +95,7 @@ function FacilityFilters({
 
     const loadSports = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/sports`)
+        const response = await fetch(`${API_BASE_URL}/sports`)
         const data = await response.json()
         if (data.success && data.data) {
           // Combine standard sports with approved sports from backend
