@@ -9,6 +9,8 @@ import AdminDashboard from './pages/AdminDashboard'
 import PendingFacilities from './pages/admin/PendingFacilities'
 import ApprovedFacilities from './pages/admin/ApprovedFacilities'
 import FacilityDetails from './pages/admin/FacilityDetails'
+import SEOPages from './pages/admin/SEOPages'
+import SEOPageEdit from './pages/admin/SEOPageEdit'
 import FacilitiesList from './pages/FacilitiesList'
 import AllFacilities from './pages/AllFacilities'
 
@@ -288,6 +290,8 @@ function AppContent() {
         <Route path="/admin/pending" element={<PendingFacilities />} />
         <Route path="/admin/approved" element={<ApprovedFacilities />} />
         <Route path="/admin/facilities/:id" element={<FacilityDetails />} />
+        <Route path="/admin/seo-pages" element={<SEOPages />} />
+        <Route path="/admin/seo-pages/:id" element={<SEOPageEdit />} />
         <Route path="/admin/users" element={<AdminDashboard />} />
         <Route path="/admin/settings" element={<AdminDashboard />} />
         <Route path="/admin" element={<AdminDashboard />} />

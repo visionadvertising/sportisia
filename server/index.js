@@ -203,6 +203,21 @@ async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `)
 
+    // Create SEO pages table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS seo_pages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        url VARCHAR(500) NOT NULL UNIQUE,
+        meta_title VARCHAR(255),
+        meta_description TEXT,
+        h1_title VARCHAR(255),
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_url (url)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
     // Create default admin user if it doesn't exist
     const [adminExists] = await pool.query('SELECT id FROM admin_users WHERE username = ?', ['admin'])
     if (adminExists.length === 0) {
@@ -1471,6 +1486,174 @@ app.put('/api/admin/pending-sports/:id/status', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating pending sport status:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// SEO Pages endpoints
+// GET SEO page by URL
+app.get('/api/seo-pages', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const { url } = req.query
+    if (!url) {
+      return res.status(400).json({ success: false, error: 'URL parameter is required' })
+    }
+
+    const [rows] = await pool.query(
+      'SELECT * FROM seo_pages WHERE url = ?',
+      [url]
+    )
+
+    if (rows.length === 0) {
+      return res.json({ success: true, data: null })
+    }
+
+    res.json({ success: true, data: rows[0] })
+  } catch (error) {
+    console.error('Error fetching SEO page:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET all SEO pages (admin only)
+app.get('/api/admin/seo-pages', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const [rows] = await pool.query(
+      'SELECT * FROM seo_pages ORDER BY url ASC'
+    )
+
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    console.error('Error fetching SEO pages:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET single SEO page by ID (admin only)
+app.get('/api/admin/seo-pages/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const { id } = req.params
+    const [rows] = await pool.query(
+      'SELECT * FROM seo_pages WHERE id = ?',
+      [id]
+    )
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'SEO page not found' })
+    }
+
+    res.json({ success: true, data: rows[0] })
+  } catch (error) {
+    console.error('Error fetching SEO page:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// POST create SEO page (admin only)
+app.post('/api/admin/seo-pages', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const { url, meta_title, meta_description, h1_title, description } = req.body
+
+    if (!url) {
+      return res.status(400).json({ success: false, error: 'URL is required' })
+    }
+
+    await pool.query(
+      'INSERT INTO seo_pages (url, meta_title, meta_description, h1_title, description) VALUES (?, ?, ?, ?, ?)',
+      [url, meta_title || null, meta_description || null, h1_title || null, description || null]
+    )
+
+    res.json({ success: true, message: 'SEO page created successfully' })
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ success: false, error: 'URL already exists' })
+    }
+    console.error('Error creating SEO page:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// PUT update SEO page (admin only)
+app.put('/api/admin/seo-pages/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const { id } = req.params
+    const { meta_title, meta_description, h1_title, description } = req.body
+
+    await pool.query(
+      'UPDATE seo_pages SET meta_title = ?, meta_description = ?, h1_title = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [meta_title || null, meta_description || null, h1_title || null, description || null, id]
+    )
+
+    res.json({ success: true, message: 'SEO page updated successfully' })
+  } catch (error) {
+    console.error('Error updating SEO page:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// DELETE SEO page (admin only)
+app.delete('/api/admin/seo-pages/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const { id } = req.params
+    await pool.query('DELETE FROM seo_pages WHERE id = ?', [id])
+
+    res.json({ success: true, message: 'SEO page deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting SEO page:', error)
     res.status(500).json({ success: false, error: error.message })
   }
 })

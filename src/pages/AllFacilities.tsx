@@ -64,6 +64,13 @@ function AllFacilities() {
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [seoData, setSeoData] = useState<{
+    meta_title?: string
+    meta_description?: string
+    h1_title?: string
+    description?: string
+  } | null>(null)
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false)
 
   useEffect(() => {
     const handleResize = () => {
@@ -120,7 +127,61 @@ function AllFacilities() {
 
   useEffect(() => {
     fetchFacilities()
+    fetchSeoData()
   }, [city, sport, facilityType])
+
+  const fetchSeoData = async () => {
+    try {
+      // Generate URL from current filters
+      const url = generateCurrentURL()
+      const response = await fetch(`${API_BASE_URL}/seo-pages?url=${encodeURIComponent(url)}`)
+      const data = await response.json()
+      if (data.success && data.data) {
+        setSeoData(data.data)
+        // Update document title and meta description
+        if (data.data.meta_title) {
+          document.title = data.data.meta_title
+        }
+        if (data.data.meta_description) {
+          const metaDesc = document.querySelector('meta[name="description"]')
+          if (metaDesc) {
+            metaDesc.setAttribute('content', data.data.meta_description)
+          } else {
+            const meta = document.createElement('meta')
+            meta.name = 'description'
+            meta.content = data.data.meta_description
+            document.head.appendChild(meta)
+          }
+        }
+      } else {
+        // Reset to defaults
+        document.title = getPageTitle()
+        setSeoData(null)
+      }
+    } catch (err) {
+      console.error('Error fetching SEO data:', err)
+      setSeoData(null)
+    }
+  }
+
+  const generateCurrentURL = () => {
+    const parts: string[] = []
+    if (city) {
+      const citySlug = param1 || city.toLowerCase().replace(/\s+/g, '-')
+      parts.push(citySlug)
+    }
+    if (sport) {
+      parts.push(sport)
+    }
+    if (facilityType) {
+      const typeSlug = facilityType === 'field' ? 'terenuri' : 
+                       facilityType === 'coach' ? 'antrenori' :
+                       facilityType === 'repair_shop' ? 'magazine-reparatii' :
+                       'magazine-articole'
+      parts.push(typeSlug)
+    }
+    return parts.length > 0 ? `/${parts.join('/')}` : '/toate'
+  }
 
   const fetchFacilities = async () => {
     setLoading(true)
@@ -172,6 +233,9 @@ function AllFacilities() {
 
   // Generate page title
   const getPageTitle = () => {
+    if (seoData?.h1_title) {
+      return seoData.h1_title
+    }
     if (facilityType && sport && city) {
       return `${FACILITY_TYPE_LABELS[facilityType]} - ${SPORT_NAMES[sport] || sport} în ${city}`
     } else if (facilityType && city) {
@@ -188,6 +252,24 @@ function AllFacilities() {
       return FACILITY_TYPE_LABELS[facilityType]
     }
     return 'Toate facilitățile'
+  }
+
+  const getDescription = () => {
+    return seoData?.description || ''
+  }
+
+  const getDescriptionPreview = () => {
+    const desc = getDescription()
+    if (!desc) return ''
+    const lines = desc.split('\n')
+    return lines.slice(0, 3).join('\n')
+  }
+
+  const getDescriptionRemaining = () => {
+    const desc = getDescription()
+    if (!desc) return ''
+    const lines = desc.split('\n')
+    return lines.slice(3).join('\n')
   }
 
   // Get empty message
@@ -230,15 +312,92 @@ function AllFacilities() {
         textAlign: 'center',
         color: 'white'
       }}>
-        <h1 style={{
-          fontSize: isMobile ? '2rem' : '3rem',
-          color: 'white',
-          marginBottom: isMobile ? '0.75rem' : '1rem',
-          fontWeight: '600',
-          lineHeight: '1.2',
-          padding: isMobile ? '0 0.5rem' : '0',
-          letterSpacing: '-0.02em'
-        }}>{getPageTitle()}</h1>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <h1 style={{
+            fontSize: isMobile ? '2rem' : '3rem',
+            color: 'white',
+            marginBottom: isMobile ? '1.5rem' : '2rem',
+            fontWeight: '700',
+            lineHeight: '1.2',
+            padding: isMobile ? '0 0.5rem' : '0',
+            letterSpacing: '-0.02em'
+          }}>{getPageTitle()}</h1>
+          
+          {/* SEO Description */}
+          {getDescription() && (
+            <div style={{
+              maxWidth: '900px',
+              margin: '0 auto',
+              textAlign: 'left',
+              background: 'rgba(255, 255, 255, 0.05)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '12px',
+              padding: isMobile ? '1.25rem' : '1.75rem',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <div style={{
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: isMobile ? '0.9375rem' : '1.0625rem',
+                lineHeight: '1.7',
+                whiteSpace: 'pre-line'
+              }}>
+                {descriptionExpanded ? getDescription() : getDescriptionPreview()}
+                {getDescriptionRemaining() && (
+                  <>
+                    {!descriptionExpanded && (
+                      <span style={{ opacity: 0.7 }}>...</span>
+                    )}
+                    <button
+                      onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                      style={{
+                        marginTop: '0.75rem',
+                        padding: '0.5rem 1rem',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '6px',
+                        color: 'white',
+                        fontSize: isMobile ? '0.875rem' : '0.9375rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+                      }}
+                    >
+                      {descriptionExpanded ? (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 15l-6-6-6 6"/>
+                          </svg>
+                          Arată mai puțin
+                        </>
+                      ) : (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M6 9l6 6 6-6"/>
+                          </svg>
+                          Citește mai mult
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content Section */}
