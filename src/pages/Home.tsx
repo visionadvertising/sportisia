@@ -637,7 +637,7 @@ function Home() {
                 margin: 0
               }}>Terenuri disponibile</h2>
               <Link
-                to="/adauga-teren"
+                to="/register"
                 style={{
                   padding: isMobile ? '0.875rem 1.5rem' : '0.75rem 2rem',
                   background: '#10b981',
@@ -673,7 +673,7 @@ function Home() {
               }}>
                 <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Nu există terenuri disponibile momentan.</p>
                 <Link
-                  to="/adauga-teren"
+                  to="/register"
                   style={{
                     padding: '0.75rem 2rem',
                     background: '#10b981',
