@@ -41,9 +41,9 @@ function AppContent() {
       {/* Header - doar pentru rute non-admin */}
       {!isAdminRoute && (
         <header style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+          background: '#ffffff',
+          padding: isMobile ? '1rem' : '1.5rem 2rem',
+          borderBottom: '1px solid #e2e8f0',
           position: 'sticky',
           top: 0,
           zIndex: 100
@@ -64,24 +64,12 @@ function AppContent() {
               textDecoration: 'none',
               flexShrink: 0
             }}>
-              <div style={{
-                width: isMobile ? '28px' : '32px',
-                height: isMobile ? '28px' : '32px',
-                background: '#10b981',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: isMobile ? '1rem' : '1.2rem'
-              }}>◆</div>
               <h1 style={{
                 margin: 0,
-                fontSize: isMobile ? '1.125rem' : '1.5rem',
-                fontWeight: 'bold',
-                color: '#333',
-                letterSpacing: '0.5px'
+                fontSize: isMobile ? '1.25rem' : '1.75rem',
+                fontWeight: '600',
+                color: '#0f172a',
+                letterSpacing: '-0.02em'
               }}>SPORTISIA</h1>
             </Link>
             {isMobile ? (
@@ -111,18 +99,18 @@ function AppContent() {
             ) : (
               <nav style={{
                 display: 'flex',
-                gap: '1.5rem',
+                gap: isMobile ? '1rem' : '2rem',
                 alignItems: 'center',
                 flexWrap: 'wrap'
               }}>
-                <Link to="/" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Home</Link>
-                <Link to="/terenuri" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Terenuri</Link>
-                <Link to="/antrenori" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Antrenori</Link>
-                <Link to="/magazine-reparatii" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Magazine Reparații</Link>
-                <Link to="/magazine-articole" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Magazine Articole</Link>
-                <div style={{ marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '1px solid #e0e0e0', display: 'flex', gap: '1rem' }}>
-                  <Link to="/register" style={{ textDecoration: 'none', color: '#10b981', fontWeight: '600', fontSize: '0.95rem' }}>Înregistrare</Link>
-                  <Link to="/login" style={{ textDecoration: 'none', color: '#1e3c72', fontWeight: '600', fontSize: '0.95rem' }}>Login</Link>
+                <Link to="/" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Home</Link>
+                <Link to="/terenuri" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Terenuri</Link>
+                <Link to="/antrenori" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Antrenori</Link>
+                <Link to="/magazine-reparatii" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Reparații</Link>
+                <Link to="/magazine-articole" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Articole</Link>
+                <div style={{ marginLeft: isMobile ? '0' : '1rem', paddingLeft: isMobile ? '0' : '1rem', borderLeft: isMobile ? 'none' : '1px solid #e2e8f0', display: 'flex', gap: '1rem' }}>
+                  <Link to="/register" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = '#0f172a'}>Înregistrare</Link>
+                  <Link to="/login" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = '#0f172a'}>Login</Link>
                 </div>
               </nav>
             )}
@@ -133,17 +121,17 @@ function AppContent() {
               flexDirection: 'column',
               gap: '0.5rem',
               paddingTop: '1rem',
-              borderTop: '1px solid #f1f5f9',
+              borderTop: '1px solid #e2e8f0',
               marginTop: '0.75rem'
             }}>
-              <Link to="/" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Home</Link>
-              <Link to="/terenuri" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Terenuri</Link>
-              <Link to="/antrenori" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Antrenori</Link>
-              <Link to="/magazine-reparatii" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Magazine Reparații</Link>
-              <Link to="/magazine-articole" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Magazine Articole</Link>
-              <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <Link to="/register" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#10b981', fontWeight: '600', fontSize: '0.95rem', padding: '0.75rem 0' }}>Înregistrare</Link>
-                <Link to="/login" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#1e3c72', fontWeight: '600', fontSize: '0.95rem', padding: '0.75rem 0' }}>Login</Link>
+              <Link to="/" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Home</Link>
+              <Link to="/terenuri" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Terenuri</Link>
+              <Link to="/antrenori" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Antrenori</Link>
+              <Link to="/magazine-reparatii" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Reparații</Link>
+              <Link to="/magazine-articole" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Articole</Link>
+              <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <Link to="/register" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = '#0f172a'}>Înregistrare</Link>
+                <Link to="/login" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = '#0f172a'}>Login</Link>
               </div>
             </nav>
           )}
