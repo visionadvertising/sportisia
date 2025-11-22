@@ -829,6 +829,27 @@ app.get('/api/cities', async (req, res) => {
   }
 })
 
+// GET single facility by ID
+app.get('/api/facilities/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const facilityId = req.params.id
+    const [rows] = await pool.query('SELECT * FROM facilities WHERE id = ?', [facilityId])
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Facilitatea nu a fost găsită' })
+    }
+
+    res.json({ success: true, data: rows[0] })
+  } catch (error) {
+    console.error('Error fetching facility:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 // GET facilities filtered by type, city, sport
 app.get('/api/facilities', async (req, res) => {
   try {
