@@ -80,27 +80,32 @@ function FacilityFilters({
       return `/${cityNameToSlug(city)}/${sportNameToSlug(sport)}/${facilityTypeToSlug(type)}`
     }
     
-    // 2. City + Type (no sport)
+    // 2. City + Sport (no type) - show all facilities for city and sport
+    if (city && sport && !type) {
+      return `/${cityNameToSlug(city)}/${sportNameToSlug(sport)}`
+    }
+    
+    // 3. City + Type (no sport)
     if (city && type && !sport) {
       return `/${cityNameToSlug(city)}/${facilityTypeToSlug(type)}`
     }
     
-    // 3. Sport + Type (no city)
+    // 4. Sport + Type (no city)
     if (sport && type && !city) {
       return `/${sportNameToSlug(sport)}/${facilityTypeToSlug(type)}`
     }
     
-    // 4. Only City
+    // 5. Only City
     if (city && !sport && !type) {
       return `/${cityNameToSlug(city)}`
     }
     
-    // 5. Only Sport
+    // 6. Only Sport
     if (sport && !city && !type) {
       return `/${sportNameToSlug(sport)}`
     }
     
-    // 6. Only Type
+    // 7. Only Type
     if (type && !city && !sport) {
       const baseUrls: Record<string, string> = {
         'field': '/terenuri',
@@ -108,10 +113,10 @@ function FacilityFilters({
         'repair_shop': '/magazine-reparatii',
         'equipment_shop': '/magazine-articole'
       }
-      return baseUrls[type] || '/'
+      return baseUrls[type] || '/toate'
     }
     
-    // 7. No filters - go to all facilities page
+    // 8. No filters - go to all facilities page
     return '/toate'
   }
 
