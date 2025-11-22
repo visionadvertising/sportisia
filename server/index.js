@@ -4,6 +4,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { existsSync } from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -11,7 +12,8 @@ const __dirname = path.dirname(__filename)
 dotenv.config()
 
 const app = express()
-const PORT = process.env.PORT || 3001
+// Folosește PORT din environment sau 3001
+const PORT = process.env.PORT || process.env.NODE_PORT || 3001
 
 // CORS - permite requests de la același domeniu
 app.use(cors({
@@ -50,7 +52,7 @@ async function initDatabase() {
 
     // Test connection
     const connection = await pool.getConnection()
-    console.log('Database connected successfully')
+    console.log('✅ Database connected successfully')
     connection.release()
 
     // Create table if not exists
@@ -76,19 +78,27 @@ async function initDatabase() {
       )
     `)
 
-    console.log('Table created or already exists')
+    console.log('✅ Table created or already exists')
   } catch (error) {
-    console.error('Database initialization error:', error)
-    throw error
+    console.error('❌ Database initialization error:', error)
+    // Nu aruncă eroarea, lasă serverul să pornească chiar dacă DB nu funcționează
   }
 }
 
 // Initialize database on startup
-initDatabase().catch(console.error)
+initDatabase().catch((error) => {
+  console.error('❌ Failed to initialize database:', error)
+})
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'API is running', timestamp: new Date().toISOString() })
+  res.json({ 
+    success: true, 
+    message: 'API is running', 
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    env: process.env.NODE_ENV || 'development'
+  })
 })
 
 // API Routes
@@ -96,6 +106,9 @@ app.get('/api/health', (req, res) => {
 // GET all fields
 app.get('/api/fields', async (req, res) => {
   try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
     const [rows] = await pool.query('SELECT * FROM sports_fields ORDER BY created_at DESC')
     res.json({ success: true, data: rows })
   } catch (error) {
@@ -107,21 +120,14 @@ app.get('/api/fields', async (req, res) => {
 // POST new field
 app.post('/api/fields', async (req, res) => {
   try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    
     const {
-      name,
-      city,
-      location,
-      sport,
-      price,
-      description,
-      imageUrl,
-      phone,
-      email,
-      hasParking,
-      hasShower,
-      hasChangingRoom,
-      hasAirConditioning,
-      hasLighting
+      name, city, location, sport, price, description, imageUrl,
+      phone, email, hasParking, hasShower, hasChangingRoom,
+      hasAirConditioning, hasLighting
     } = req.body
 
     if (!name || !city || !location || !sport || !price || !phone) {
@@ -137,20 +143,10 @@ app.post('/api/fields', async (req, res) => {
        has_parking, has_shower, has_changing_room, has_air_conditioning, has_lighting)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        name,
-        city,
-        location,
-        sport,
-        parseFloat(price),
-        description || null,
-        imageUrl || null,
-        phone,
-        email || null,
-        hasParking || false,
-        hasShower || false,
-        hasChangingRoom || false,
-        hasAirConditioning || false,
-        hasLighting || false
+        name, city, location, sport, parseFloat(price),
+        description || null, imageUrl || null, phone, email || null,
+        hasParking || false, hasShower || false, hasChangingRoom || false,
+        hasAirConditioning || false, hasLighting || false
       ]
     )
 
@@ -168,6 +164,9 @@ app.post('/api/fields', async (req, res) => {
 // GET field by ID
 app.get('/api/fields/:id', async (req, res) => {
   try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
     const [rows] = await pool.query('SELECT * FROM sports_fields WHERE id = ?', [req.params.id])
     if (rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Terenul nu a fost găsit' })
@@ -185,7 +184,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: 'Internal server error' })
 })
 
+// Start server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`)
-  console.log(`API available at http://localhost:${PORT}/api`)
+  console.log(`🚀 Server running on port ${PORT}`)
+  console.log(`📡 API available at http://localhost:${PORT}/api`)
+  console.log(`🌐 Health check: http://localhost:${PORT}/api/health`)
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`)
+})
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...')
+  if (pool) {
+    pool.end()
+  }
+  process.exit(0)
 })
