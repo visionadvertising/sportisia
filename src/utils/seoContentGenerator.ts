@@ -124,7 +124,7 @@ export function generateSEOTitle(filters: FilterParams, count?: number): string 
     parts.push(`(${count} disponibile)`)
   }
   
-  return parts.join(' - ')
+  return parts.join(' ')
 }
 
 export function generateSEODescription(filters: FilterParams, count?: number): string {
