@@ -98,14 +98,35 @@ function SEOFacilityPage() {
     
     if (sportSlug && typeSlug) {
       // Format: /:city/:sport/:type
-      sportName = sportSlugToName(sportSlug)
-      sportSlugValue = sportSlug
-      facilityType = slugToFacilityType(typeSlug)
+      // BUT: Check if sportSlug is actually a facility type (not a sport)
+      // This handles cases like /iasi/antrenori/terenuri where "antrenori" is a type, not a sport
+      if (FACILITY_TYPE_SLUGS.includes(sportSlug.toLowerCase())) {
+        // The second param is actually a facility type, not a sport
+        // Check if the third param is also a facility type (invalid URL like /iasi/antrenori/terenuri)
+        // If so, use the third param as the type, otherwise use the second param
+        if (FACILITY_TYPE_SLUGS.includes(typeSlug.toLowerCase())) {
+          // Both are facility types - use the third one and redirect
+          return <Navigate to={`/${citySlug}/${typeSlug}`} replace />
+        } else {
+          // Second is facility type, third is something else - use second and redirect
+          return <Navigate to={`/${citySlug}/${sportSlug}`} replace />
+        }
+      } else {
+        // It's a real sport
+        sportName = sportSlugToName(sportSlug)
+        sportSlugValue = sportSlug
+        facilityType = slugToFacilityType(typeSlug)
+      }
     } else if (typeSlug && !sportSlug) {
       // Format: /:city/:type
       facilityType = slugToFacilityType(typeSlug)
     } else if (sportSlug && !typeSlug) {
       // Format: /:city/:sport (handled by AllFacilitiesByCityAndSport)
+      // BUT: Check if sportSlug is actually a facility type
+      if (FACILITY_TYPE_SLUGS.includes(sportSlug.toLowerCase())) {
+        // It's a facility type, redirect to /:city/:type
+        return <Navigate to={`/${citySlug}/${sportSlug}`} replace />
+      }
       sportName = sportSlugToName(sportSlug)
       sportSlugValue = sportSlug
     }
