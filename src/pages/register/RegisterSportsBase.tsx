@@ -423,7 +423,7 @@ function RegisterSportsBase() {
         )}
 
         <form onSubmit={currentStep === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
-          {/* Step 1: Contact Details - Copy from RegisterRepairShop */}
+          {/* Step 1: Contact Details - Identical to RegisterRepairShop */}
           {currentStep === 1 && (
             <div>
               <h2 style={{ 
@@ -436,11 +436,563 @@ function RegisterSportsBase() {
               }}>
                 Date de contact
               </h2>
-              {/* Contact fields - identical to RegisterRepairShop Step 1 - will be copied in next step */}
-              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
-                Implementarea completă va include toate câmpurile (telefon, email, persoană contact, oraș, adresă, hartă).
-                Structura este identică cu RegisterRepairShop Step 1.
-              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                gap: isMobile ? '1.5rem' : '2rem',
+                marginBottom: isMobile ? '1.5rem' : '2.5rem'
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Telefon *</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Email *</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Persoană de contact</label>
+                  <input
+                    type="text"
+                    value={contactPerson}
+                    onChange={(e) => setContactPerson(e.target.value)}
+                    placeholder="Ex: Ion Popescu"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {/* City Selection - Identical to RegisterRepairShop */}
+              <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem', position: 'relative' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Oraș *</label>
+                {!showAddCityInput ? (
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={city || citySearch}
+                      onChange={(e) => {
+                        setCitySearch(e.target.value)
+                        setShowCityDropdown(true)
+                        if (!e.target.value) {
+                          setCity('')
+                          setCounty('')
+                        }
+                      }}
+                      onClick={() => setShowCityDropdown(true)}
+                      onFocus={() => setShowCityDropdown(true)}
+                      placeholder="Caută sau selectează oraș"
+                      required={!city}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        paddingRight: isMobile ? '2.25rem' : '2.5rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
+                      onBlur={(e) => {
+                        setTimeout(() => setShowCityDropdown(false), 250)
+                      }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none'
+                    }}>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                        <path d="M5 7.5l5 5 5-5"/>
+                      </svg>
+                    </div>
+                    {showCityDropdown && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: '0.25rem',
+                        background: '#ffffff',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        maxHeight: isMobile ? '250px' : '300px',
+                        overflowY: 'auto',
+                        zIndex: 1000,
+                        WebkitOverflowScrolling: 'touch'
+                      }}>
+                        {[...availableCities, ...customCities.filter(c => !availableCities.some(ac => ac.city === c.city))]
+                          .filter(cityOption => 
+                            !citySearch || 
+                            cityOption.city.toLowerCase().includes(citySearch.toLowerCase()) ||
+                            (cityOption.county && cityOption.county.toLowerCase().includes(citySearch.toLowerCase()))
+                          )
+                          .map(cityOption => (
+                            <div
+                              key={cityOption.city}
+                              onMouseDown={(e) => {
+                                e.preventDefault()
+                                setCity(cityOption.city)
+                                setCounty(cityOption.county || '')
+                                setCitySearch('')
+                                setShowCityDropdown(false)
+                              }}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #f1f5f9',
+                                color: '#0f172a',
+                                fontSize: '0.9375rem',
+                                transition: 'background 0.15s'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f0fdf4'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#ffffff'
+                              }}
+                            >
+                              <div style={{ fontWeight: '600' }}>{cityOption.city}</div>
+                              {cityOption.county && (
+                                <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
+                                  {cityOption.county}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        <div
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            setShowAddCityInput(true)
+                            setShowCityDropdown(false)
+                            setCitySearch('')
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            cursor: 'pointer',
+                            color: '#0f172a',
+                            fontSize: '0.9375rem',
+                            fontWeight: '600',
+                            borderTop: '1.5px solid #f1f5f9',
+                            background: '#f8fafc',
+                            transition: 'background 0.15s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#f1f5f9'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#f8fafc'
+                          }}
+                        >
+                          + Adaugă oraș nou
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        value={newCity}
+                        onChange={(e) => setNewCity(e.target.value)}
+                        placeholder="Introdu numele orașului"
+                        required
+                        style={{
+                          flex: 1,
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                      <select
+                        value={newCityCounty}
+                        onChange={(e) => setNewCityCounty(e.target.value)}
+                        required
+                        style={{
+                          flex: 1,
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation',
+                          cursor: 'pointer'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      >
+                        <option value="">Selectează județul</option>
+                        {ROMANIAN_COUNTIES.map(countyOption => (
+                          <option key={countyOption} value={countyOption}>{countyOption}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: isMobile ? 'column' : 'row',
+                      gap: isMobile ? '0.75rem' : '1rem', 
+                      marginTop: '0.5rem' 
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newCity.trim() && newCityCounty) {
+                            const cityName = newCity.trim()
+                            const cityCounty = newCityCounty
+                            if (!customCities.some(c => c.city === cityName) && !availableCities.some(c => c.city === cityName)) {
+                              setCustomCities([...customCities, { city: cityName, county: cityCounty }])
+                            }
+                            setCity(cityName)
+                            setCounty(cityCounty)
+                            setNewCity('')
+                            setNewCityCounty('')
+                            setShowAddCityInput(false)
+                          }
+                        }}
+                        style={{
+                          padding: isMobile ? '0.875rem 1.5rem' : '0.875rem 2rem',
+                          background: '#0f172a',
+                          color: 'white',
+                          border: '1px solid #0f172a',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          width: isMobile ? '100%' : 'auto',
+                          touchAction: 'manipulation',
+                          minHeight: isMobile ? '48px' : 'auto'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.background = '#1e293b'
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.background = '#0f172a'
+                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                          }
+                        }}
+                      >
+                        Adaugă
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddCityInput(false)
+                          setNewCity('')
+                          setNewCityCounty('')
+                          setCity('')
+                          setCounty('')
+                        }}
+                        style={{
+                          padding: isMobile ? '0.875rem 1.5rem' : '0.875rem 2rem',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          width: isMobile ? '100%' : 'auto',
+                          touchAction: 'manipulation',
+                          minHeight: isMobile ? '48px' : 'auto'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.borderColor = '#0f172a'
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.borderColor = '#e2e8f0'
+                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                          }
+                        }}
+                      >
+                        Anulează
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Location with Map - Identical to RegisterRepairShop */}
+              <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: isMobile ? 'column' : 'row',
+                  alignItems: isMobile ? 'flex-start' : 'center', 
+                  gap: isMobile ? '0.75rem' : '0.5rem', 
+                  marginBottom: '0.75rem' 
+                }}>
+                  <label style={{
+                    display: 'block',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em',
+                    margin: 0
+                  }}>Adresă completă {!locationNotSpecified && '*'}</label>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem',
+                    marginLeft: isMobile ? '0' : 'auto'
+                  }}>
+                    <span style={{
+                      fontSize: '0.875rem',
+                      color: '#64748b',
+                      fontWeight: '500'
+                    }}>Nespecificat</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newValue = !locationNotSpecified
+                        setLocationNotSpecified(newValue)
+                        if (newValue) {
+                          setLocation('')
+                          setMapCoordinates(null)
+                        }
+                      }}
+                      style={{
+                        position: 'relative',
+                        width: isMobile ? '48px' : '44px',
+                        height: isMobile ? '28px' : '24px',
+                        borderRadius: '14px',
+                        border: 'none',
+                        background: locationNotSpecified ? '#10b981' : '#cbd5e1',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s ease',
+                        outline: 'none',
+                        padding: 0,
+                        touchAction: 'manipulation',
+                        minWidth: isMobile ? '48px' : '44px'
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)'
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: '2px',
+                        left: locationNotSpecified ? (isMobile ? '22px' : '22px') : '2px',
+                        width: isMobile ? '24px' : '20px',
+                        height: isMobile ? '24px' : '20px',
+                        borderRadius: '50%',
+                        background: '#ffffff',
+                        transition: 'left 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                      }} />
+                    </button>
+                  </div>
+                </div>
+                {!locationNotSpecified && (
+                  <>
+                    <textarea
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Ex: Strada Mihai Eminescu, Nr. 10, Bl. A1, Sc. 2, Ap. 15"
+                      required={!locationNotSpecified}
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        marginBottom: isMobile ? '1rem' : '1.5rem',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#0f172a'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e2e8f0'
+                        e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      }}
+                    />
+                    <div style={{ marginBottom: isMobile ? '1rem' : '1.5rem' }}>
+                      <MapSelector
+                        location={location}
+                        coordinates={mapCoordinates}
+                        onLocationChange={setLocation}
+                        onCoordinatesChange={setMapCoordinates}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
