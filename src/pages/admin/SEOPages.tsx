@@ -57,6 +57,7 @@ function SEOPages() {
           city: item.city,
           county: item.county || null
         }))
+        console.log('Cities loaded from API:', backendCities.map((c: any) => c.city))
         // Create a map to avoid duplicates
         const cityMap = new Map<string, {city: string, county?: string | null}>()
         // Add standard cities
@@ -69,7 +70,9 @@ function SEOPages() {
             cityMap.set(c.city, c)
           }
         })
-        setAvailableCities(Array.from(cityMap.values()).sort((a, b) => a.city.localeCompare(b.city)))
+        const allCities = Array.from(cityMap.values()).sort((a, b) => a.city.localeCompare(b.city))
+        console.log('All cities (combined):', allCities.map(c => c.city))
+        setAvailableCities(allCities)
       } else {
         setAvailableCities(ROMANIAN_CITIES)
       }
@@ -86,8 +89,10 @@ function SEOPages() {
     combinations.push({ url: '/toate' })
 
     // 2. /:city
+    console.log('Generating combinations for cities:', availableCities.map(c => c.city))
     availableCities.forEach(city => {
       const citySlug = cityNameToSlug(city.city)
+      console.log(`City: ${city.city} -> Slug: ${citySlug}`)
       combinations.push({ url: `/${citySlug}` })
     })
 
