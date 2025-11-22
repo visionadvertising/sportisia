@@ -777,7 +777,15 @@ app.get('/api/facilities', async (req, res) => {
 
     query += ' ORDER BY created_at DESC'
 
+    console.log('[API /facilities] Query:', query)
+    console.log('[API /facilities] Params:', params)
+    
     const [rows] = await pool.query(query, params)
+    
+    console.log('[API /facilities] Results count:', rows.length)
+    if (rows.length > 0) {
+      console.log('[API /facilities] First result facility_type:', rows[0].facility_type)
+    }
 
     res.json({ success: true, data: rows })
   } catch (error) {
