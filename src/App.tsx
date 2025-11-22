@@ -6,6 +6,9 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
+import Sports from './pages/Sports'
+import Cities from './pages/Cities'
+import FacilitiesList from './pages/FacilitiesList'
 
 function AppContent() {
   const location = useLocation()
@@ -65,16 +68,16 @@ function AppContent() {
             <nav style={{
               display: 'flex',
               gap: '1.5rem',
-              alignItems: 'center'
+              alignItems: 'center',
+              flexWrap: 'wrap'
             }}>
               <Link to="/" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Home</Link>
-              <Link to="/sports" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Sports</Link>
-              <Link to="/coaches" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Coaches</Link>
-              <Link to="/courts" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Courts & Fields</Link>
-              <Link to="/mates" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Find sport mates</Link>
-              <Link to="/repair" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Repair services</Link>
-              <Link to="/for-coaches" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>For coaches</Link>
-              <Link to="/for-clubs" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>For clubs</Link>
+              <Link to="/sporturi" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Sporturi</Link>
+              <Link to="/orase" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Orașe</Link>
+              <Link to="/terenuri" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Terenuri</Link>
+              <Link to="/antrenori" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Antrenori</Link>
+              <Link to="/magazine-reparatii" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Magazine Reparații</Link>
+              <Link to="/magazine-articole" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Magazine Articole</Link>
               <div style={{ marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '1px solid #e0e0e0', display: 'flex', gap: '1rem' }}>
                 <Link to="/register" style={{ textDecoration: 'none', color: '#10b981', fontWeight: '600', fontSize: '0.95rem' }}>Înregistrare</Link>
                 <Link to="/login" style={{ textDecoration: 'none', color: '#1e3c72', fontWeight: '600', fontSize: '0.95rem' }}>Login</Link>
@@ -90,6 +93,12 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/sporturi" element={<Sports />} />
+        <Route path="/orase" element={<Cities />} />
+        <Route path="/terenuri" element={<FacilitiesList type="field" title="Terenuri Sportive" />} />
+        <Route path="/antrenori" element={<FacilitiesList type="coach" title="Antrenori" />} />
+        <Route path="/magazine-reparatii" element={<FacilitiesList type="repair_shop" title="Magazine Reparații Articole Sportive" />} />
+        <Route path="/magazine-articole" element={<FacilitiesList type="equipment_shop" title="Magazine Articole Sportive" />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>

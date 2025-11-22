@@ -693,6 +693,99 @@ app.put('/api/facilities/:id', async (req, res) => {
   }
 })
 
+// ==================== PUBLIC ENDPOINTS ====================
+
+// GET all sports with facility counts
+app.get('/api/sports', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const [rows] = await pool.query(`
+      SELECT 
+        sport,
+        COUNT(*) as facility_count
+      FROM facilities
+      WHERE sport IS NOT NULL AND sport != '' AND status = 'active'
+      GROUP BY sport
+      ORDER BY facility_count DESC, sport ASC
+    `)
+
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    console.error('Error fetching sports:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET all cities with facility counts
+app.get('/api/cities', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const [rows] = await pool.query(`
+      SELECT 
+        city,
+        COUNT(*) as facility_count
+      FROM facilities
+      WHERE city IS NOT NULL AND city != '' AND status = 'active'
+      GROUP BY city
+      ORDER BY facility_count DESC, city ASC
+    `)
+
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    console.error('Error fetching cities:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET facilities filtered by type, city, sport
+app.get('/api/facilities', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const { type, city, sport, status = 'active' } = req.query
+
+    let query = 'SELECT * FROM facilities WHERE 1=1'
+    const params = []
+
+    if (type) {
+      query += ' AND facility_type = ?'
+      params.push(type)
+    }
+
+    if (city) {
+      query += ' AND city = ?'
+      params.push(city)
+    }
+
+    if (sport) {
+      query += ' AND sport = ?'
+      params.push(sport)
+    }
+
+    if (status) {
+      query += ' AND status = ?'
+      params.push(status)
+    }
+
+    query += ' ORDER BY created_at DESC'
+
+    const [rows] = await pool.query(query, params)
+
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    console.error('Error fetching facilities:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 // ==================== ADMIN ENDPOINTS ====================
 
 // POST admin login
