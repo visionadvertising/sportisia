@@ -281,7 +281,17 @@ function FacilityFilters({
                 setCitySearch('')
               }
             }}
-            onFocus={() => setShowCityDropdown(true)}
+            onClick={() => setShowCityDropdown(true)}
+            onFocus={(e) => {
+              setShowCityDropdown(true)
+              e.target.style.borderColor = '#10b981'
+              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#e2e8f0'
+              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+              setTimeout(() => setShowCityDropdown(false), 250)
+            }}
             placeholder="Caută sau selectează oraș"
             style={{
               width: '100%',
@@ -297,15 +307,6 @@ function FacilityFilters({
               fontWeight: '400',
               lineHeight: '1.5',
               boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#10b981'
-              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = '#e2e8f0'
-              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-              setTimeout(() => setShowCityDropdown(false), 200)
             }}
           />
           <div style={{
@@ -334,7 +335,10 @@ function FacilityFilters({
               zIndex: 1000
             }}>
               <div
-                onClick={() => handleCityChange('')}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  handleCityChange('')
+                }}
                 style={{
                   padding: '0.75rem 1rem',
                   cursor: 'pointer',
@@ -363,7 +367,10 @@ function FacilityFilters({
                 .map(cityOption => (
                   <div
                     key={cityOption.city}
-                    onClick={() => handleCityChange(cityOption.city)}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      handleCityChange(cityOption.city)
+                    }}
                     style={{
                       padding: '0.75rem 1rem',
                       cursor: 'pointer',
@@ -411,7 +418,17 @@ function FacilityFilters({
                 setSportSearch('')
               }
             }}
-            onFocus={() => setShowSportDropdown(true)}
+            onClick={() => setShowSportDropdown(true)}
+            onFocus={(e) => {
+              setShowSportDropdown(true)
+              e.target.style.borderColor = '#10b981'
+              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#e2e8f0'
+              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+              setTimeout(() => setShowSportDropdown(false), 250)
+            }}
             placeholder="Caută sau selectează sport"
             style={{
               width: '100%',
@@ -427,15 +444,6 @@ function FacilityFilters({
               fontWeight: '400',
               lineHeight: '1.5',
               boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#10b981'
-              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = '#e2e8f0'
-              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-              setTimeout(() => setShowSportDropdown(false), 200)
             }}
           />
           <div style={{
@@ -464,7 +472,10 @@ function FacilityFilters({
               zIndex: 1000
             }}>
               <div
-                onClick={() => handleSportChange('')}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  handleSportChange('')
+                }}
                 style={{
                   padding: '0.75rem 1rem',
                   cursor: 'pointer',
@@ -492,7 +503,10 @@ function FacilityFilters({
                 .map(sportOption => (
                   <div
                     key={sportOption}
-                    onClick={() => handleSportChange(sportOption)}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      handleSportChange(sportOption)
+                    }}
                     style={{
                       padding: '0.75rem 1rem',
                       cursor: 'pointer',
@@ -537,7 +551,17 @@ function FacilityFilters({
                   setTypeSearch('')
                 }
               }}
-              onFocus={() => setShowTypeDropdown(true)}
+              onClick={() => setShowTypeDropdown(true)}
+              onFocus={(e) => {
+                setShowTypeDropdown(true)
+                e.target.style.borderColor = '#10b981'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                setTimeout(() => setShowTypeDropdown(false), 250)
+              }}
               placeholder="Caută sau selectează tip"
               style={{
                 width: '100%',
@@ -553,15 +577,6 @@ function FacilityFilters({
                 fontWeight: '400',
                 lineHeight: '1.5',
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#10b981'
-                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0'
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                setTimeout(() => setShowTypeDropdown(false), 200)
               }}
             />
             <div style={{
@@ -597,7 +612,10 @@ function FacilityFilters({
                   .map(typeOption => (
                     <div
                       key={typeOption.value}
-                      onClick={() => handleTypeChange(typeOption.value)}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        handleTypeChange(typeOption.value)
+                      }}
                       style={{
                         padding: '0.75rem 1rem',
                         cursor: 'pointer',

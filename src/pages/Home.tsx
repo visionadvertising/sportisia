@@ -213,7 +213,17 @@ function Home() {
                   setSelectedCity('')
                 }
               }}
-              onFocus={() => setShowCityDropdown(true)}
+              onClick={() => setShowCityDropdown(true)}
+              onFocus={(e) => {
+                setShowCityDropdown(true)
+                e.target.style.borderColor = '#10b981'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                setTimeout(() => setShowCityDropdown(false), 250)
+              }}
               placeholder="Caută sau selectează oraș"
               style={{
                 width: '100%',
@@ -229,15 +239,6 @@ function Home() {
                 fontWeight: '400',
                 lineHeight: '1.5',
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#10b981'
-                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0'
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                setTimeout(() => setShowCityDropdown(false), 200)
               }}
             />
             <div style={{
@@ -273,28 +274,29 @@ function Home() {
                   )
                   .slice(0, 20)
                   .map(cityOption => (
-                    <div
-                      key={cityOption.city}
-                      onClick={() => {
-                        setSelectedCity(cityOption.city)
-                        setCitySearch('')
-                        setShowCityDropdown(false)
-                      }}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #f1f5f9',
-                        color: '#0f172a',
-                        fontSize: '0.9375rem',
-                        transition: 'background 0.15s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f0fdf4'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#ffffff'
-                      }}
-                    >
+                  <div
+                    key={cityOption.city}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      setSelectedCity(cityOption.city)
+                      setCitySearch('')
+                      setShowCityDropdown(false)
+                    }}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid #f1f5f9',
+                      color: '#0f172a',
+                      fontSize: '0.9375rem',
+                      transition: 'background 0.15s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f0fdf4'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#ffffff'
+                    }}
+                  >
                       <div style={{ fontWeight: '600' }}>{cityOption.city}</div>
                       {cityOption.county && (
                         <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
@@ -326,7 +328,17 @@ function Home() {
                   setSelectedSport('')
                 }
               }}
-              onFocus={() => setShowSportDropdown(true)}
+              onClick={() => setShowSportDropdown(true)}
+              onFocus={(e) => {
+                setShowSportDropdown(true)
+                e.target.style.borderColor = '#10b981'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                setTimeout(() => setShowSportDropdown(false), 250)
+              }}
               placeholder="Caută sau selectează sport"
               style={{
                 width: '100%',
@@ -342,15 +354,6 @@ function Home() {
                 fontWeight: '400',
                 lineHeight: '1.5',
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#10b981'
-                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0'
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                setTimeout(() => setShowSportDropdown(false), 200)
               }}
             />
             <div style={{
@@ -387,7 +390,8 @@ function Home() {
                   .map(sportOption => (
                     <div
                       key={sportOption}
-                      onClick={() => {
+                      onMouseDown={(e) => {
+                        e.preventDefault()
                         setSelectedSport(sportOption)
                         setSportSearch('')
                         setShowSportDropdown(false)
@@ -434,7 +438,17 @@ function Home() {
                   setSelectedType('')
                 }
               }}
-              onFocus={() => setShowTypeDropdown(true)}
+              onClick={() => setShowTypeDropdown(true)}
+              onFocus={(e) => {
+                setShowTypeDropdown(true)
+                e.target.style.borderColor = '#10b981'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                setTimeout(() => setShowTypeDropdown(false), 250)
+              }}
               placeholder="Caută sau selectează tip"
               style={{
                 width: '100%',
@@ -450,15 +464,6 @@ function Home() {
                 fontWeight: '400',
                 lineHeight: '1.5',
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#10b981'
-                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0'
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                setTimeout(() => setShowTypeDropdown(false), 200)
               }}
             />
             <div style={{
@@ -494,7 +499,8 @@ function Home() {
                   .map(typeOption => (
                     <div
                       key={typeOption.value}
-                      onClick={() => {
+                      onMouseDown={(e) => {
+                        e.preventDefault()
                         setSelectedType(typeOption.value)
                         setTypeSearch('')
                         setShowTypeDropdown(false)
