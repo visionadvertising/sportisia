@@ -91,6 +91,7 @@ async function initDatabase() {
         -- Fields specific
         sport VARCHAR(100),
         price_per_hour DECIMAL(10, 2),
+        pricing_details JSON,
         has_parking BOOLEAN DEFAULT FALSE,
         has_shower BOOLEAN DEFAULT FALSE,
         has_changing_room BOOLEAN DEFAULT FALSE,
@@ -101,6 +102,7 @@ async function initDatabase() {
         specialization TEXT,
         experience_years INT,
         price_per_lesson DECIMAL(10, 2),
+        pricing_details JSON,
         certifications TEXT,
         languages VARCHAR(255),
         
@@ -115,7 +117,10 @@ async function initDatabase() {
         delivery_available BOOLEAN DEFAULT FALSE,
         
         -- Common fields
+        logo_url VARCHAR(500),
         website VARCHAR(500),
+        social_media JSON,
+        gallery JSON,
         opening_hours VARCHAR(255),
         status ENUM('active', 'pending', 'inactive') DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -273,8 +278,10 @@ app.post('/api/register', async (req, res) => {
     const {
       facilityType, // 'field', 'coach', 'repair_shop', 'equipment_shop'
       name, city, location, phone, email, description, imageUrl,
+      // New common fields
+      logoUrl, socialMedia, gallery,
       // Field specific
-      sport, pricePerHour, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
+      sport, pricePerHour, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
       // Coach specific
       specialization, experienceYears, pricePerLesson, certifications, languages,
       // Repair shop specific
@@ -322,16 +329,21 @@ app.post('/api/register', async (req, res) => {
       const [facilityResult] = await connection.query(
         `INSERT INTO facilities (
           facility_type, name, city, location, phone, email, description, image_url,
-          sport, price_per_hour, has_parking, has_shower, has_changing_room, 
+          logo_url, social_media, gallery,
+          sport, price_per_hour, pricing_details, has_parking, has_shower, has_changing_room, 
           has_air_conditioning, has_lighting,
           specialization, experience_years, price_per_lesson, certifications, languages,
           services_offered, brands_serviced, average_repair_time,
           products_categories, brands_available, delivery_available,
           website, opening_hours, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
         [
           facilityType, name, city, location, phone, email || null, description || null, imageUrl || null,
+          logoUrl || null, 
+          socialMedia ? JSON.stringify(socialMedia) : null,
+          gallery ? JSON.stringify(gallery) : null,
           sport || null, pricePerHour ? parseFloat(pricePerHour) : null,
+          pricingDetails ? JSON.stringify(pricingDetails) : null,
           hasParking || false, hasShower || false, hasChangingRoom || false,
           hasAirConditioning || false, hasLighting || false,
           specialization || null, experienceYears || null, pricePerLesson ? parseFloat(pricePerLesson) : null,
@@ -484,7 +496,8 @@ app.put('/api/facilities/:id', async (req, res) => {
     const facilityId = req.params.id
     const {
       name, city, location, phone, email, description, imageUrl,
-      sport, pricePerHour, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
+      logoUrl, socialMedia, gallery,
+      sport, pricePerHour, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
       specialization, experienceYears, pricePerLesson, certifications, languages,
       servicesOffered, brandsServiced, averageRepairTime,
       productsCategories, brandsAvailable, deliveryAvailable,
@@ -502,6 +515,9 @@ app.put('/api/facilities/:id', async (req, res) => {
     if (email !== undefined) { updates.push('email = ?'); values.push(email) }
     if (description !== undefined) { updates.push('description = ?'); values.push(description) }
     if (imageUrl !== undefined) { updates.push('image_url = ?'); values.push(imageUrl) }
+    if (logoUrl !== undefined) { updates.push('logo_url = ?'); values.push(logoUrl) }
+    if (socialMedia !== undefined) { updates.push('social_media = ?'); values.push(JSON.stringify(socialMedia)) }
+    if (gallery !== undefined) { updates.push('gallery = ?'); values.push(JSON.stringify(gallery)) }
     if (website !== undefined) { updates.push('website = ?'); values.push(website) }
     if (openingHours !== undefined) { updates.push('opening_hours = ?'); values.push(openingHours) }
     if (status) { updates.push('status = ?'); values.push(status) }
@@ -509,6 +525,7 @@ app.put('/api/facilities/:id', async (req, res) => {
     // Field specific
     if (sport !== undefined) { updates.push('sport = ?'); values.push(sport) }
     if (pricePerHour !== undefined) { updates.push('price_per_hour = ?'); values.push(parseFloat(pricePerHour)) }
+    if (pricingDetails !== undefined) { updates.push('pricing_details = ?'); values.push(JSON.stringify(pricingDetails)) }
     if (hasParking !== undefined) { updates.push('has_parking = ?'); values.push(hasParking) }
     if (hasShower !== undefined) { updates.push('has_shower = ?'); values.push(hasShower) }
     if (hasChangingRoom !== undefined) { updates.push('has_changing_room = ?'); values.push(hasChangingRoom) }

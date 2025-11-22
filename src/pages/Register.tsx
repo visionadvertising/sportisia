@@ -4,27 +4,49 @@ import API_BASE_URL from '../config'
 
 type FacilityType = 'field' | 'coach' | 'repair_shop' | 'equipment_shop'
 
+interface PricingDetail {
+  title: string
+  description: string
+  price: number
+}
+
 function Register() {
   const navigate = useNavigate()
-  const [facilityType, setFacilityType] = useState<FacilityType>('field')
+  const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null)
   const [error, setError] = useState('')
 
-  // Common fields
-  const [name, setName] = useState('')
-  const [city, setCity] = useState('')
-  const [location, setLocation] = useState('')
+  // Step 1: Facility Type
+  const [facilityType, setFacilityType] = useState<FacilityType | ''>('')
+
+  // Step 2: Contact Details
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
-  const [description, setDescription] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
-  const [website, setWebsite] = useState('')
-  const [openingHours, setOpeningHours] = useState('')
+  const [city, setCity] = useState('')
+  const [location, setLocation] = useState('')
 
+  // Step 3: Branding
+  const [name, setName] = useState('')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [website, setWebsite] = useState('')
+  const [socialMedia, setSocialMedia] = useState({
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    linkedin: ''
+  })
+
+  // Step 4: Gallery
+  const [gallery, setGallery] = useState<string[]>([])
+
+  // Step 5: Specific Details
+  const [description, setDescription] = useState('')
+  const [openingHours, setOpeningHours] = useState('')
+  
   // Field specific
   const [sport, setSport] = useState('')
-  const [pricePerHour, setPricePerHour] = useState('')
+  const [pricingDetails, setPricingDetails] = useState<PricingDetail[]>([])
   const [hasParking, setHasParking] = useState(false)
   const [hasShower, setHasShower] = useState(false)
   const [hasChangingRoom, setHasChangingRoom] = useState(false)
@@ -34,7 +56,6 @@ function Register() {
   // Coach specific
   const [specialization, setSpecialization] = useState('')
   const [experienceYears, setExperienceYears] = useState('')
-  const [pricePerLesson, setPricePerLesson] = useState('')
   const [certifications, setCertifications] = useState('')
   const [languages, setLanguages] = useState('')
 
@@ -48,12 +69,94 @@ function Register() {
   const [brandsAvailable, setBrandsAvailable] = useState('')
   const [deliveryAvailable, setDeliveryAvailable] = useState(false)
 
+  const addPricingDetail = () => {
+    setPricingDetails([...pricingDetails, { title: '', description: '', price: 0 }])
+  }
+
+  const removePricingDetail = (index: number) => {
+    setPricingDetails(pricingDetails.filter((_, i) => i !== index))
+  }
+
+  const updatePricingDetail = (index: number, field: keyof PricingDetail, value: string | number) => {
+    const updated = [...pricingDetails]
+    updated[index] = { ...updated[index], [field]: value }
+    setPricingDetails(updated)
+  }
+
+  const addGalleryImage = (url: string) => {
+    if (url.trim()) {
+      setGallery([...gallery, url.trim()])
+    }
+  }
+
+  const removeGalleryImage = (index: number) => {
+    setGallery(gallery.filter((_, i) => i !== index))
+  }
+
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        if (!facilityType) {
+          setError('Te rugăm să alegi tipul facilității')
+          return false
+        }
+        break
+      case 2:
+        if (!phone || !email || !city || !location) {
+          setError('Toate câmpurile de contact sunt obligatorii')
+          return false
+        }
+        break
+      case 3:
+        if (!name) {
+          setError('Denumirea facilității este obligatorie')
+          return false
+        }
+        break
+      case 4:
+        // Gallery is optional
+        break
+      case 5:
+        if (facilityType === 'field' && !sport) {
+          setError('Sportul este obligatoriu pentru terenuri')
+          return false
+        }
+        if (facilityType === 'coach' && !specialization) {
+          setError('Specializarea este obligatorie pentru antrenori')
+          return false
+        }
+        break
+    }
+    setError('')
+    return true
+  }
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const prevStep = () => {
+    setCurrentStep(currentStep - 1)
+    setError('')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateStep(5)) return
+
     setLoading(true)
     setError('')
 
     try {
+      // Prepare social media object (only non-empty values)
+      const socialMediaFiltered: any = {}
+      if (socialMedia.facebook) socialMediaFiltered.facebook = socialMedia.facebook
+      if (socialMedia.instagram) socialMediaFiltered.instagram = socialMedia.instagram
+      if (socialMedia.twitter) socialMediaFiltered.twitter = socialMedia.twitter
+      if (socialMedia.linkedin) socialMediaFiltered.linkedin = socialMedia.linkedin
+
       const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: {
@@ -67,12 +170,15 @@ function Register() {
           phone,
           email,
           description: description || null,
-          imageUrl: imageUrl || null,
+          logoUrl: logoUrl || null,
           website: website || null,
+          socialMedia: Object.keys(socialMediaFiltered).length > 0 ? socialMediaFiltered : null,
+          gallery: gallery.length > 0 ? gallery : null,
           openingHours: openingHours || null,
           // Field specific
           sport: facilityType === 'field' ? sport : null,
-          pricePerHour: facilityType === 'field' ? pricePerHour : null,
+          pricePerHour: facilityType === 'field' && pricingDetails.length > 0 ? pricingDetails[0].price : null,
+          pricingDetails: facilityType === 'field' && pricingDetails.length > 0 ? pricingDetails : null,
           hasParking: facilityType === 'field' ? hasParking : false,
           hasShower: facilityType === 'field' ? hasShower : false,
           hasChangingRoom: facilityType === 'field' ? hasChangingRoom : false,
@@ -81,7 +187,8 @@ function Register() {
           // Coach specific
           specialization: facilityType === 'coach' ? specialization : null,
           experienceYears: facilityType === 'coach' ? experienceYears : null,
-          pricePerLesson: facilityType === 'coach' ? pricePerLesson : null,
+          pricePerLesson: facilityType === 'coach' && pricingDetails.length > 0 ? pricingDetails[0].price : null,
+          pricingDetails: facilityType === 'coach' && pricingDetails.length > 0 ? pricingDetails : null,
           certifications: facilityType === 'coach' ? certifications : null,
           languages: facilityType === 'coach' ? languages : null,
           // Repair shop specific
@@ -231,6 +338,14 @@ function Register() {
     )
   }
 
+  const steps = [
+    { number: 1, title: 'Tip facilitate' },
+    { number: 2, title: 'Date de contact' },
+    { number: 3, title: 'Branding' },
+    { number: 4, title: 'Galerie' },
+    { number: 5, title: 'Detalii specifice' }
+  ]
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -251,11 +366,58 @@ function Register() {
           marginBottom: '0.5rem',
           textAlign: 'center'
         }}>Înregistrare Facilitate</h1>
-        <p style={{
-          color: '#666',
-          textAlign: 'center',
-          marginBottom: '2rem'
-        }}>Completează formularul pentru a-ți înregistra facilitatea</p>
+
+        {/* Progress Steps */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: '3rem',
+          position: 'relative'
+        }}>
+          {steps.map((step, index) => (
+            <div key={step.number} style={{ flex: 1, position: 'relative', zIndex: 1 }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  background: currentStep >= step.number ? '#10b981' : '#e5e7eb',
+                  color: currentStep >= step.number ? 'white' : '#666',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem',
+                  transition: 'all 0.3s'
+                }}>
+                  {currentStep > step.number ? '✓' : step.number}
+                </div>
+                <span style={{
+                  fontSize: '0.85rem',
+                  color: currentStep >= step.number ? '#10b981' : '#666',
+                  fontWeight: currentStep === step.number ? 'bold' : 'normal',
+                  textAlign: 'center'
+                }}>{step.title}</span>
+              </div>
+              {index < steps.length - 1 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '25px',
+                  left: '60%',
+                  width: '80%',
+                  height: '2px',
+                  background: currentStep > step.number ? '#10b981' : '#e5e7eb',
+                  zIndex: 0
+                }} />
+              )}
+            </div>
+          ))}
+        </div>
 
         {error && (
           <div style={{
@@ -270,389 +432,60 @@ function Register() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          {/* Facility Type Selection */}
-          <div style={{ marginBottom: '2rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#333',
-              fontWeight: 'bold',
-              fontSize: '1.1rem'
-            }}>Tip facilitate *</label>
-            <select
-              value={facilityType}
-              onChange={(e) => setFacilityType(e.target.value as FacilityType)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
-            >
-              <option value="field">Teren Sportiv</option>
-              <option value="coach">Antrenor</option>
-              <option value="repair_shop">Magazin Reparații Articole Sportive</option>
-              <option value="equipment_shop">Magazin Articole Sportive</option>
-            </select>
-          </div>
-
-          {/* Common Fields */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '1rem',
-            marginBottom: '1.5rem'
-          }}>
+        <form onSubmit={currentStep === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+          {/* Step 1: Facility Type */}
+          {currentStep === 1 && (
             <div>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>Nume facilitate *</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>Oraș *</label>
-              <input
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#333',
-              fontWeight: '500'
-            }}>Adresă completă *</label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '1rem',
-            marginBottom: '1.5rem'
-          }}>
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>Telefon *</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>Email *</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#333',
-              fontWeight: '500'
-            }}>Descriere</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none',
-                fontFamily: 'inherit'
-              }}
-            />
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '1rem',
-            marginBottom: '1.5rem'
-          }}>
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>URL Imagine</label>
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>Website</label>
-              <input
-                type="url"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                placeholder="https://example.com"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#333',
-              fontWeight: '500'
-            }}>Program (ex: Luni-Vineri 9:00-18:00)</label>
-            <input
-              type="text"
-              value={openingHours}
-              onChange={(e) => setOpeningHours(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          {/* Field Specific Fields */}
-          {facilityType === 'field' && (
-            <div style={{
-              background: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '8px',
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Teren</h3>
+              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+                Alege tipul facilității
+              </h2>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1rem',
-                marginBottom: '1rem'
+                gap: '1.5rem'
               }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
-                  }}>Sport *</label>
-                  <select
-                    value={sport}
-                    onChange={(e) => setSport(e.target.value)}
-                    required
+                {[
+                  { value: 'field', label: 'Teren Sportiv', icon: '⚽' },
+                  { value: 'coach', label: 'Antrenor', icon: '👨‍🏫' },
+                  { value: 'repair_shop', label: 'Magazin Reparații', icon: '🔧' },
+                  { value: 'equipment_shop', label: 'Magazin Articole', icon: '🏪' }
+                ].map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setFacilityType(type.value as FacilityType)}
                     style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none'
+                      padding: '2rem',
+                      border: facilityType === type.value ? '3px solid #10b981' : '2px solid #e0e0e0',
+                      borderRadius: '12px',
+                      background: facilityType === type.value ? '#f0fdf4' : 'white',
+                      cursor: 'pointer',
+                      fontSize: '3rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      transition: 'all 0.3s'
                     }}
                   >
-                    <option value="">Selectează sport</option>
-                    <option value="tenis">Tenis</option>
-                    <option value="fotbal">Fotbal</option>
-                    <option value="baschet">Baschet</option>
-                    <option value="volei">Volei</option>
-                    <option value="handbal">Handbal</option>
-                    <option value="badminton">Badminton</option>
-                    <option value="squash">Squash</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
-                  }}>Preț pe oră (RON) *</label>
-                  <input
-                    type="number"
-                    value={pricePerHour}
-                    onChange={(e) => setPricePerHour(e.target.value)}
-                    required
-                    min="0"
-                    step="0.01"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none'
-                    }}
-                  />
-                </div>
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '1rem'
-              }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={hasParking}
-                    onChange={(e) => setHasParking(e.target.checked)}
-                  />
-                  <span>Parcare</span>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={hasShower}
-                    onChange={(e) => setHasShower(e.target.checked)}
-                  />
-                  <span>Dusuri</span>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={hasChangingRoom}
-                    onChange={(e) => setHasChangingRoom(e.target.checked)}
-                  />
-                  <span>Vestiar</span>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={hasAirConditioning}
-                    onChange={(e) => setHasAirConditioning(e.target.checked)}
-                  />
-                  <span>Aer condiționat</span>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={hasLighting}
-                    onChange={(e) => setHasLighting(e.target.checked)}
-                  />
-                  <span>Iluminat</span>
-                </label>
+                    <span>{type.icon}</span>
+                    <span style={{
+                      fontSize: '1.1rem',
+                      fontWeight: 'bold',
+                      color: '#333'
+                    }}>{type.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Coach Specific Fields */}
-          {facilityType === 'coach' && (
-            <div style={{
-              background: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '8px',
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Antrenor</h3>
+          {/* Step 2: Contact Details */}
+          {currentStep === 2 && (
+            <div>
+              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+                Date de contact
+              </h2>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
@@ -665,13 +498,12 @@ function Register() {
                     marginBottom: '0.5rem',
                     color: '#333',
                     fontWeight: '500'
-                  }}>Specializare *</label>
+                  }}>Telefon *</label>
                   <input
-                    type="text"
-                    value={specialization}
-                    onChange={(e) => setSpecialization(e.target.value)}
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     required
-                    placeholder="ex: Tenis pentru începători"
                     style={{
                       width: '100%',
                       padding: '0.75rem',
@@ -688,12 +520,12 @@ function Register() {
                     marginBottom: '0.5rem',
                     color: '#333',
                     fontWeight: '500'
-                  }}>Ani experiență</label>
+                  }}>Email *</label>
                   <input
-                    type="number"
-                    value={experienceYears}
-                    onChange={(e) => setExperienceYears(e.target.value)}
-                    min="0"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                     style={{
                       width: '100%',
                       padding: '0.75rem',
@@ -705,58 +537,27 @@ function Register() {
                   />
                 </div>
               </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1rem',
-                marginBottom: '1rem'
-              }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
-                  }}>Preț pe lecție (RON) *</label>
-                  <input
-                    type="number"
-                    value={pricePerLesson}
-                    onChange={(e) => setPricePerLesson(e.target.value)}
-                    required
-                    min="0"
-                    step="0.01"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none'
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
-                  }}>Limbi vorbite</label>
-                  <input
-                    type="text"
-                    value={languages}
-                    onChange={(e) => setLanguages(e.target.value)}
-                    placeholder="ex: Română, Engleză"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none'
-                    }}
-                  />
-                </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  color: '#333',
+                  fontWeight: '500'
+                }}>Oraș *</label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
               </div>
               <div>
                 <label style={{
@@ -764,76 +565,130 @@ function Register() {
                   marginBottom: '0.5rem',
                   color: '#333',
                   fontWeight: '500'
-                }}>Certificări</label>
-                <textarea
-                  value={certifications}
-                  onChange={(e) => setCertifications(e.target.value)}
-                  rows={3}
-                  placeholder="Listează certificările tale"
+                }}>Adresă completă *</label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  required
                   style={{
                     width: '100%',
                     padding: '0.75rem',
                     border: '2px solid #e0e0e0',
                     borderRadius: '8px',
                     fontSize: '1rem',
-                    outline: 'none',
-                    fontFamily: 'inherit'
+                    outline: 'none'
                   }}
                 />
               </div>
             </div>
           )}
 
-          {/* Repair Shop Specific Fields */}
-          {facilityType === 'repair_shop' && (
-            <div style={{
-              background: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '8px',
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Magazin Reparații</h3>
+          {/* Step 3: Branding */}
+          {currentStep === 3 && (
+            <div>
+              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+                Branding și prezentare
+              </h2>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.5rem',
                   color: '#333',
                   fontWeight: '500'
-                }}>Servicii oferite *</label>
-                <textarea
-                  value={servicesOffered}
-                  onChange={(e) => setServicesOffered(e.target.value)}
+                }}>Denumire facilitate *</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   required
-                  rows={4}
-                  placeholder="ex: Reparație rachete tenis, Reparație pantofi sport, Reparație echipamente fitness"
                   style={{
                     width: '100%',
                     padding: '0.75rem',
                     border: '2px solid #e0e0e0',
                     borderRadius: '8px',
                     fontSize: '1rem',
-                    outline: 'none',
-                    fontFamily: 'inherit'
+                    outline: 'none'
                   }}
                 />
               </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1rem'
-              }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
-                  }}>Mărci deservite</label>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  color: '#333',
+                  fontWeight: '500'
+                }}>URL Logo</label>
+                <input
+                  type="url"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="https://example.com/logo.png"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+                {logoUrl && (
+                  <img
+                    src={logoUrl}
+                    alt="Logo preview"
+                    style={{
+                      marginTop: '0.5rem',
+                      maxWidth: '200px',
+                      maxHeight: '200px',
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0'
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none'
+                    }}
+                  />
+                )}
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  color: '#333',
+                  fontWeight: '500'
+                }}>Website</label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://example.com"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  color: '#333',
+                  fontWeight: '500'
+                }}>Rețele sociale</label>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '1rem'
+                }}>
                   <input
-                    type="text"
-                    value={brandsServiced}
-                    onChange={(e) => setBrandsServiced(e.target.value)}
-                    placeholder="ex: Nike, Adidas, Wilson"
+                    type="url"
+                    value={socialMedia.facebook}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, facebook: e.target.value })}
+                    placeholder="Facebook URL"
                     style={{
                       width: '100%',
                       padding: '0.75rem',
@@ -843,19 +698,39 @@ function Register() {
                       outline: 'none'
                     }}
                   />
-                </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
-                  }}>Timp mediu reparație</label>
                   <input
-                    type="text"
-                    value={averageRepairTime}
-                    onChange={(e) => setAverageRepairTime(e.target.value)}
-                    placeholder="ex: 2-3 zile"
+                    type="url"
+                    value={socialMedia.instagram}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, instagram: e.target.value })}
+                    placeholder="Instagram URL"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.twitter}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, twitter: e.target.value })}
+                    placeholder="Twitter URL"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.linkedin}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, linkedin: e.target.value })}
+                    placeholder="LinkedIn URL"
                     style={{
                       width: '100%',
                       padding: '0.75rem',
@@ -870,28 +745,137 @@ function Register() {
             </div>
           )}
 
-          {/* Equipment Shop Specific Fields */}
-          {facilityType === 'equipment_shop' && (
-            <div style={{
-              background: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '8px',
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Magazin Articole Sportive</h3>
+          {/* Step 4: Gallery */}
+          {currentStep === 4 && (
+            <div>
+              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+                Galerie imagini
+              </h2>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.5rem',
                   color: '#333',
                   fontWeight: '500'
-                }}>Categorii produse *</label>
+                }}>Adaugă URL imagine</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="url"
+                    placeholder="https://example.com/image.jpg"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const input = e.target as HTMLInputElement
+                        addGalleryImage(input.value)
+                        input.value = ''
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const input = (e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement
+                      addGalleryImage(input.value)
+                      input.value = ''
+                    }}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Adaugă
+                  </button>
+                </div>
+              </div>
+              {gallery.length > 0 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                  gap: '1rem',
+                  marginTop: '1rem'
+                }}>
+                  {gallery.map((url, index) => (
+                    <div key={index} style={{ position: 'relative' }}>
+                      <img
+                        src={url}
+                        alt={`Gallery ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '150px',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0'
+                        }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(index)}
+                        style={{
+                          position: 'absolute',
+                          top: '0.5rem',
+                          right: '0.5rem',
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '30px',
+                          height: '30px',
+                          cursor: 'pointer',
+                          fontSize: '1.2rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {gallery.length === 0 && (
+                <p style={{ color: '#666', fontStyle: 'italic', textAlign: 'center', padding: '2rem' }}>
+                  Nu ai adăugat imagini încă. Poți sări peste acest pas.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Step 5: Specific Details */}
+          {currentStep === 5 && (
+            <div>
+              <h2 style={{ fontSize: '1.8rem', color: '#1e3c72', marginBottom: '1.5rem' }}>
+                Detalii specifice
+              </h2>
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  color: '#333',
+                  fontWeight: '500'
+                }}>Descriere</label>
                 <textarea
-                  value={productsCategories}
-                  onChange={(e) => setProductsCategories(e.target.value)}
-                  required
-                  rows={4}
-                  placeholder="ex: Rachete tenis, Pantofi sport, Echipamente fitness, Accesorii"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={5}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -903,41 +887,468 @@ function Register() {
                   }}
                 />
               </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1rem',
-                marginBottom: '1rem'
-              }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
-                  }}>Mărci disponibile</label>
-                  <input
-                    type="text"
-                    value={brandsAvailable}
-                    onChange={(e) => setBrandsAvailable(e.target.value)}
-                    placeholder="ex: Nike, Adidas, Wilson, Head"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none'
-                    }}
-                  />
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  color: '#333',
+                  fontWeight: '500'
+                }}>Program (ex: Luni-Vineri 9:00-18:00)</label>
+                <input
+                  type="text"
+                  value={openingHours}
+                  onChange={(e) => setOpeningHours(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              {/* Field Specific */}
+              {facilityType === 'field' && (
+                <div style={{
+                  background: '#f9fafb',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem'
+                }}>
+                  <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Teren</h3>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#333',
+                      fontWeight: '500'
+                    }}>Sport *</label>
+                    <select
+                      value={sport}
+                      onChange={(e) => setSport(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="">Selectează sport</option>
+                      <option value="tenis">Tenis</option>
+                      <option value="fotbal">Fotbal</option>
+                      <option value="baschet">Baschet</option>
+                      <option value="volei">Volei</option>
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <label style={{ color: '#333', fontWeight: '500' }}>Prețuri</label>
+                      <button
+                        type="button"
+                        onClick={addPricingDetail}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          background: '#10b981',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        + Adaugă preț
+                      </button>
+                    </div>
+                    {pricingDetails.map((detail, index) => (
+                      <div key={index} style={{
+                        background: 'white',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        marginBottom: '1rem',
+                        border: '1px solid #e0e0e0'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                          <span style={{ fontWeight: 'bold' }}>Preț #{index + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => removePricingDetail(index)}
+                            style={{
+                              background: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              padding: '0.25rem 0.5rem',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem'
+                            }}
+                          >
+                            Șterge
+                          </button>
+                        </div>
+                        <div style={{ marginBottom: '0.5rem' }}>
+                          <input
+                            type="text"
+                            placeholder="Titlu (ex: Preț pe oră, Preț pentru 2 ore)"
+                            value={detail.title}
+                            onChange={(e) => updatePricingDetail(index, 'title', e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem',
+                              border: '1px solid #e0e0e0',
+                              borderRadius: '6px',
+                              fontSize: '0.9rem',
+                              outline: 'none'
+                            }}
+                          />
+                        </div>
+                        <div style={{ marginBottom: '0.5rem' }}>
+                          <textarea
+                            placeholder="Descriere preț"
+                            value={detail.description}
+                            onChange={(e) => updatePricingDetail(index, 'description', e.target.value)}
+                            rows={2}
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem',
+                              border: '1px solid #e0e0e0',
+                              borderRadius: '6px',
+                              fontSize: '0.9rem',
+                              outline: 'none',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="number"
+                            placeholder="Preț (RON)"
+                            value={detail.price || ''}
+                            onChange={(e) => updatePricingDetail(index, 'price', parseFloat(e.target.value) || 0)}
+                            min="0"
+                            step="0.01"
+                            style={{
+                              width: '100%',
+                              padding: '0.5rem',
+                              border: '1px solid #e0e0e0',
+                              borderRadius: '6px',
+                              fontSize: '0.9rem',
+                              outline: 'none'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    {pricingDetails.length === 0 && (
+                      <p style={{ color: '#666', fontStyle: 'italic', textAlign: 'center', padding: '1rem' }}>
+                        Adaugă cel puțin un preț
+                      </p>
+                    )}
+                  </div>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '1rem'
+                  }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={hasParking}
+                        onChange={(e) => setHasParking(e.target.checked)}
+                      />
+                      <span>Parcare</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={hasShower}
+                        onChange={(e) => setHasShower(e.target.checked)}
+                      />
+                      <span>Dusuri</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={hasChangingRoom}
+                        onChange={(e) => setHasChangingRoom(e.target.checked)}
+                      />
+                      <span>Vestiar</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={hasAirConditioning}
+                        onChange={(e) => setHasAirConditioning(e.target.checked)}
+                      />
+                      <span>Aer condiționat</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={hasLighting}
+                        onChange={(e) => setHasLighting(e.target.checked)}
+                      />
+                      <span>Iluminat</span>
+                    </label>
+                  </div>
                 </div>
-                <div>
+              )}
+
+              {/* Coach Specific */}
+              {facilityType === 'coach' && (
+                <div style={{
+                  background: '#f9fafb',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem'
+                }}>
+                  <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Antrenor</h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '1rem',
+                    marginBottom: '1rem'
+                  }}>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
+                        color: '#333',
+                        fontWeight: '500'
+                      }}>Specializare *</label>
+                      <input
+                        type="text"
+                        value={specialization}
+                        onChange={(e) => setSpecialization(e.target.value)}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e0e0e0',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
+                        color: '#333',
+                        fontWeight: '500'
+                      }}>Ani experiență</label>
+                      <input
+                        type="number"
+                        value={experienceYears}
+                        onChange={(e) => setExperienceYears(e.target.value)}
+                        min="0"
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e0e0e0',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#333',
+                      fontWeight: '500'
+                    }}>Certificări</label>
+                    <textarea
+                      value={certifications}
+                      onChange={(e) => setCertifications(e.target.value)}
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#333',
+                      fontWeight: '500'
+                    }}>Limbi vorbite</label>
+                    <input
+                      type="text"
+                      value={languages}
+                      onChange={(e) => setLanguages(e.target.value)}
+                      placeholder="ex: Română, Engleză"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Repair Shop Specific */}
+              {facilityType === 'repair_shop' && (
+                <div style={{
+                  background: '#f9fafb',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem'
+                }}>
+                  <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Magazin Reparații</h3>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#333',
+                      fontWeight: '500'
+                    }}>Servicii oferite</label>
+                    <textarea
+                      value={servicesOffered}
+                      onChange={(e) => setServicesOffered(e.target.value)}
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit'
+                      }}
+                    />
+                  </div>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '1rem'
+                  }}>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
+                        color: '#333',
+                        fontWeight: '500'
+                      }}>Mărci deservite</label>
+                      <input
+                        type="text"
+                        value={brandsServiced}
+                        onChange={(e) => setBrandsServiced(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e0e0e0',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
+                        color: '#333',
+                        fontWeight: '500'
+                      }}>Timp mediu reparație</label>
+                      <input
+                        type="text"
+                        value={averageRepairTime}
+                        onChange={(e) => setAverageRepairTime(e.target.value)}
+                        placeholder="ex: 2-3 zile"
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e0e0e0',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Equipment Shop Specific */}
+              {facilityType === 'equipment_shop' && (
+                <div style={{
+                  background: '#f9fafb',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem'
+                }}>
+                  <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Magazin Articole Sportive</h3>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#333',
+                      fontWeight: '500'
+                    }}>Categorii produse</label>
+                    <textarea
+                      value={productsCategories}
+                      onChange={(e) => setProductsCategories(e.target.value)}
+                      rows={4}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#333',
+                      fontWeight: '500'
+                    }}>Mărci disponibile</label>
+                    <input
+                      type="text"
+                      value={brandsAvailable}
+                      onChange={(e) => setBrandsAvailable(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
                   <label style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
                     cursor: 'pointer',
-                    marginTop: '1.5rem'
+                    marginTop: '1rem'
                   }}>
                     <input
                       type="checkbox"
@@ -947,44 +1358,65 @@ function Register() {
                     <span>Livrare disponibilă</span>
                   </label>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                flex: 1,
-                padding: '1rem',
-                background: loading ? '#9ca3af' : '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {loading ? 'Se înregistrează...' : 'Înregistrează facilitatea'}
-            </button>
-            <Link
-              to="/"
-              style={{
-                padding: '1rem 2rem',
-                background: '#e5e7eb',
-                color: '#333',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                textAlign: 'center',
-                display: 'block'
-              }}
-            >
-              Anulează
-            </Link>
+          {/* Navigation Buttons */}
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'space-between' }}>
+            {currentStep > 1 && (
+              <button
+                type="button"
+                onClick={prevStep}
+                style={{
+                  padding: '1rem 2rem',
+                  background: '#e5e7eb',
+                  color: '#333',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                ← Înapoi
+              </button>
+            )}
+            <div style={{ flex: 1 }} />
+            {currentStep < 5 ? (
+              <button
+                type="submit"
+                style={{
+                  padding: '1rem 2rem',
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Următorul →
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '1rem 2rem',
+                  background: loading ? '#9ca3af' : '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {loading ? 'Se înregistrează...' : 'Finalizează înregistrarea'}
+              </button>
+            )}
           </div>
         </form>
       </div>
@@ -993,4 +1425,3 @@ function Register() {
 }
 
 export default Register
-
