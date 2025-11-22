@@ -8,8 +8,54 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
   const location = useLocation()
 
   const menuItems = [
-    { path: '/admin/pending', label: 'Cereri în așteptare', icon: '⏳' },
-    { path: '/admin/approved', label: 'Facilități aprobate', icon: '✅' },
+    { 
+      path: '/admin/pending-sports-bases', 
+      label: 'Baze Sportive (Pending)', 
+      icon: '🏟️',
+      category: 'sports-bases'
+    },
+    { 
+      path: '/admin/approved-sports-bases', 
+      label: 'Baze Sportive (Aprobate)', 
+      icon: '✅',
+      category: 'sports-bases'
+    },
+    { 
+      path: '/admin/pending-coaches', 
+      label: 'Antrenori (Pending)', 
+      icon: '👨‍🏫',
+      category: 'coaches'
+    },
+    { 
+      path: '/admin/approved-coaches', 
+      label: 'Antrenori (Aprobați)', 
+      icon: '✅',
+      category: 'coaches'
+    },
+    { 
+      path: '/admin/pending-repair-shops', 
+      label: 'Magazine Reparații (Pending)', 
+      icon: '🔧',
+      category: 'repair-shops'
+    },
+    { 
+      path: '/admin/approved-repair-shops', 
+      label: 'Magazine Reparații (Aprobate)', 
+      icon: '✅',
+      category: 'repair-shops'
+    },
+    { 
+      path: '/admin/pending-equipment-shops', 
+      label: 'Magazine Articole (Pending)', 
+      icon: '🛍️',
+      category: 'equipment-shops'
+    },
+    { 
+      path: '/admin/approved-equipment-shops', 
+      label: 'Magazine Articole (Aprobate)', 
+      icon: '✅',
+      category: 'equipment-shops'
+    },
     { path: '/admin/suggestions', label: 'Sugestii', icon: '💡' },
     { path: '/admin/seo-pages', label: 'Pagini SEO', icon: '🔍' },
     { path: '/admin/users', label: 'Utilizatori', icon: '👥' },
@@ -17,7 +63,7 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
   ]
 
   const isActive = (path: string) => {
-    if (path === '/admin/pending' || path === '/admin/approved') {
+    if (path.includes('sports-bases') || path.includes('coaches') || path.includes('repair-shops') || path.includes('equipment-shops')) {
       return location.pathname === path || location.pathname.startsWith('/admin/facilities/')
     }
     if (path === '/admin/seo-pages') {
