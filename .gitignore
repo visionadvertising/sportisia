@@ -38,15 +38,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# security - scripts with credentials
-*fix*.sh
-*check*.sh
-*create*.sh
-*setup*.sh
-!setup-ssl.sh
-*diagnose*.sh
-*force*.sh
-*update*.sh
+# security - scripts with credentials or server configuration
+*.sh
 
 # documentation with sensitive info
 *.md
