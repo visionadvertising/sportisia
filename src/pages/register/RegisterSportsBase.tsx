@@ -84,8 +84,15 @@ function RegisterSportsBase() {
   const [showAddSportInput, setShowAddSportInput] = useState(false)
   const [newSport, setNewSport] = useState('')
   const [customSports, setCustomSports] = useState<string[]>([])
-  const [availableCities, setAvailableCities] = useState<Array<{city: string, county: string}>>([])
+  const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string | null}>>(ROMANIAN_CITIES)
   const [availableSports, setAvailableSports] = useState<string[]>([])
+  const [showAddCityInput, setShowAddCityInput] = useState(false)
+  const [showCityDropdown, setShowCityDropdown] = useState(false)
+  const [showAddSportInput, setShowAddSportInput] = useState(false)
+  const [showSportDropdown, setShowSportDropdown] = useState(false)
+  const [customCities, setCustomCities] = useState<Array<{city: string, county: string}>>([])
+  const [citySearch, setCitySearch] = useState('')
+  const [sportSearch, setSportSearch] = useState('')
   const [pricingDetails, setPricingDetails] = useState<PricingDetail[]>([])
   const [hasParking, setHasParking] = useState(false)
   const [hasShower, setHasShower] = useState(false)
@@ -140,35 +147,47 @@ function RegisterSportsBase() {
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        setError('Logo-ul trebuie să fie mai mic de 2MB')
-        return
-      }
-      setLogoFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Logo-ul trebuie să fie maxim 2MB')
+      return
     }
+
+    if (!file.type.startsWith('image/')) {
+      setError('Fișierul trebuie să fie o imagine')
+      return
+    }
+
+    setLogoFile(file)
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
   }
 
   const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    if (files.length + galleryFiles.length > 10) {
-      setError('Poți încărca maxim 10 imagini')
+    
+    if (galleryFiles.length + files.length > 10) {
+      setError('Poți încărca maxim 10 imagini în galerie')
       return
     }
-    const validFiles = files.filter(file => {
+
+    for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
-        setError(`Imaginea ${file.name} este prea mare (max 5MB)`)
-        return false
+        setError(`Imaginea ${file.name} depășește 5MB`)
+        return
       }
-      return true
-    })
-    setGalleryFiles([...galleryFiles, ...validFiles])
-    validFiles.forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        setError(`Fișierul ${file.name} trebuie să fie o imagine`)
+        return
+      }
+    }
+
+    setGalleryFiles([...galleryFiles, ...files])
+    files.forEach(file => {
       const reader = new FileReader()
       reader.onloadend = () => {
         setGalleryPreviews(prev => [...prev, reader.result as string])
@@ -177,15 +196,65 @@ function RegisterSportsBase() {
     })
   }
 
+  const addPricingDetail = () => {
+    setPricingDetails([...pricingDetails, { title: '', description: '', price: 0 }])
+  }
+
+  const removePricingDetail = (index: number) => {
+    setPricingDetails(pricingDetails.filter((_, i) => i !== index))
+  }
+
+  const updatePricingDetail = (index: number, field: keyof PricingDetail, value: string | number) => {
+    const updated = [...pricingDetails]
+    updated[index] = { ...updated[index], [field]: value }
+    setPricingDetails(updated)
+  }
+
   const removeGalleryImage = (index: number) => {
     setGalleryFiles(galleryFiles.filter((_, i) => i !== index))
     setGalleryPreviews(galleryPreviews.filter((_, i) => i !== index))
   }
 
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        if (!phone || !email || !city || (!location && !locationNotSpecified)) {
+          setError('Te rugăm să completezi toate câmpurile obligatorii')
+          return false
+        }
+        break
+      case 2:
+        if (!name) {
+          setError('Te rugăm să introduci denumirea facilității')
+          return false
+        }
+        break
+      case 4:
+        if (!sport) {
+          setError('Te rugăm să selectezi un sport')
+          return false
+        }
+        break
+    }
+    return true
+  }
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(currentStep + 1)
+      setError('')
+    }
+  }
+
+  const prevStep = () => {
+    setCurrentStep(currentStep - 1)
+    setError('')
+  }
+
   const handleSubmit = async () => {
     setError('')
     
-    if (!name || !phone || !email || !city || !location || !sport) {
+    if (!name || !phone || !email || !city || (!location && !locationNotSpecified) || !sport) {
       setError('Te rugăm să completezi toate câmpurile obligatorii')
       return
     }
@@ -193,7 +262,6 @@ function RegisterSportsBase() {
     setLoading(true)
 
     try {
-      // Convert logo to base64
       let logoBase64 = ''
       if (logoFile) {
         const reader = new FileReader()
@@ -203,7 +271,6 @@ function RegisterSportsBase() {
         })
       }
 
-      // Convert gallery to base64
       const galleryBase64 = await Promise.all(
         galleryFiles.map(file => {
           return new Promise<string>((resolve) => {
@@ -215,14 +282,14 @@ function RegisterSportsBase() {
       )
 
       const formData = {
-        facilityType: 'field', // Sports base = field
+        facilityType: 'field',
         name,
         phone,
         email,
         contactPerson,
         city,
         county: county || newCityCounty || null,
-        location,
+        location: locationNotSpecified ? null : location,
         locationNotSpecified,
         mapCoordinates: mapCoordinates ? JSON.stringify(mapCoordinates) : null,
         description,
@@ -233,7 +300,7 @@ function RegisterSportsBase() {
         openingHours: JSON.stringify(openingHours),
         sport,
         pricePerHour: pricingDetails.length > 0 ? pricingDetails[0].price : null,
-        pricingDetails: pricingDetails.length > 0 ? pricingDetails : null,
+        pricingDetails: JSON.stringify(pricingDetails),
         hasParking,
         hasShower,
         hasChangingRoom,
@@ -264,11 +331,11 @@ function RegisterSportsBase() {
 
   const totalSteps = 5
   const steps = [
-    'Tip facilitate',
     'Date de contact',
     'Branding',
     'Galerie',
-    'Detalii specifice'
+    'Sport și prețuri',
+    'Facilități și program'
   ]
 
   // Rest of the component JSX will be similar to Register.tsx but simplified for sports bases
@@ -355,14 +422,309 @@ function RegisterSportsBase() {
           </div>
         )}
 
-        {/* Step Content - Similar to Register.tsx but for sports bases only */}
-        {/* This is a simplified version - full implementation would include all form fields */}
-        
-        <div style={{ marginTop: '2rem' }}>
-          <p style={{ textAlign: 'center', color: '#64748b' }}>
-            Formularul complet va fi implementat similar cu Register.tsx, dar adaptat doar pentru baze sportive.
-          </p>
-        </div>
+        <form onSubmit={currentStep === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+          {/* Step 1: Contact Details - Copy from RegisterRepairShop */}
+          {currentStep === 1 && (
+            <div>
+              <h2 style={{ 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
+              }}>
+                Date de contact
+              </h2>
+              {/* Contact fields - identical to RegisterRepairShop Step 1 - will be copied in next step */}
+              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
+                Implementarea completă va include toate câmpurile (telefon, email, persoană contact, oraș, adresă, hartă).
+                Structura este identică cu RegisterRepairShop Step 1.
+              </p>
+            </div>
+          )}
+
+          {/* Step 2: Branding - Same as RegisterRepairShop */}
+          {currentStep === 2 && (
+            <div>
+              <h2 style={{ 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
+              }}>
+                Branding și prezentare
+              </h2>
+              {/* Branding fields - identical to RegisterRepairShop Step 2 */}
+              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
+                Câmpurile de branding sunt identice cu cele din RegisterRepairShop.
+                Implementarea completă va include toate câmpurile (denumire, descriere, logo, website, rețele sociale).
+              </p>
+            </div>
+          )}
+
+          {/* Step 3: Gallery - Same as RegisterRepairShop */}
+          {currentStep === 3 && (
+            <div>
+              <h2 style={{ 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
+              }}>
+                Galerie imagini
+              </h2>
+              {/* Gallery fields - identical to RegisterRepairShop Step 3 */}
+              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
+                Câmpurile de galerie sunt identice cu cele din RegisterRepairShop.
+                Implementarea completă va include upload-ul de imagini (max 10, 5MB/fișier).
+              </p>
+            </div>
+          )}
+
+          {/* Step 4: Sport and Pricing */}
+          {currentStep === 4 && (
+            <div>
+              <h2 style={{ 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
+              }}>
+                Sport și prețuri
+              </h2>
+              {/* Sport selection and pricing fields from Register.tsx */}
+              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
+                Implementarea completă va include selecția sportului și gestionarea prețurilor.
+              </p>
+            </div>
+          )}
+
+          {/* Step 5: Facilities and Opening Hours */}
+          {currentStep === 5 && (
+            <div>
+              <h2 style={{ 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
+              }}>
+                Facilități și program
+              </h2>
+              {/* Facilities checkboxes and opening hours from Register.tsx */}
+              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
+                Implementarea completă va include facilitățile (parcare, duș, vestiar, AC, iluminat) și programul pentru fiecare zi.
+              </p>
+            </div>
+          )}
+
+          {/* Success Step - Same as RegisterRepairShop */}
+          {currentStep === 6 && credentials && (
+            <div style={{
+              textAlign: 'center',
+              padding: isMobile ? '2rem 1rem' : '3rem'
+            }}>
+              <h2 style={{
+                color: '#10b981',
+                fontSize: isMobile ? '1.5rem' : '2rem',
+                marginBottom: '1rem',
+                fontWeight: '600'
+              }}>✅ Înregistrare reușită!</h2>
+              <p style={{
+                color: '#64748b',
+                marginBottom: '2rem',
+                fontSize: '0.9375rem',
+                lineHeight: '1.6'
+              }}>Baza ta sportivă a fost înregistrată. Contul tău a fost creat cu următoarele credențiale:</p>
+              
+              <div style={{
+                background: '#f8fafc',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                marginBottom: '2rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <strong style={{ color: '#0f172a', fontSize: '0.875rem' }}>Username:</strong>
+                  <div style={{
+                    background: 'white',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    marginTop: '0.5rem',
+                    fontFamily: 'monospace',
+                    fontSize: '1rem',
+                    color: '#0f172a',
+                    border: '1px solid #e2e8f0'
+                  }}>{credentials.username}</div>
+                </div>
+                <div>
+                  <strong style={{ color: '#0f172a', fontSize: '0.875rem' }}>Parolă:</strong>
+                  <div style={{
+                    background: 'white',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    marginTop: '0.5rem',
+                    fontFamily: 'monospace',
+                    fontSize: '1rem',
+                    color: '#0f172a',
+                    border: '1px solid #e2e8f0'
+                  }}>{credentials.password}</div>
+                </div>
+              </div>
+
+              <div style={{
+                background: '#fef3c7',
+                border: '1px solid #fbbf24',
+                borderRadius: '8px',
+                padding: '1rem',
+                marginBottom: '2rem'
+              }}>
+                <p style={{
+                  margin: 0,
+                  color: '#92400e',
+                  fontSize: '0.875rem',
+                  lineHeight: '1.6'
+                }}>
+                  ⚠️ <strong>Important:</strong> Salvează aceste credențiale! Vei avea nevoie de ele pentru a accesa și edita detaliile bazei tale sportive.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`Username: ${credentials.username}\nParolă: ${credentials.password}`)
+                    alert('Credențiale copiate în clipboard!')
+                  }}
+                  style={{
+                    padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
+                    background: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '1rem' : '0.875rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
+                    width: isMobile ? '100%' : 'auto',
+                    touchAction: 'manipulation',
+                    minHeight: isMobile ? '48px' : 'auto'
+                  }}
+                >
+                  Copiază credențiale
+                </button>
+                <button
+                  onClick={() => navigate('/login')}
+                  style={{
+                    padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
+                    background: '#0f172a',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '1rem' : '0.875rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)',
+                    width: isMobile ? '100%' : 'auto',
+                    touchAction: 'manipulation',
+                    minHeight: isMobile ? '48px' : 'auto'
+                  }}
+                >
+                  Mergi la Login
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Buttons - Same as RegisterRepairShop */}
+          {currentStep < 6 && (
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: isMobile ? 'column-reverse' : 'row',
+              gap: isMobile ? '0.75rem' : '1rem', 
+              marginTop: isMobile ? '2rem' : '2rem', 
+              justifyContent: 'space-between' 
+            }}>
+              {currentStep > 1 && (
+                <button
+                  type="button"
+                  onClick={prevStep}
+                  style={{
+                    padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '1rem' : '0.875rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    width: isMobile ? '100%' : 'auto',
+                    touchAction: 'manipulation',
+                    minHeight: isMobile ? '48px' : 'auto'
+                  }}
+                >
+                  Înapoi
+                </button>
+              )}
+              {!isMobile && <div style={{ flex: 1 }} />}
+              {currentStep < 5 ? (
+                <button
+                  type="submit"
+                  style={{
+                    padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
+                    background: '#0f172a',
+                    color: 'white',
+                    border: '1.5px solid #0f172a',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '1rem' : '0.875rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)',
+                    width: isMobile ? '100%' : 'auto',
+                    touchAction: 'manipulation',
+                    minHeight: isMobile ? '48px' : 'auto'
+                  }}
+                >
+                  Următorul
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
+                    background: loading ? '#94a3b8' : '#0f172a',
+                    color: 'white',
+                    border: '1.5px solid ' + (loading ? '#94a3b8' : '#0f172a'),
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '1rem' : '0.875rem',
+                    fontWeight: '600',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: loading ? 'none' : '0 2px 4px rgba(15, 23, 42, 0.2)',
+                    width: isMobile ? '100%' : 'auto',
+                    touchAction: 'manipulation',
+                    minHeight: isMobile ? '48px' : 'auto'
+                  }}
+                >
+                  {loading ? 'Se înregistrează...' : 'Finalizează'}
+                </button>
+              )}
+            </div>
+          )}
+        </form>
       </div>
     </div>
   )
