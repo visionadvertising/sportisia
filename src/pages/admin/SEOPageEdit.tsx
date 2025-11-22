@@ -520,8 +520,11 @@ function SEOPageEdit() {
               e.currentTarget.style.boxShadow = 'none'
             }}
             >
-              {useMemo(() => {
-                const quillModules = {
+              <ReactQuill
+                theme="snow"
+                value={formData.description}
+                onChange={(value) => setFormData({ ...formData, description: value })}
+                modules={useMemo(() => ({
                   toolbar: [
                     [{ 'header': [1, 2, 3, false] }],
                     ['bold', 'italic', 'underline', 'strike'],
@@ -530,31 +533,20 @@ function SEOPageEdit() {
                     [{ 'color': [] }, { 'background': [] }],
                     ['clean']
                   ]
-                }
-                
-                const quillFormats = [
+                }), [])}
+                formats={useMemo(() => [
                   'header',
                   'bold', 'italic', 'underline', 'strike',
                   'list', 'bullet',
                   'link',
                   'color', 'background'
-                ]
-                
-                return (
-                  <ReactQuill
-                    theme="snow"
-                    value={formData.description}
-                    onChange={(value) => setFormData({ ...formData, description: value })}
-                    modules={quillModules}
-                    formats={quillFormats}
-                    style={{
-                      background: 'white',
-                      minHeight: '300px'
-                    }}
-                    placeholder="Scrie descrierea aici. Poți adăuga link-uri interne folosind butonul de link din toolbar. Folosește link-uri relative (ex: /iasi/tenis/antrenori) pentru link-uri interne."
-                  />
-                )
-              }, [formData.description])}
+                ], [])}
+                style={{
+                  background: 'white',
+                  minHeight: '300px'
+                }}
+                placeholder="Scrie descrierea aici. Poți adăuga link-uri interne folosind butonul de link din toolbar. Folosește link-uri relative (ex: /iasi/tenis/antrenori) pentru link-uri interne."
+              />
             </div>
             <p style={{
               marginTop: '0.5rem',
