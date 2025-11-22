@@ -525,31 +525,32 @@ function Register() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#fafafa',
+      background: '#ffffff',
       padding: '0'
     }}>
       <div style={{
-        maxWidth: '1400px',
+        maxWidth: '1200px',
         margin: '0 auto',
-        padding: '4rem 2rem',
+        padding: '5rem 2rem',
         width: '100%'
       }}>
         <h1 style={{
-          fontSize: '2rem',
-          color: '#1a1a1a',
-          marginBottom: '3rem',
-          fontWeight: '300',
-          letterSpacing: '-0.02em'
+          fontSize: '2.5rem',
+          color: '#0f172a',
+          marginBottom: '4rem',
+          fontWeight: '600',
+          letterSpacing: '-0.03em',
+          lineHeight: '1.2'
         }}>Înregistrare Facilitate</h1>
 
         {/* Progress Steps */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginBottom: '4rem',
+          marginBottom: '5rem',
           position: 'relative',
-          paddingBottom: '2rem',
-          borderBottom: '1px solid #e5e5e5'
+          paddingBottom: '3rem',
+          borderBottom: '1px solid #f1f5f9'
         }}>
           {steps.map((step, index) => (
             <div key={step.number} style={{ flex: 1, position: 'relative', zIndex: 1 }}>
@@ -557,41 +558,43 @@ function Register() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '0.75rem'
+                gap: '1rem'
               }}>
                 <div style={{
-                  width: '32px',
-                  height: '32px',
+                  width: '40px',
+                  height: '40px',
                   borderRadius: '50%',
-                  background: currentStep >= step.number ? '#1a1a1a' : '#e5e5e5',
-                  color: currentStep >= step.number ? 'white' : '#999',
+                  background: currentStep >= step.number ? '#0f172a' : '#f1f5f9',
+                  color: currentStep >= step.number ? 'white' : '#94a3b8',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontWeight: '400',
-                  fontSize: '0.875rem',
-                  transition: 'all 0.2s'
+                  fontWeight: '600',
+                  fontSize: '0.9375rem',
+                  transition: 'all 0.3s ease',
+                  boxShadow: currentStep >= step.number ? '0 2px 8px rgba(15, 23, 42, 0.15)' : 'none'
                 }}>
                   {currentStep > step.number ? '✓' : step.number}
                 </div>
                 <span style={{
-                  fontSize: '0.75rem',
-                  color: currentStep >= step.number ? '#1a1a1a' : '#999',
-                  fontWeight: currentStep === step.number ? '500' : '400',
+                  fontSize: '0.8125rem',
+                  color: currentStep >= step.number ? '#0f172a' : '#94a3b8',
+                  fontWeight: currentStep === step.number ? '600' : '500',
                   textAlign: 'center',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
+                  letterSpacing: '0.1em'
                 }}>{step.title}</span>
               </div>
               {index < steps.length - 1 && (
                 <div style={{
                   position: 'absolute',
-                  top: '16px',
-                  left: 'calc(50% + 16px)',
-                  right: 'calc(-50% + 16px)',
-                  height: '1px',
-                  background: currentStep > step.number ? '#1a1a1a' : '#e5e5e5',
-                  zIndex: 0
+                  top: '20px',
+                  left: 'calc(50% + 20px)',
+                  right: 'calc(-50% + 20px)',
+                  height: '2px',
+                  background: currentStep > step.number ? '#0f172a' : '#f1f5f9',
+                  zIndex: 0,
+                  transition: 'all 0.3s ease'
                 }} />
               )}
             </div>
@@ -600,12 +603,15 @@ function Register() {
 
         {error && (
           <div style={{
-            background: '#fee2e2',
-            border: '1px solid #ef4444',
+            background: '#fef2f2',
+            border: '1.5px solid #fca5a5',
             color: '#991b1b',
-            padding: '1rem',
+            padding: '1rem 1.25rem',
             borderRadius: '8px',
-            marginBottom: '2rem'
+            marginBottom: '2rem',
+            fontSize: '0.9375rem',
+            fontWeight: '500',
+            boxShadow: '0 1px 3px rgba(239, 68, 68, 0.1)'
           }}>
             {error}
           </div>
@@ -616,18 +622,19 @@ function Register() {
           {currentStep === 1 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.5rem', 
-                color: '#1a1a1a', 
-                marginBottom: '2rem',
-                fontWeight: '400',
-                letterSpacing: '-0.01em'
+                fontSize: '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
               }}>
                 Alege tipul facilității
               </h2>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1rem'
+                gap: '1.25rem'
               }}>
                 {[
                   { value: 'field', label: 'Teren Sportiv' },
@@ -640,18 +647,31 @@ function Register() {
                     type="button"
                     onClick={() => setFacilityType(type.value as FacilityType)}
                     style={{
-                      padding: '2rem',
-                      border: facilityType === type.value ? '2px solid #1a1a1a' : '1px solid #e5e5e5',
-                      borderRadius: '0',
-                      background: facilityType === type.value ? '#1a1a1a' : 'transparent',
-                      color: facilityType === type.value ? 'white' : '#1a1a1a',
+                      padding: '1.5rem',
+                      border: facilityType === type.value ? '2px solid #0f172a' : '1.5px solid #e2e8f0',
+                      borderRadius: '12px',
+                      background: facilityType === type.value ? '#0f172a' : '#ffffff',
+                      color: facilityType === type.value ? 'white' : '#0f172a',
                       cursor: 'pointer',
                       fontSize: '1rem',
-                      fontWeight: '400',
+                      fontWeight: '600',
                       textAlign: 'left',
-                      transition: 'all 0.2s',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em'
+                      transition: 'all 0.2s ease',
+                      boxShadow: facilityType === type.value ? '0 4px 12px rgba(15, 23, 42, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.05)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (facilityType !== type.value) {
+                        e.currentTarget.style.borderColor = '#0f172a'
+                        e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.1)'
+                        e.currentTarget.style.transform = 'translateY(-2px)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (facilityType !== type.value) {
+                        e.currentTarget.style.borderColor = '#e2e8f0'
+                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)'
+                        e.currentTarget.style.transform = 'translateY(0)'
+                      }
                     }}
                   >
                     {type.label}
@@ -665,29 +685,29 @@ function Register() {
           {currentStep === 2 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.5rem', 
-                color: '#1a1a1a', 
-                marginBottom: '2rem',
-                fontWeight: '400',
-                letterSpacing: '-0.01em'
+                fontSize: '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
               }}>
                 Date de contact
               </h2>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '3rem',
-                marginBottom: '3rem'
+                gap: '2rem',
+                marginBottom: '2.5rem'
               }}>
                 <div>
                   <label style={{
                     display: 'block',
-                    marginBottom: '1rem',
-                    color: '#1a1a1a',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
                     fontWeight: '600',
                     fontSize: '0.875rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em'
+                    letterSpacing: '0.01em'
                   }}>Telefon *</label>
                   <input
                     type="tel"
@@ -696,37 +716,36 @@ function Register() {
                     required
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   />
                 </div>
                 <div>
                   <label style={{
                     display: 'block',
-                    marginBottom: '1rem',
-                    color: '#1a1a1a',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
                     fontWeight: '600',
                     fontSize: '0.875rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em'
+                    letterSpacing: '0.01em'
                   }}>Email *</label>
                   <input
                     type="email"
@@ -735,37 +754,36 @@ function Register() {
                     required
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   />
                 </div>
                 <div>
                   <label style={{
                     display: 'block',
-                    marginBottom: '1rem',
-                    color: '#1a1a1a',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
                     fontWeight: '600',
                     fontSize: '0.875rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em'
+                    letterSpacing: '0.01em'
                   }}>Persoană de contact</label>
                   <input
                     type="text"
@@ -774,30 +792,30 @@ function Register() {
                     placeholder="Ex: Ion Popescu"
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   />
                 </div>
               </div>
-              <div style={{ marginBottom: '3rem' }}>
+              <div style={{ marginBottom: '2.5rem' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',
@@ -825,26 +843,26 @@ function Register() {
                     required
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
                       cursor: 'pointer',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   >
                     <option value="">Selectează oraș</option>
@@ -993,7 +1011,7 @@ function Register() {
                   </div>
                 )}
               </div>
-              <div style={{ marginBottom: '3rem' }}>
+              <div style={{ marginBottom: '2.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
                   <label style={{
                     display: 'block',
@@ -1080,15 +1098,16 @@ function Register() {
           {currentStep === 3 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.5rem', 
-                color: '#1a1a1a', 
-                marginBottom: '2rem',
-                fontWeight: '400',
-                letterSpacing: '-0.01em'
+                fontSize: '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
               }}>
                 Branding și prezentare
               </h2>
-              <div style={{ marginBottom: '3rem' }}>
+              <div style={{ marginBottom: '2.5rem' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',
@@ -1123,7 +1142,7 @@ function Register() {
                   }}
                 />
               </div>
-              <div style={{ marginBottom: '3rem' }}>
+              <div style={{ marginBottom: '2.5rem' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',
@@ -1140,31 +1159,31 @@ function Register() {
                   rows={5}
                   style={{
                     width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
                       fontFamily: 'inherit',
                       resize: 'vertical',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                 />
               </div>
-              <div style={{ marginBottom: '3rem' }}>
+              <div style={{ marginBottom: '2.5rem' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',
@@ -1217,7 +1236,7 @@ function Register() {
                   </div>
                 )}
               </div>
-              <div style={{ marginBottom: '3rem' }}>
+              <div style={{ marginBottom: '2.5rem' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',
@@ -1274,25 +1293,25 @@ function Register() {
                     placeholder="Facebook URL"
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   />
                   <input
@@ -1302,25 +1321,25 @@ function Register() {
                     placeholder="Instagram URL"
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   />
                   <input
@@ -1330,25 +1349,25 @@ function Register() {
                     placeholder="X.com URL"
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   />
                   <input
@@ -1358,25 +1377,25 @@ function Register() {
                     placeholder="TikTok URL"
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   />
                   <input
@@ -1386,25 +1405,25 @@ function Register() {
                     placeholder="YouTube URL"
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   />
                   <input
@@ -1414,25 +1433,25 @@ function Register() {
                     placeholder="LinkedIn URL"
                     style={{
                       width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   />
                 </div>
@@ -1444,15 +1463,16 @@ function Register() {
           {currentStep === 4 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.5rem', 
-                color: '#1a1a1a', 
-                marginBottom: '2rem',
-                fontWeight: '400',
-                letterSpacing: '-0.01em'
+                fontSize: '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
               }}>
                 Galerie imagini
               </h2>
-              <div style={{ marginBottom: '3rem' }}>
+              <div style={{ marginBottom: '2.5rem' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',
@@ -1569,16 +1589,17 @@ function Register() {
           {currentStep === 5 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.5rem', 
-                color: '#1a1a1a', 
-                marginBottom: '2rem',
-                fontWeight: '400',
-                letterSpacing: '-0.01em'
+                fontSize: '1.75rem', 
+                color: '#0f172a', 
+                marginBottom: '2.5rem',
+                fontWeight: '600',
+                letterSpacing: '-0.02em',
+                lineHeight: '1.3'
               }}>
                 Detalii specifice
               </h2>
 
-              <div style={{ marginBottom: '3rem' }}>
+              <div style={{ marginBottom: '2.5rem' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',
@@ -1670,23 +1691,23 @@ function Register() {
                                   })
                                 }}
                                 style={{
-                      padding: '0.75rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
+                      padding: '0.75rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
                       fontSize: '0.875rem',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
-                      fontWeight: '400'
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                               />
                               <span style={{ color: '#999', fontSize: '0.875rem' }}>—</span>
@@ -1703,23 +1724,23 @@ function Register() {
                                   })
                                 }}
                                 style={{
-                      padding: '0.75rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
+                      padding: '0.75rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
                       fontSize: '0.875rem',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
-                      fontWeight: '400'
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                               />
                             </>
@@ -1740,13 +1761,14 @@ function Register() {
                   paddingTop: '3rem'
                 }}>
                   <h3 style={{ 
-                    color: '#1a1a1a', 
+                    color: '#0f172a', 
                     marginBottom: '2rem',
-                    fontSize: '1.25rem',
-                    fontWeight: '400',
-                    letterSpacing: '-0.01em'
+                    fontSize: '1.375rem',
+                    fontWeight: '600',
+                    letterSpacing: '-0.01em',
+                    lineHeight: '1.3'
                   }}>Detalii Teren</h3>
-                  <div style={{ marginBottom: '3rem' }}>
+                  <div style={{ marginBottom: '2.5rem' }}>
                     <label style={{
                       display: 'block',
                       marginBottom: '0.75rem',
@@ -1898,7 +1920,7 @@ function Register() {
                     )}
                   </div>
 
-                  <div style={{ marginBottom: '3rem' }}>
+                  <div style={{ marginBottom: '2.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                       <label style={{ 
                         color: '#1a1a1a', 
@@ -2007,27 +2029,27 @@ function Register() {
                             rows={2}
                             style={{
                               width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
                       fontFamily: 'inherit',
                       resize: 'vertical',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                           />
                         </div>
@@ -2077,7 +2099,7 @@ function Register() {
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '2rem',
+                    gap: '1.5rem',
                     marginTop: '2rem'
                   }}>
                     <label style={{ 
@@ -2094,9 +2116,9 @@ function Register() {
                         checked={hasParking}
                         onChange={(e) => setHasParking(e.target.checked)}
                         style={{
-                          width: '18px',
-                          height: '18px',
-                          accentColor: '#1a1a1a',
+                          width: '20px',
+                          height: '20px',
+                          accentColor: '#0f172a',
                           cursor: 'pointer'
                         }}
                       />
@@ -2116,9 +2138,9 @@ function Register() {
                         checked={hasShower}
                         onChange={(e) => setHasShower(e.target.checked)}
                         style={{
-                          width: '18px',
-                          height: '18px',
-                          accentColor: '#1a1a1a',
+                          width: '20px',
+                          height: '20px',
+                          accentColor: '#0f172a',
                           cursor: 'pointer'
                         }}
                       />
@@ -2138,9 +2160,9 @@ function Register() {
                         checked={hasChangingRoom}
                         onChange={(e) => setHasChangingRoom(e.target.checked)}
                         style={{
-                          width: '18px',
-                          height: '18px',
-                          accentColor: '#1a1a1a',
+                          width: '20px',
+                          height: '20px',
+                          accentColor: '#0f172a',
                           cursor: 'pointer'
                         }}
                       />
@@ -2160,9 +2182,9 @@ function Register() {
                         checked={hasAirConditioning}
                         onChange={(e) => setHasAirConditioning(e.target.checked)}
                         style={{
-                          width: '18px',
-                          height: '18px',
-                          accentColor: '#1a1a1a',
+                          width: '20px',
+                          height: '20px',
+                          accentColor: '#0f172a',
                           cursor: 'pointer'
                         }}
                       />
@@ -2182,9 +2204,9 @@ function Register() {
                         checked={hasLighting}
                         onChange={(e) => setHasLighting(e.target.checked)}
                         style={{
-                          width: '18px',
-                          height: '18px',
-                          accentColor: '#1a1a1a',
+                          width: '20px',
+                          height: '20px',
+                          accentColor: '#0f172a',
                           cursor: 'pointer'
                         }}
                       />
@@ -2203,11 +2225,12 @@ function Register() {
                   paddingTop: '3rem'
                 }}>
                   <h3 style={{ 
-                    color: '#1a1a1a', 
+                    color: '#0f172a', 
                     marginBottom: '2rem',
-                    fontSize: '1.25rem',
-                    fontWeight: '400',
-                    letterSpacing: '-0.01em'
+                    fontSize: '1.375rem',
+                    fontWeight: '600',
+                    letterSpacing: '-0.01em',
+                    lineHeight: '1.3'
                   }}>Detalii Antrenor</h3>
                   <div style={{
                     display: 'grid',
@@ -2286,7 +2309,7 @@ function Register() {
                       />
                     </div>
                   </div>
-                  <div style={{ marginBottom: '3rem' }}>
+                  <div style={{ marginBottom: '2.5rem' }}>
                     <label style={{
                       display: 'block',
                       marginBottom: '0.75rem',
@@ -2302,27 +2325,27 @@ function Register() {
                       rows={3}
                       style={{
                         width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
                       fontFamily: 'inherit',
                       resize: 'vertical',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     />
                   </div>
@@ -2373,13 +2396,14 @@ function Register() {
                   paddingTop: '3rem'
                 }}>
                   <h3 style={{ 
-                    color: '#1a1a1a', 
+                    color: '#0f172a', 
                     marginBottom: '2rem',
-                    fontSize: '1.25rem',
-                    fontWeight: '400',
-                    letterSpacing: '-0.01em'
+                    fontSize: '1.375rem',
+                    fontWeight: '600',
+                    letterSpacing: '-0.01em',
+                    lineHeight: '1.3'
                   }}>Detalii Magazin Reparații</h3>
-                  <div style={{ marginBottom: '3rem' }}>
+                  <div style={{ marginBottom: '2.5rem' }}>
                     <label style={{
                       display: 'block',
                       marginBottom: '0.75rem',
@@ -2395,27 +2419,27 @@ function Register() {
                       rows={4}
                       style={{
                         width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
                       fontFamily: 'inherit',
                       resize: 'vertical',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     />
                   </div>
@@ -2506,13 +2530,14 @@ function Register() {
                   paddingTop: '3rem'
                 }}>
                   <h3 style={{ 
-                    color: '#1a1a1a', 
+                    color: '#0f172a', 
                     marginBottom: '2rem',
-                    fontSize: '1.25rem',
-                    fontWeight: '400',
-                    letterSpacing: '-0.01em'
+                    fontSize: '1.375rem',
+                    fontWeight: '600',
+                    letterSpacing: '-0.01em',
+                    lineHeight: '1.3'
                   }}>Detalii Magazin Articole Sportive</h3>
-                  <div style={{ marginBottom: '3rem' }}>
+                  <div style={{ marginBottom: '2.5rem' }}>
                     <label style={{
                       display: 'block',
                       marginBottom: '0.75rem',
@@ -2528,27 +2553,27 @@ function Register() {
                       rows={4}
                       style={{
                         width: '100%',
-                      padding: '1rem 0',
-                      border: 'none',
-                      borderBottom: '2px solid #d1d5db',
-                      borderRadius: '0',
-                      fontSize: '1.0625rem',
+                      padding: '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
                       outline: 'none',
                       fontFamily: 'inherit',
                       resize: 'vertical',
-                      background: 'transparent',
-                      color: '#1a1a1a',
-                      transition: 'all 0.2s',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      lineHeight: '1.5'
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderBottomColor = '#1a1a1a'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderBottomColor = '#d1d5db'
-                      e.target.style.borderBottomWidth = '2px'
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                     />
                   </div>
@@ -2622,22 +2647,23 @@ function Register() {
                 onClick={prevStep}
                 style={{
                   padding: '0.875rem 2rem',
-                  background: 'transparent',
-                  color: '#1a1a1a',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '0',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
                   fontSize: '0.875rem',
-                  fontWeight: '400',
+                  fontWeight: '600',
                   cursor: 'pointer',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#1a1a1a'
+                  e.currentTarget.style.borderColor = '#0f172a'
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#e5e5e5'
+                  e.currentTarget.style.borderColor = '#e2e8f0'
+                  e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                 }}
               >
                 Înapoi
@@ -2649,22 +2675,27 @@ function Register() {
                 type="submit"
                 style={{
                   padding: '0.875rem 2rem',
-                  background: '#1a1a1a',
+                  background: '#0f172a',
                   color: 'white',
-                  border: '1px solid #1a1a1a',
-                  borderRadius: '0',
+                  border: '1.5px solid #0f172a',
+                  borderRadius: '8px',
                   fontSize: '0.875rem',
-                  fontWeight: '400',
+                  fontWeight: '600',
                   cursor: 'pointer',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '0.8'
+                  e.currentTarget.style.background = '#1e293b'
+                  e.currentTarget.style.borderColor = '#1e293b'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(15, 23, 42, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1'
+                  e.currentTarget.style.background = '#0f172a'
+                  e.currentTarget.style.borderColor = '#0f172a'
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(15, 23, 42, 0.2)'
+                  e.currentTarget.style.transform = 'translateY(0)'
                 }}
               >
                 Următorul
