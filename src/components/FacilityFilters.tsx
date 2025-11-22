@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ROMANIAN_CITIES, getCityNames } from '../data/romanian-cities'
+import { ROMANIAN_CITIES } from '../data/romanian-cities'
 import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug } from '../utils/seo'
 import API_BASE_URL from '../config'
 import './FacilityFilters.css'
@@ -44,7 +44,7 @@ function FacilityFilters({
   const [city, setCity] = useState(selectedCity)
   const [sport, setSport] = useState(selectedSport)
   const [type, setType] = useState(selectedType)
-  const [availableCities, setAvailableCities] = useState<string[]>(getCityNames())
+  const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
   const [availableSports, setAvailableSports] = useState<string[]>(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash'])
 
   // Load cities and sports from backend
@@ -55,9 +55,23 @@ function FacilityFilters({
         const data = await response.json()
         if (data.success && data.data) {
           // Combine standard cities with approved cities from backend
-          const backendCities = data.data.map((item: any) => item.city)
-          const allCities = [...new Set([...getCityNames(), ...backendCities])].sort()
-          setAvailableCities(allCities)
+          const backendCities = data.data.map((item: any) => ({
+            city: item.city,
+            county: item.county || null
+          }))
+          // Create a map to avoid duplicates
+          const cityMap = new Map<string, {city: string, county?: string | null}>()
+          // Add standard cities
+          ROMANIAN_CITIES.forEach(c => {
+            cityMap.set(c.city, c)
+          })
+          // Add API cities
+          backendCities.forEach((c: {city: string, county?: string | null}) => {
+            if (!cityMap.has(c.city)) {
+              cityMap.set(c.city, c)
+            }
+          })
+          setAvailableCities(Array.from(cityMap.values()).sort((a, b) => a.city.localeCompare(b.city)))
         }
       } catch (err) {
         console.error('Error loading cities:', err)
@@ -228,7 +242,11 @@ function FacilityFilters({
           >
             <option value="">Toate orașele</option>
             {availableCities.map(cityOption => (
-              <option key={cityOption} value={cityOption}>{cityOption}</option>
+              <option key={cityOption.city} value={cityOption.city}>
+                {cityOption.county 
+                  ? `${cityOption.city} • ${cityOption.county}` 
+                  : cityOption.city}
+              </option>
             ))}
           </select>
         </div>
