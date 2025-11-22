@@ -218,6 +218,21 @@ async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `)
 
+    // Create facility suggestions table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS facility_suggestions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        county VARCHAR(100) NOT NULL,
+        city VARCHAR(100) NOT NULL,
+        address TEXT NOT NULL,
+        status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_status (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
     // Create default admin user if it doesn't exist
     const [adminExists] = await pool.query('SELECT id FROM admin_users WHERE username = ?', ['admin'])
     if (adminExists.length === 0) {
@@ -1638,6 +1653,125 @@ app.put('/api/admin/seo-pages/:id', async (req, res) => {
 })
 
 // DELETE SEO page (admin only)
+// POST facility suggestion
+app.post('/api/suggestions', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const { name, county, city, address } = req.body
+
+    if (!name || !county || !city || !address) {
+      return res.status(400).json({
+        success: false,
+        error: 'Toate câmpurile sunt obligatorii'
+      })
+    }
+
+    await pool.query(
+      'INSERT INTO facility_suggestions (name, county, city, address, status) VALUES (?, ?, ?, ?, ?)',
+      [name.trim(), county, city.trim(), address.trim(), 'pending']
+    )
+
+    res.json({
+      success: true,
+      message: 'Sugestia a fost trimisă cu succes'
+    })
+  } catch (error) {
+    console.error('Error saving suggestion:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET all suggestions (admin only)
+app.get('/api/admin/suggestions', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const adminToken = req.headers.authorization?.replace('Bearer ', '')
+    if (!adminToken || !verifyAdminToken(adminToken)) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const { status } = req.query
+    let query = 'SELECT * FROM facility_suggestions'
+    const params = []
+
+    if (status) {
+      query += ' WHERE status = ?'
+      params.push(status)
+    }
+
+    query += ' ORDER BY created_at DESC'
+
+    const [rows] = await pool.query(query, params)
+
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    console.error('Error fetching suggestions:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// PUT update suggestion status (admin only)
+app.put('/api/admin/suggestions/:id/status', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const adminToken = req.headers.authorization?.replace('Bearer ', '')
+    if (!adminToken || !verifyAdminToken(adminToken)) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const { id } = req.params
+    const { status } = req.body
+
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Status invalid'
+      })
+    }
+
+    await pool.query(
+      'UPDATE facility_suggestions SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [status, id]
+    )
+
+    res.json({ success: true, message: 'Status actualizat cu succes' })
+  } catch (error) {
+    console.error('Error updating suggestion status:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// DELETE suggestion (admin only)
+app.delete('/api/admin/suggestions/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const adminToken = req.headers.authorization?.replace('Bearer ', '')
+    if (!adminToken || !verifyAdminToken(adminToken)) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
+    }
+
+    const { id } = req.params
+    await pool.query('DELETE FROM facility_suggestions WHERE id = ?', [id])
+
+    res.json({ success: true, message: 'Sugestie ștearsă cu succes' })
+  } catch (error) {
+    console.error('Error deleting suggestion:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 app.delete('/api/admin/seo-pages/:id', async (req, res) => {
   try {
     if (!pool) {

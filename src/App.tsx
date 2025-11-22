@@ -13,6 +13,7 @@ import SEOPages from './pages/admin/SEOPages'
 import SEOPageEdit from './pages/admin/SEOPageEdit'
 import FacilitiesList from './pages/FacilitiesList'
 import AllFacilities from './pages/AllFacilities'
+import SuggestFacility from './pages/SuggestFacility'
 
 function AppContent() {
   const location = useLocation()
@@ -274,6 +275,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/sugereaza" element={<SuggestFacility />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/toate" element={<AllFacilities />} />
@@ -290,6 +292,7 @@ function AppContent() {
         <Route path="/admin/pending" element={<PendingFacilities />} />
         <Route path="/admin/approved" element={<ApprovedFacilities />} />
         <Route path="/admin/facilities/:id" element={<FacilityDetails />} />
+        <Route path="/admin/suggestions" element={<Suggestions />} />
         <Route path="/admin/seo-pages" element={<SEOPages />} />
         <Route path="/admin/seo-pages/edit" element={<SEOPageEdit />} />
         <Route path="/admin/seo-pages/:id" element={<SEOPageEdit />} />

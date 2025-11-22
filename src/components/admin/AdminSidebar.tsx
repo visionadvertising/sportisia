@@ -10,6 +10,7 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
   const menuItems = [
     { path: '/admin/pending', label: 'Cereri în așteptare', icon: '⏳' },
     { path: '/admin/approved', label: 'Facilități aprobate', icon: '✅' },
+    { path: '/admin/suggestions', label: 'Sugestii', icon: '💡' },
     { path: '/admin/seo-pages', label: 'Pagini SEO', icon: '🔍' },
     { path: '/admin/users', label: 'Utilizatori', icon: '👥' },
     { path: '/admin/settings', label: 'Setări Site', icon: '⚙️' }
@@ -21,6 +22,9 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
     }
     if (path === '/admin/seo-pages') {
       return location.pathname === path || location.pathname.startsWith('/admin/seo-pages/')
+    }
+    if (path === '/admin/suggestions') {
+      return location.pathname === path
     }
     return location.pathname === path
   }

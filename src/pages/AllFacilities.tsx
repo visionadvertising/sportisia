@@ -516,33 +516,67 @@ function AllFacilities() {
             }}>
               Ai o facilitate sau serviciu sportiv? Înregistrează-te și ajută comunitatea să te găsească!
             </p>
-            <Link
-              to="/register"
-              style={{
-                padding: isMobile ? '0.875rem 1.5rem' : '1rem 2.5rem',
-                background: '#10b981',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                display: 'inline-block',
-                fontWeight: '600',
-                fontSize: isMobile ? '0.9375rem' : '1.1rem',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#059669'
-                e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
-                e.currentTarget.style.transform = 'translateY(-1px)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#10b981'
-                e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
-                e.currentTarget.style.transform = 'translateY(0)'
-              }}
-            >
-              Înregistrează-te acum
-            </Link>
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <Link
+                to="/register"
+                style={{
+                  padding: isMobile ? '0.875rem 1.5rem' : '1rem 2.5rem',
+                  background: '#10b981',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '8px',
+                  display: 'inline-block',
+                  fontWeight: '600',
+                  fontSize: isMobile ? '0.9375rem' : '1.1rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#059669'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#10b981'
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                Înregistrează-te acum
+              </Link>
+              <Link
+                to="/sugereaza"
+                style={{
+                  padding: isMobile ? '0.875rem 1.5rem' : '1rem 2.5rem',
+                  background: '#6366f1',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '8px',
+                  display: 'inline-block',
+                  fontWeight: '600',
+                  fontSize: isMobile ? '0.9375rem' : '1.1rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(99, 102, 241, 0.2)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#4f46e5'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(99, 102, 241, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#6366f1'
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(99, 102, 241, 0.2)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                Sugerează
+              </Link>
+            </div>
           </div>
           ) : (
             <div>
