@@ -6,8 +6,6 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
-import Sports from './pages/Sports'
-import Cities from './pages/Cities'
 import FacilitiesList from './pages/FacilitiesList'
 import SEOFacilityPage from './pages/SEOFacilityPage'
 import AllFacilitiesBySport from './pages/AllFacilitiesBySport'
@@ -75,8 +73,6 @@ function AppContent() {
               flexWrap: 'wrap'
             }}>
               <Link to="/" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Home</Link>
-              <Link to="/sporturi" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Sporturi</Link>
-              <Link to="/orase" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Orașe</Link>
               <Link to="/terenuri" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Terenuri</Link>
               <Link to="/antrenori" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Antrenori</Link>
               <Link to="/magazine-reparatii" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Magazine Reparații</Link>
@@ -96,8 +92,6 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/sporturi" element={<Sports />} />
-        <Route path="/orase" element={<Cities />} />
         {/* All facilities by sport or city - must be before other dynamic routes */}
         <Route path="/sport/:sport" element={<AllFacilitiesBySport />} />
         <Route path="/oras/:city" element={<AllFacilitiesByCity />} />

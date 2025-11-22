@@ -109,8 +109,8 @@ function AllFacilitiesBySport() {
         color: 'white'
       }}>
         <h1>Sport invalid</h1>
-        <Link to="/sporturi" style={{ color: 'white', textDecoration: 'underline' }}>
-          Înapoi la Sporturi
+        <Link to="/" style={{ color: 'white', textDecoration: 'underline' }}>
+          Înapoi la Home
         </Link>
       </div>
     )

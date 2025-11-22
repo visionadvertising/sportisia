@@ -108,8 +108,8 @@ function AllFacilitiesByCity() {
         color: 'white'
       }}>
         <h1>Oraș invalid</h1>
-        <Link to="/orase" style={{ color: 'white', textDecoration: 'underline' }}>
-          Înapoi la Orașe
+        <Link to="/" style={{ color: 'white', textDecoration: 'underline' }}>
+          Înapoi la Home
         </Link>
       </div>
     )
