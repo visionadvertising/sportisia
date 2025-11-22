@@ -746,11 +746,11 @@ app.get('/api/sports', async (req, res) => {
     // Combine and deduplicate
     const sportMap = new Map()
     
-    facilitySports.forEach((row: any) => {
+    facilitySports.forEach((row) => {
       sportMap.set(row.sport, row.facility_count)
     })
     
-    approvedSports.forEach((row: any) => {
+    approvedSports.forEach((row) => {
       if (!sportMap.has(row.sport)) {
         sportMap.set(row.sport, 0)
       }
@@ -801,11 +801,11 @@ app.get('/api/cities', async (req, res) => {
     // Combine and deduplicate
     const cityMap = new Map()
     
-    facilityCities.forEach((row: any) => {
+    facilityCities.forEach((row) => {
       cityMap.set(row.city, row.facility_count)
     })
     
-    approvedCities.forEach((row: any) => {
+    approvedCities.forEach((row) => {
       if (!cityMap.has(row.city)) {
         cityMap.set(row.city, 0)
       }
