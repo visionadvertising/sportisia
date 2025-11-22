@@ -153,6 +153,51 @@ async function initDatabase() {
       )
     `)
 
+    // Create admin users table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_username (username)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    // Create site settings table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS site_settings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_key (setting_key)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    // Create default admin user if it doesn't exist
+    const [adminExists] = await pool.query('SELECT id FROM admin_users WHERE username = ?', ['admin'])
+    if (adminExists.length === 0) {
+      const defaultPassword = hashPassword('admin123') // Default password - CHANGE THIS!
+      await pool.query(
+        'INSERT INTO admin_users (username, password, email) VALUES (?, ?, ?)',
+        ['admin', defaultPassword, 'admin@sportisia.ro']
+      )
+      console.log('✅ Default admin user created (username: admin, password: admin123 - CHANGE THIS!)')
+    }
+
+    // Initialize site settings
+    const [logoExists] = await pool.query('SELECT id FROM site_settings WHERE setting_key = ?', ['site_logo'])
+    if (logoExists.length === 0) {
+      await pool.query(
+        'INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)',
+        ['site_logo', '']
+      )
+    }
+
     console.log('✅ Tables created or already exist')
 
     // Check and add missing columns to facilities table
@@ -644,6 +689,209 @@ app.put('/api/facilities/:id', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating facility:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// ==================== ADMIN ENDPOINTS ====================
+
+// POST admin login
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const { username, password } = req.body
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Username și parolă sunt obligatorii'
+      })
+    }
+
+    const hashedPassword = hashPassword(password)
+    const [rows] = await pool.query(
+      'SELECT id, username, email FROM admin_users WHERE username = ? AND password = ?',
+      [username, hashedPassword]
+    )
+
+    if (rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        error: 'Credențiale invalide'
+      })
+    }
+
+    res.json({
+      success: true,
+      message: 'Autentificare reușită',
+      admin: {
+        id: rows[0].id,
+        username: rows[0].username,
+        email: rows[0].email
+      }
+    })
+  } catch (error) {
+    console.error('Error during admin login:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET pending facilities (for approval)
+app.get('/api/admin/pending-facilities', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const [rows] = await pool.query(
+      `SELECT f.*, u.username, u.email as user_email
+       FROM facilities f
+       LEFT JOIN users u ON f.id = u.facility_id AND f.facility_type = u.facility_type
+       WHERE f.status = 'pending'
+       ORDER BY f.created_at DESC`
+    )
+
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    console.error('Error fetching pending facilities:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// PUT approve/reject facility
+app.put('/api/admin/facilities/:id/status', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const facilityId = req.params.id
+    const { status } = req.body // 'active' or 'inactive'
+
+    if (!status || !['active', 'inactive'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Status invalid. Trebuie să fie "active" sau "inactive"'
+      })
+    }
+
+    await pool.query(
+      'UPDATE facilities SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [status, facilityId]
+    )
+
+    res.json({
+      success: true,
+      message: `Facilitatea a fost ${status === 'active' ? 'aprobată' : 'respinsă'} cu succes`
+    })
+  } catch (error) {
+    console.error('Error updating facility status:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET all users
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const [rows] = await pool.query(
+      `SELECT u.id, u.username, u.email, u.facility_id, u.facility_type, u.created_at,
+              f.name as facility_name, f.status as facility_status
+       FROM users u
+       LEFT JOIN facilities f ON u.facility_id = f.id AND u.facility_type = f.facility_type
+       ORDER BY u.created_at DESC`
+    )
+
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// POST reset user password
+app.post('/api/admin/users/:id/reset-password', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const userId = req.params.id
+    const newPassword = crypto.randomBytes(8).toString('hex') // Generate random password
+    const hashedPassword = hashPassword(newPassword)
+
+    await pool.query(
+      'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [hashedPassword, userId]
+    )
+
+    res.json({
+      success: true,
+      message: 'Parola a fost resetată cu succes',
+      newPassword: newPassword
+    })
+  } catch (error) {
+    console.error('Error resetting password:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET site settings
+app.get('/api/admin/site-settings', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const [rows] = await pool.query('SELECT setting_key, setting_value FROM site_settings')
+    
+    const settings = {}
+    rows.forEach(row => {
+      settings[row.setting_key] = row.setting_value
+    })
+
+    res.json({ success: true, data: settings })
+  } catch (error) {
+    console.error('Error fetching site settings:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// PUT update site logo
+app.put('/api/admin/site-settings/logo', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const { logoUrl } = req.body
+
+    if (!logoUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL-ul logo-ului este obligatoriu'
+      })
+    }
+
+    await pool.query(
+      `INSERT INTO site_settings (setting_key, setting_value) 
+       VALUES ('site_logo', ?) 
+       ON DUPLICATE KEY UPDATE setting_value = ?, updated_at = CURRENT_TIMESTAMP`,
+      [logoUrl, logoUrl]
+    )
+
+    res.json({
+      success: true,
+      message: 'Logo-ul site-ului a fost actualizat cu succes'
+    })
+  } catch (error) {
+    console.error('Error updating site logo:', error)
     res.status(500).json({ success: false, error: error.message })
   }
 })
