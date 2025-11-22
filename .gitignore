@@ -43,6 +43,7 @@ next-env.d.ts
 *check*.sh
 *create*.sh
 *setup*.sh
+!setup-ssl.sh
 *diagnose*.sh
 *force*.sh
 *update*.sh
