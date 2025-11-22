@@ -363,7 +363,6 @@ function FacilityFilters({
                   cityOption.city.toLowerCase().includes(citySearch.toLowerCase()) ||
                   (cityOption.county && cityOption.county.toLowerCase().includes(citySearch.toLowerCase()))
                 )
-                .slice(0, 20)
                 .map(cityOption => (
                   <div
                     key={cityOption.city}
@@ -499,7 +498,6 @@ function FacilityFilters({
                   !sportSearch || 
                   sportOption.toLowerCase().includes(sportSearch.toLowerCase())
                 )
-                .slice(0, 20)
                 .map(sportOption => (
                   <div
                     key={sportOption}
