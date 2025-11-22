@@ -51,18 +51,68 @@ function FacilityFilters({
   }, [selectedCity, selectedSport, selectedType])
 
   const handleCityChange = (newCity: string) => {
-    setCity(newCity)
-    updateFilters(newCity, sport, type)
+    const updatedCity = newCity || ''
+    setCity(updatedCity)
+    // Use current state values, but override with new city
+    updateFilters(updatedCity, sport || selectedSport || '', type || selectedType || '')
   }
 
   const handleSportChange = (newSport: string) => {
-    setSport(newSport)
-    updateFilters(city, newSport, type)
+    const updatedSport = newSport || ''
+    setSport(updatedSport)
+    // Use current state values, but override with new sport
+    updateFilters(city || selectedCity || '', updatedSport, type || selectedType || '')
   }
 
   const handleTypeChange = (newType: string) => {
-    setType(newType)
-    updateFilters(city, sport, newType)
+    const updatedType = newType || ''
+    setType(updatedType)
+    // Use current state values, but override with new type
+    updateFilters(city || selectedCity || '', sport || selectedSport || '', updatedType)
+  }
+
+  // Simple, deterministic function to generate URL from filters
+  const generateURLFromFilters = (city: string, sport: string, type: string): string => {
+    // Priority order: City > Sport > Type
+    
+    // 1. City + Sport + Type
+    if (city && sport && type) {
+      return `/${cityNameToSlug(city)}/${sportNameToSlug(sport)}/${facilityTypeToSlug(type)}`
+    }
+    
+    // 2. City + Type (no sport)
+    if (city && type && !sport) {
+      return `/${cityNameToSlug(city)}/${facilityTypeToSlug(type)}`
+    }
+    
+    // 3. Sport + Type (no city)
+    if (sport && type && !city) {
+      return `/${sportNameToSlug(sport)}/${facilityTypeToSlug(type)}`
+    }
+    
+    // 4. Only City
+    if (city && !sport && !type) {
+      return `/oras/${cityNameToSlug(city)}`
+    }
+    
+    // 5. Only Sport
+    if (sport && !city && !type) {
+      return `/sport/${sportNameToSlug(sport)}`
+    }
+    
+    // 6. Only Type
+    if (type && !city && !sport) {
+      const baseUrls: Record<string, string> = {
+        'field': '/terenuri',
+        'coach': '/antrenori',
+        'repair_shop': '/magazine-reparatii',
+        'equipment_shop': '/magazine-articole'
+      }
+      return baseUrls[type] || '/'
+    }
+    
+    // 7. No filters - go to home
+    return '/'
   }
 
   const updateFilters = (newCity: string, newSport: string, newType: string) => {
@@ -71,37 +121,9 @@ function FacilityFilters({
       return
     }
 
-    // Standard navigation logic - always use the same format regardless of current path
-    // Format: /:city/:sport/:type or /:sport/:type or /:city/:type
-    
-    if (newCity && newSport && newType) {
-      // City + Sport + Type: /city/sport/type
-      navigate(`/${cityNameToSlug(newCity)}/${sportNameToSlug(newSport)}/${facilityTypeToSlug(newType)}`)
-    } else if (newCity && newType) {
-      // City + Type (no sport): /city/type
-      navigate(`/${cityNameToSlug(newCity)}/${facilityTypeToSlug(newType)}`)
-    } else if (newCity) {
-      // Only city: /oras/city
-      navigate(`/oras/${cityNameToSlug(newCity)}`)
-    } else if (newSport && newType) {
-      // Sport + Type (no city): /sport/type
-      navigate(`/${sportNameToSlug(newSport)}/${facilityTypeToSlug(newType)}`)
-    } else if (newSport) {
-      // Only sport: /sport/sport
-      navigate(`/sport/${sportNameToSlug(newSport)}`)
-    } else if (newType) {
-      // Only type: base URL
-      const baseUrls: Record<string, string> = {
-        'field': '/terenuri',
-        'coach': '/antrenori',
-        'repair_shop': '/magazine-reparatii',
-        'equipment_shop': '/magazine-articole'
-      }
-      navigate(baseUrls[newType] || '/')
-    } else {
-      // No filters - stay on current page or go to home
-      // Don't navigate if nothing is selected
-    }
+    // Use simple, deterministic URL generation
+    const newURL = generateURLFromFilters(newCity, newSport, newType)
+    navigate(newURL)
   }
 
   return (
