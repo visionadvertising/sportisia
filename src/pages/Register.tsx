@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
+import { ROMANIAN_COUNTIES } from '../data/romanian-counties'
 
 type FacilityType = 'field' | 'coach' | 'repair_shop' | 'equipment_shop'
 
@@ -25,10 +26,12 @@ function Register() {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [city, setCity] = useState('')
+  const [county, setCounty] = useState('')
   const [location, setLocation] = useState('')
   const [showAddCityInput, setShowAddCityInput] = useState(false)
   const [newCity, setNewCity] = useState('')
-  const [customCities, setCustomCities] = useState<string[]>([]) // Orașe adăugate de utilizator
+  const [newCityCounty, setNewCityCounty] = useState('')
+  const [customCities, setCustomCities] = useState<Array<{city: string, county: string}>>([]) // Orașe adăugate de utilizator
 
   // Step 3: Branding
   const [name, setName] = useState('')
@@ -53,7 +56,7 @@ function Register() {
   const [showAddSportInput, setShowAddSportInput] = useState(false)
   const [newSport, setNewSport] = useState('')
   const [customSports, setCustomSports] = useState<string[]>([]) // Sporturi adăugate de utilizator
-  const [availableCities, setAvailableCities] = useState<string[]>([]) // Orașe aprobate din API
+  const [availableCities, setAvailableCities] = useState<Array<{city: string, county: string}>>([]) // Orașe aprobate din API
   const [availableSports, setAvailableSports] = useState<string[]>([]) // Sporturi aprobate din API
   const [pricingDetails, setPricingDetails] = useState<PricingDetail[]>([])
   const [hasParking, setHasParking] = useState(false)
@@ -113,8 +116,24 @@ function Register() {
       const response = await fetch(`${API_BASE_URL}/cities`)
       const data = await response.json()
       if (data.success && data.data) {
-        const cities = data.data.map((item: any) => item.city)
-        setAvailableCities([...new Set([...ROMANIAN_CITIES, ...cities])].sort())
+        // Combine standard cities with approved cities from API
+        const apiCities = data.data.map((item: any) => ({
+          city: item.city,
+          county: item.county || ''
+        }))
+        // Create a map to avoid duplicates
+        const cityMap = new Map<string, {city: string, county: string}>()
+        // Add standard cities
+        ROMANIAN_CITIES.forEach(c => {
+          cityMap.set(c.city, c)
+        })
+        // Add API cities
+        apiCities.forEach((c: {city: string, county: string}) => {
+          if (!cityMap.has(c.city)) {
+            cityMap.set(c.city, c)
+          }
+        })
+        setAvailableCities(Array.from(cityMap.values()).sort((a, b) => a.city.localeCompare(b.city)))
       } else {
         setAvailableCities(ROMANIAN_CITIES)
       }
@@ -214,6 +233,7 @@ function Register() {
           facilityType,
           name,
           city,
+          county: county || null,
           location,
           phone,
           email,
@@ -598,8 +618,12 @@ function Register() {
                       if (e.target.value === '__add_new__') {
                         setShowAddCityInput(true)
                         setCity('')
+                        setCounty('')
                       } else {
+                        const selectedCity = availableCities.find(c => c.city === e.target.value) || 
+                                            customCities.find(c => c.city === e.target.value)
                         setCity(e.target.value)
+                        setCounty(selectedCity?.county || '')
                       }
                     }}
                     required
@@ -615,44 +639,73 @@ function Register() {
                   >
                     <option value="">Selectează oraș</option>
                     {availableCities.map(cityOption => (
-                      <option key={cityOption} value={cityOption}>{cityOption}</option>
+                      <option key={cityOption.city} value={cityOption.city}>
+                        {cityOption.city}{cityOption.county ? `, ${cityOption.county}` : ''}
+                      </option>
                     ))}
-                    {customCities.filter(c => !availableCities.includes(c)).map(cityOption => (
-                      <option key={cityOption} value={cityOption}>{cityOption}</option>
+                    {customCities.filter(c => !availableCities.some(ac => ac.city === c.city)).map(cityOption => (
+                      <option key={cityOption.city} value={cityOption.city}>
+                        {cityOption.city}{cityOption.county ? `, ${cityOption.county}` : ''}
+                      </option>
                     ))}
                     <option value="__add_new__">+ Adaugă oraș nou</option>
                   </select>
                 ) : (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input
-                      type="text"
-                      value={newCity}
-                      onChange={(e) => setNewCity(e.target.value)}
-                      placeholder="Introdu numele orașului"
-                      required
-                      style={{
-                        flex: 1,
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        outline: 'none'
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (newCity.trim()) {
-                          const cityName = newCity.trim()
-                          // Adaugă orașul în lista locală pentru a-l putea selecta
-                          if (!customCities.includes(cityName) && !ROMANIAN_CITIES.includes(cityName)) {
-                            setCustomCities([...customCities, cityName])
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        value={newCity}
+                        onChange={(e) => setNewCity(e.target.value)}
+                        placeholder="Introdu numele orașului"
+                        required
+                        style={{
+                          flex: 1,
+                          padding: '0.75rem',
+                          border: '2px solid #e0e0e0',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          outline: 'none'
+                        }}
+                      />
+                      <select
+                        value={newCityCounty}
+                        onChange={(e) => setNewCityCounty(e.target.value)}
+                        required
+                        style={{
+                          flex: 1,
+                          padding: '0.75rem',
+                          border: '2px solid #e0e0e0',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          outline: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="">Selectează județul</option>
+                        {ROMANIAN_COUNTIES.map(countyOption => (
+                          <option key={countyOption} value={countyOption}>{countyOption}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newCity.trim() && newCityCounty) {
+                            const cityName = newCity.trim()
+                            const cityCounty = newCityCounty
+                            // Adaugă orașul în lista locală pentru a-l putea selecta
+                            if (!customCities.some(c => c.city === cityName) && !availableCities.some(c => c.city === cityName)) {
+                              setCustomCities([...customCities, { city: cityName, county: cityCounty }])
+                            }
+                            setCity(cityName)
+                            setCounty(cityCounty)
+                            setNewCity('')
+                            setNewCityCounty('')
+                            setShowAddCityInput(false)
                           }
-                          setCity(cityName)
-                          setNewCity('')
-                          setShowAddCityInput(false)
-                        }
-                      }}
+                        }}
                       style={{
                         padding: '0.75rem 1.5rem',
                         background: '#10b981',
@@ -671,7 +724,9 @@ function Register() {
                       onClick={() => {
                         setShowAddCityInput(false)
                         setNewCity('')
+                        setNewCityCounty('')
                         setCity('')
+                        setCounty('')
                       }}
                       style={{
                         padding: '0.75rem 1.5rem',

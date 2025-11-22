@@ -135,6 +135,7 @@ async function initDatabase() {
       CREATE TABLE IF NOT EXISTS pending_cities (
         id INT AUTO_INCREMENT PRIMARY KEY,
         city VARCHAR(255) NOT NULL UNIQUE,
+        county VARCHAR(100),
         status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -266,6 +267,26 @@ async function addMissingColumns() {
       await pool.query(`ALTER TABLE facilities ADD COLUMN pricing_details JSON AFTER price_per_hour`)
       console.log('✅ Added pricing_details column')
     }
+
+    if (!existingColumns.includes('county')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN county VARCHAR(100) AFTER city`)
+      console.log('✅ Added county column')
+    }
+
+    // Check pending_cities table for county column
+    const [pendingCitiesColumns] = await pool.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'pending_cities'
+    `)
+    
+    const existingPendingCitiesColumns = pendingCitiesColumns.map((col) => col.COLUMN_NAME)
+    
+    if (!existingPendingCitiesColumns.includes('county')) {
+      await pool.query(`ALTER TABLE pending_cities ADD COLUMN county VARCHAR(100) AFTER city`)
+      console.log('✅ Added county column to pending_cities')
+    }
   } catch (error) {
     console.error('❌ Error adding missing columns:', error)
     // Don't throw, just log the error
@@ -388,7 +409,7 @@ app.post('/api/register', async (req, res) => {
 
     const {
       facilityType, // 'field', 'coach', 'repair_shop', 'equipment_shop'
-      name, city, location, phone, email, description, imageUrl,
+      name, city, county, location, phone, email, description, imageUrl,
       // New common fields
       logoUrl, socialMedia, gallery,
       // Field specific
@@ -450,7 +471,7 @@ app.post('/api/register', async (req, res) => {
     try {
       // Prepare values array
       const values = [
-        facilityType, name, city, location, phone, email || null, description || null, imageUrl || null,
+        facilityType, name, city, county || null, location, phone, email || null, description || null, imageUrl || null,
         logoUrl || null, 
         socialMedia ? JSON.stringify(socialMedia) : null,
         gallery ? JSON.stringify(gallery) : null,
@@ -466,22 +487,22 @@ app.post('/api/register', async (req, res) => {
         'pending' // status
       ]
 
-      // Verify values count - MUST BE 33
-      if (values.length !== 33) {
-        const errorMsg = `Values array must have 33 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
+      // Verify values count - MUST BE 34 (added county)
+      if (values.length !== 34) {
+        const errorMsg = `Values array must have 34 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
         console.error(`[REGISTER ERROR] ${errorMsg}`)
         throw new Error(errorMsg)
       }
 
       // Debug: log values count
       console.log(`[REGISTER] Inserting facility: ${name}`)
-      console.log(`[REGISTER] Values count: ${values.length}, expected: 33`)
-      console.log(`[REGISTER] Last value (status): ${values[32]}`)
+      console.log(`[REGISTER] Values count: ${values.length}, expected: 34`)
+      console.log(`[REGISTER] Last value (status): ${values[33]}`)
 
       // Insert facility
       const [facilityResult] = await connection.query(
         `INSERT INTO facilities (
-          facility_type, name, city, location, phone, email, description, image_url,
+          facility_type, name, city, county, location, phone, email, description, image_url,
           logo_url, social_media, gallery,
           sport, price_per_hour, pricing_details, has_parking, has_shower, has_changing_room, 
           has_air_conditioning, has_lighting,
@@ -489,7 +510,7 @@ app.post('/api/register', async (req, res) => {
           services_offered, brands_serviced, average_repair_time,
           products_categories, brands_available, delivery_available,
           website, opening_hours, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         values
       )
 
@@ -507,8 +528,8 @@ app.post('/api/register', async (req, res) => {
           // Check if it's a standard Romanian city (we'll assume it's new if not in our standard list)
           // For now, we'll add all cities to pending_cities, and they'll be approved when facility is approved
           await connection.query(
-            'INSERT INTO pending_cities (city, status) VALUES (?, ?)',
-            [city.trim(), 'pending']
+            'INSERT INTO pending_cities (city, county, status) VALUES (?, ?, ?)',
+            [city.trim(), county || null, 'pending']
           )
         }
       }
@@ -675,7 +696,7 @@ app.put('/api/facilities/:id', async (req, res) => {
 
     const facilityId = req.params.id
     const {
-      name, city, location, phone, email, description, imageUrl,
+      name, city, county, location, phone, email, description, imageUrl,
       logoUrl, socialMedia, gallery,
       sport, pricePerHour, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
       specialization, experienceYears, pricePerLesson, certifications, languages,
@@ -690,6 +711,7 @@ app.put('/api/facilities/:id', async (req, res) => {
 
     if (name) { updates.push('name = ?'); values.push(name) }
     if (city) { updates.push('city = ?'); values.push(city) }
+    if (county !== undefined) { updates.push('county = ?'); values.push(county) }
     if (location) { updates.push('location = ?'); values.push(location) }
     if (phone) { updates.push('phone = ?'); values.push(phone) }
     if (email !== undefined) { updates.push('email = ?'); values.push(email) }
@@ -821,15 +843,16 @@ app.get('/api/cities', async (req, res) => {
     const [facilityCities] = await pool.query(`
       SELECT 
         city,
+        county,
         COUNT(*) as facility_count
       FROM facilities
       WHERE city IS NOT NULL AND city != '' AND status = 'active'
-      GROUP BY city
+      GROUP BY city, county
     `)
 
     // Get approved cities from pending_cities
     const [approvedCities] = await pool.query(`
-      SELECT city, 0 as facility_count
+      SELECT city, county, 0 as facility_count
       FROM pending_cities
       WHERE status = 'approved'
     `)
@@ -838,19 +861,20 @@ app.get('/api/cities', async (req, res) => {
     const cityMap = new Map()
     
     facilityCities.forEach((row) => {
-      cityMap.set(row.city, row.facility_count)
+      cityMap.set(row.city, { county: row.county, facility_count: row.facility_count })
     })
     
     approvedCities.forEach((row) => {
       if (!cityMap.has(row.city)) {
-        cityMap.set(row.city, 0)
+        cityMap.set(row.city, { county: row.county, facility_count: 0 })
       }
     })
 
     // Convert to array and sort
-    const cities = Array.from(cityMap.entries()).map(([city, count]) => ({
+    const cities = Array.from(cityMap.entries()).map(([city, data]) => ({
       city,
-      facility_count: count
+      county: data.county || null,
+      facility_count: data.facility_count
     })).sort((a, b) => {
       if (b.facility_count !== a.facility_count) {
         return b.facility_count - a.facility_count
@@ -1024,7 +1048,7 @@ app.put('/api/admin/facilities/:id/status', async (req, res) => {
 
     // Get facility details before updating
     const [facilities] = await pool.query(
-      'SELECT city, sport FROM facilities WHERE id = ?',
+      'SELECT city, county, sport FROM facilities WHERE id = ?',
       [facilityId]
     )
 
@@ -1069,8 +1093,8 @@ app.put('/api/admin/facilities/:id/status', async (req, res) => {
           if (existingCity.length === 0) {
             // Add as approved directly
             await pool.query(
-              'INSERT INTO pending_cities (city, status) VALUES (?, ?)',
-              [facility.city, 'approved']
+              'INSERT INTO pending_cities (city, county, status) VALUES (?, ?, ?)',
+              [facility.city, facility.county || null, 'approved']
             )
           }
         }

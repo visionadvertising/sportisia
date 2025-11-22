@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
-import { ROMANIAN_CITIES } from '../../data/romanian-cities'
+import { ROMANIAN_CITIES, getCityNames } from '../../data/romanian-cities'
 
 interface Facility {
   id: number
@@ -92,12 +92,12 @@ function FacilityDetails() {
       const data = await response.json()
       if (data.success && data.data) {
         const cities = data.data.map((item: any) => item.city)
-        setAvailableCities([...new Set([...ROMANIAN_CITIES, ...cities])].sort())
+        setAvailableCities([...new Set([...getCityNames(), ...cities])].sort())
       } else {
-        setAvailableCities(ROMANIAN_CITIES)
+        setAvailableCities(getCityNames())
       }
     } catch (err) {
-      setAvailableCities(ROMANIAN_CITIES)
+      setAvailableCities(getCityNames())
     }
   }
 

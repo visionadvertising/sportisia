@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ROMANIAN_CITIES } from '../data/romanian-cities'
+import { ROMANIAN_CITIES, getCityNames } from '../data/romanian-cities'
 import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug } from '../utils/seo'
 import API_BASE_URL from '../config'
 import './FacilityFilters.css'
@@ -44,7 +44,7 @@ function FacilityFilters({
   const [city, setCity] = useState(selectedCity)
   const [sport, setSport] = useState(selectedSport)
   const [type, setType] = useState(selectedType)
-  const [availableCities, setAvailableCities] = useState<string[]>(ROMANIAN_CITIES)
+  const [availableCities, setAvailableCities] = useState<string[]>(getCityNames())
   const [availableSports, setAvailableSports] = useState<string[]>(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash'])
 
   // Load cities and sports from backend
@@ -56,7 +56,7 @@ function FacilityFilters({
         if (data.success && data.data) {
           // Combine standard cities with approved cities from backend
           const backendCities = data.data.map((item: any) => item.city)
-          const allCities = [...new Set([...ROMANIAN_CITIES, ...backendCities])].sort()
+          const allCities = [...new Set([...getCityNames(), ...backendCities])].sort()
           setAvailableCities(allCities)
         }
       } catch (err) {

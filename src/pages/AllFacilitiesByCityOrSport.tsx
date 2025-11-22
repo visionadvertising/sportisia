@@ -1,6 +1,6 @@
 import { useParams, Navigate } from 'react-router-dom'
 import { citySlugToName } from '../utils/seo'
-import { ROMANIAN_CITIES } from '../data/romanian-cities'
+import { ROMANIAN_CITIES, getCityNames } from '../data/romanian-cities'
 import AllFacilitiesByCity from './AllFacilitiesByCity'
 import AllFacilitiesBySport from './AllFacilitiesBySport'
 
@@ -25,10 +25,11 @@ function AllFacilitiesByCityOrSport() {
   } else {
     // Try to determine if it's a city
     const cityName = citySlugToName(slug)
-    const isCity = ROMANIAN_CITIES.some(city => 
-      city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === slug.toLowerCase() ||
-      city === cityName
-    )
+    const isCity = ROMANIAN_CITIES.some(cityObj => {
+      const city = cityObj.city
+      return city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === slug.toLowerCase() ||
+             city === cityName
+    })
 
     if (isCity) {
       // It's a city - render AllFacilitiesByCity
