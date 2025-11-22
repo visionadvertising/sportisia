@@ -109,11 +109,14 @@ async function initDatabase() {
         services_offered TEXT,
         brands_serviced VARCHAR(500),
         average_repair_time VARCHAR(100),
+        repair_categories JSON,
         
         -- Equipment shop specific
         products_categories VARCHAR(500),
         brands_available VARCHAR(500),
         delivery_available BOOLEAN DEFAULT FALSE,
+        -- Note: sport column above is used for both fields and equipment shops
+        -- For equipment shops, sport can be 'general' or a specific sport
         
         -- Common fields
         logo_url VARCHAR(500),
@@ -317,6 +320,12 @@ async function addMissingColumns() {
       await pool.query(`ALTER TABLE facilities ADD COLUMN map_coordinates JSON AFTER location_not_specified`)
       console.log('✅ Added map_coordinates column')
     }
+    
+    // Add repair_categories for repair shops
+    if (!existingColumns.includes('repair_categories')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN repair_categories JSON AFTER average_repair_time`)
+      console.log('✅ Added repair_categories column')
+    }
 
     // Check pending_cities table for county column
     const [pendingCitiesColumns] = await pool.query(`
@@ -462,11 +471,13 @@ app.post('/api/register', async (req, res) => {
       // Coach specific
       specialization, experienceYears, pricePerLesson, certifications, languages,
       // Repair shop specific
-      servicesOffered, brandsServiced, averageRepairTime,
+      servicesOffered, brandsServiced, averageRepairTime, repairCategories,
       // Equipment shop specific
       productsCategories, brandsAvailable, deliveryAvailable,
       // Common
-      website, openingHours
+      website, openingHours,
+      // sport for equipment shops (can be 'general' or specific sport)
+      sport
     } = req.body
 
     // Validate required fields
@@ -539,31 +550,36 @@ app.post('/api/register', async (req, res) => {
         logoUrlFinal || null, 
         socialMedia ? JSON.stringify(socialMedia) : null,
         galleryFinal ? JSON.stringify(galleryFinal) : null,
-        sport || null, pricePerHour ? parseFloat(pricePerHour) : null,
+        // sport: for fields use sport, for equipment shops use sport (can be 'general'), for others null
+        (facilityType === 'field' || facilityType === 'equipment_shop') ? (sport || null) : null,
+        pricePerHour ? parseFloat(pricePerHour) : null,
         pricingDetails ? JSON.stringify(pricingDetails) : null,
         hasParking || false, hasShower || false, hasChangingRoom || false,
         hasAirConditioning || false, hasLighting || false,
         specialization || null, experienceYears || null, pricePerLesson ? parseFloat(pricePerLesson) : null,
         certifications || null, languages || null,
         servicesOffered || null, brandsServiced || null, averageRepairTime || null,
+        repairCategories ? JSON.stringify(repairCategories) : null,
         productsCategories || null, brandsAvailable || null, deliveryAvailable || false,
         website || null, openingHours || null,
         'pending' // status
       ]
 
-      // Verify values count - MUST BE 37 (37 columns in INSERT)
-      if (values.length !== 37) {
-        const errorMsg = `Values array must have 37 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
+      // Verify values count - MUST BE 38 (38 columns in INSERT)
+      if (values.length !== 38) {
+        const errorMsg = `Values array must have 38 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
         console.error(`[REGISTER ERROR] ${errorMsg}`)
         throw new Error(errorMsg)
       }
 
       // Debug: log values count
       console.log(`[REGISTER] Inserting facility: ${name}`)
-      console.log(`[REGISTER] Values count: ${values.length}, expected: 37`)
-      console.log(`[REGISTER] Last value (status): ${values[36]}`)
+      console.log(`[REGISTER] Values count: ${values.length}, expected: 38`)
+      console.log(`[REGISTER] Last value (status): ${values[37]}`)
 
       // Insert facility
+      // Note: sport is used for both fields and equipment shops
+      // For fields: specific sport, for equipment shops: 'general' or specific sport
       const [facilityResult] = await connection.query(
         `INSERT INTO facilities (
           facility_type, name, city, county, location, location_not_specified, map_coordinates, phone, email, contact_person, description, image_url,
@@ -571,7 +587,7 @@ app.post('/api/register', async (req, res) => {
           sport, price_per_hour, pricing_details, has_parking, has_shower, has_changing_room, 
           has_air_conditioning, has_lighting,
           specialization, experience_years, price_per_lesson, certifications, languages,
-          services_offered, brands_serviced, average_repair_time,
+          services_offered, brands_serviced, average_repair_time, repair_categories,
           products_categories, brands_available, delivery_available,
           website, opening_hours, status
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
