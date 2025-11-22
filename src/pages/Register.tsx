@@ -200,7 +200,7 @@ function Register() {
 
   const loadCities = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/cities`)
+      const response = await fetch(`${API_BASE_URL}/api/cities`)
       const data = await response.json()
       if (data.success && data.data) {
         // Combine standard cities with approved cities from API
@@ -232,7 +232,7 @@ function Register() {
 
   const loadSports = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/sports`)
+      const response = await fetch(`${API_BASE_URL}/api/sports`)
       const data = await response.json()
       if (data.success && data.data) {
         const sports = data.data.map((item: any) => item.sport)

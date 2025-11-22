@@ -57,7 +57,7 @@ function Home() {
     // Load cities and sports from backend
     const loadCities = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/cities`)
+        const response = await fetch(`${API_BASE_URL}/api/cities`)
         const data = await response.json()
         if (data.success && data.data) {
           const backendCities = data.data.map((item: any) => ({
@@ -82,7 +82,7 @@ function Home() {
 
     const loadSports = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/sports`)
+        const response = await fetch(`${API_BASE_URL}/api/sports`)
         const data = await response.json()
         if (data.success && data.data) {
           const backendSports = data.data.map((item: any) => item.sport)
