@@ -28,6 +28,8 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.production
+.env.development
 
 # vercel
 .vercel
@@ -35,3 +37,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# security - scripts with credentials
+*fix*.sh
+*check*.sh
+*create*.sh
+*setup*.sh
+*diagnose*.sh
+*force*.sh
+*update*.sh
+
+# documentation with sensitive info
+*.md
+!README.md
+
+# backup files
+*.backup
+*.bak
+*_backup
