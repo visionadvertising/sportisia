@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
 
 function SEOPageEdit() {
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const isNew = id === 'new'
+  const urlParam = searchParams.get('url')
+  const isNew = id === 'new' || id === 'edit'
+  const isEditByUrl = !!urlParam
   
-  const [loading, setLoading] = useState(!isNew)
+  const [loading, setLoading] = useState(!isNew || isEditByUrl)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   
@@ -21,10 +24,15 @@ function SEOPageEdit() {
   })
 
   useEffect(() => {
-    if (!isNew) {
+    if (isEditByUrl && urlParam) {
+      setFormData(prev => ({ ...prev, url: decodeURIComponent(urlParam) }))
+      fetchSEOPageByUrl()
+    } else if (!isNew && id) {
       fetchSEOPage()
+    } else if (isNew && !urlParam) {
+      setLoading(false)
     }
-  }, [id])
+  }, [id, urlParam, isNew, isEditByUrl])
 
   const fetchSEOPage = async () => {
     try {
@@ -60,6 +68,48 @@ function SEOPageEdit() {
     }
   }
 
+  const fetchSEOPageByUrl = async () => {
+    try {
+      setLoading(true)
+      const adminToken = localStorage.getItem('admin')
+      if (!adminToken || !urlParam) {
+        setError('Nu sunteți autentificat sau URL lipsă')
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/seo-pages?url=${encodeURIComponent(urlParam)}`, {
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
+      })
+
+      const data = await response.json()
+      if (data.success && data.data) {
+        setFormData({
+          url: data.data.url || urlParam,
+          meta_title: data.data.meta_title || '',
+          meta_description: data.data.meta_description || '',
+          h1_title: data.data.h1_title || '',
+          description: data.data.description || ''
+        })
+      } else {
+        // Page doesn't exist yet, use URL from param
+        setFormData(prev => ({
+          ...prev,
+          url: decodeURIComponent(urlParam),
+          meta_title: '',
+          meta_description: '',
+          h1_title: '',
+          description: ''
+        }))
+      }
+    } catch (err: any) {
+      setError(err.message || 'Eroare la încărcarea paginii SEO')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -72,11 +122,30 @@ function SEOPageEdit() {
         return
       }
 
-      const url = isNew 
-        ? `${API_BASE_URL}/admin/seo-pages`
-        : `${API_BASE_URL}/admin/seo-pages/${id}`
+      if (!formData.url) {
+        setError('URL-ul este obligatoriu')
+        setSaving(false)
+        return
+      }
+
+      // First, try to get existing page by URL
+      const checkResponse = await fetch(`${API_BASE_URL}/seo-pages?url=${encodeURIComponent(formData.url)}`, {
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
+      })
+
+      const checkData = await checkResponse.json()
+      let existingId = null
+      if (checkData.success && checkData.data) {
+        existingId = checkData.data.id
+      }
+
+      const url = existingId
+        ? `${API_BASE_URL}/admin/seo-pages/${existingId}`
+        : `${API_BASE_URL}/admin/seo-pages`
       
-      const method = isNew ? 'POST' : 'PUT'
+      const method = existingId ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
         method,
@@ -143,7 +212,7 @@ function SEOPageEdit() {
             color: '#0f172a',
             margin: 0
           }}>
-            {isNew ? 'Adaugă pagină SEO' : 'Editează pagină SEO'}
+            {isNew && !isEditByUrl ? 'Adaugă pagină SEO' : 'Editează pagină SEO'}
           </h1>
         </div>
 

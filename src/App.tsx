@@ -291,6 +291,7 @@ function AppContent() {
         <Route path="/admin/approved" element={<ApprovedFacilities />} />
         <Route path="/admin/facilities/:id" element={<FacilityDetails />} />
         <Route path="/admin/seo-pages" element={<SEOPages />} />
+        <Route path="/admin/seo-pages/edit" element={<SEOPageEdit />} />
         <Route path="/admin/seo-pages/:id" element={<SEOPageEdit />} />
         <Route path="/admin/users" element={<AdminDashboard />} />
         <Route path="/admin/settings" element={<AdminDashboard />} />
