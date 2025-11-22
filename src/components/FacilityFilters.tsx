@@ -72,41 +72,53 @@ function FacilityFilters({
   }
 
   // Simple, deterministic function to generate URL from filters
+  // Rules:
+  // - City + Sport + Type → /city/sport/type
+  // - City + Type (no sport) → /city/type
+  // - City + Sport (no type) → /city/sport
+  // - City only → /city
+  // - Sport + Type (no city) → /sport/type
+  // - Sport only → /sport
+  // - Type only → /type (base URL)
+  // - Nothing → /toate
   const generateURLFromFilters = (city: string, sport: string, type: string): string => {
-    // Priority order: City > Sport > Type
+    // Clean empty strings
+    const hasCity = city && city.trim() !== ''
+    const hasSport = sport && sport.trim() !== ''
+    const hasType = type && type.trim() !== ''
     
-    // 1. City + Sport + Type
-    if (city && sport && type) {
+    // 1. City + Sport + Type → /city/sport/type
+    if (hasCity && hasSport && hasType) {
       return `/${cityNameToSlug(city)}/${sportNameToSlug(sport)}/${facilityTypeToSlug(type)}`
     }
     
-    // 2. City + Sport (no type) - show all facilities for city and sport
-    if (city && sport && !type) {
-      return `/${cityNameToSlug(city)}/${sportNameToSlug(sport)}`
-    }
-    
-    // 3. City + Type (no sport)
-    if (city && type && !sport) {
+    // 2. City + Type (no sport) → /city/type
+    if (hasCity && hasType && !hasSport) {
       return `/${cityNameToSlug(city)}/${facilityTypeToSlug(type)}`
     }
     
-    // 4. Sport + Type (no city)
-    if (sport && type && !city) {
-      return `/${sportNameToSlug(sport)}/${facilityTypeToSlug(type)}`
+    // 3. City + Sport (no type) → /city/sport
+    if (hasCity && hasSport && !hasType) {
+      return `/${cityNameToSlug(city)}/${sportNameToSlug(sport)}`
     }
     
-    // 5. Only City
-    if (city && !sport && !type) {
+    // 4. City only → /city
+    if (hasCity && !hasSport && !hasType) {
       return `/${cityNameToSlug(city)}`
     }
     
-    // 6. Only Sport
-    if (sport && !city && !type) {
+    // 5. Sport + Type (no city) → /sport/type
+    if (hasSport && hasType && !hasCity) {
+      return `/${sportNameToSlug(sport)}/${facilityTypeToSlug(type)}`
+    }
+    
+    // 6. Sport only → /sport
+    if (hasSport && !hasCity && !hasType) {
       return `/${sportNameToSlug(sport)}`
     }
     
-    // 7. Only Type
-    if (type && !city && !sport) {
+    // 7. Type only → /type (base URL)
+    if (hasType && !hasCity && !hasSport) {
       const baseUrls: Record<string, string> = {
         'field': '/terenuri',
         'coach': '/antrenori',
@@ -116,7 +128,7 @@ function FacilityFilters({
       return baseUrls[type] || '/toate'
     }
     
-    // 8. No filters - go to all facilities page
+    // 8. Nothing → /toate
     return '/toate'
   }
 

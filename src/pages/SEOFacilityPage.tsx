@@ -57,29 +57,52 @@ function SEOFacilityPage() {
   const [selectedSport, setSelectedSport] = useState('')
 
   // Parse URL parameters
-  // Check if we have city/:sport/:type or just :sport/:type format
-  const hasCity = !!params.city
+  // URL formats:
+  // - /:city/:sport/:type (e.g., /baia-mare/fotbal/terenuri)
+  // - /:city/:type (e.g., /baia-mare/terenuri)
+  // - /:sport/:type (e.g., /fotbal/terenuri)
+  
   const citySlug = params.city || ''
   const sportSlug = params.sport || ''
   const typeSlug = params.type || ''
 
-  // If we have city param, it's a city. Otherwise, sport param might be the sport (without city)
+  // Determine what we have based on what params exist
+  // If we have city param, first segment is city
+  // If we have sport param, it could be second segment (after city) or first segment (no city)
+  // If we have type param, it's always the last segment
+  
   let city = ''
   let sportName = '' // For display
   let sportSlugValue = '' // For dropdown value (slug)
+  let facilityType = ''
   
-  if (hasCity) {
-    // Format: /:city/:sport/:type or /:city/:type
-    city = citySlug ? citySlugToName(citySlug) : ''
-    sportName = sportSlug ? sportSlugToName(sportSlug) : ''
-    sportSlugValue = sportSlug || '' // Keep slug for dropdown
-  } else {
-    // Format: /:sport/:type (sport without city)
-    sportName = sportSlug ? sportSlugToName(sportSlug) : ''
-    sportSlugValue = sportSlug || '' // Keep slug for dropdown
+  if (citySlug) {
+    // We have a city - first segment
+    city = citySlugToName(citySlug)
+    
+    if (sportSlug && typeSlug) {
+      // Format: /:city/:sport/:type
+      sportName = sportSlugToName(sportSlug)
+      sportSlugValue = sportSlug
+      facilityType = slugToFacilityType(typeSlug)
+    } else if (typeSlug && !sportSlug) {
+      // Format: /:city/:type
+      facilityType = slugToFacilityType(typeSlug)
+    } else if (sportSlug && !typeSlug) {
+      // Format: /:city/:sport (handled by AllFacilitiesByCityAndSport)
+      sportName = sportSlugToName(sportSlug)
+      sportSlugValue = sportSlug
+    }
+  } else if (sportSlug) {
+    // No city, but we have sport - first segment is sport
+    sportName = sportSlugToName(sportSlug)
+    sportSlugValue = sportSlug
+    
+    if (typeSlug) {
+      // Format: /:sport/:type
+      facilityType = slugToFacilityType(typeSlug)
+    }
   }
-  
-  const facilityType = typeSlug ? slugToFacilityType(typeSlug) : ''
 
   useEffect(() => {
     if (facilityType) {
