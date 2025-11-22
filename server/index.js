@@ -495,6 +495,42 @@ app.post('/api/register', async (req, res) => {
 
       const facilityId = facilityResult.insertId
 
+      // Check if city is new (not in ROMANIAN_CITIES list) and add to pending_cities if needed
+      if (city) {
+        // Check if city exists in pending_cities
+        const [existingCity] = await connection.query(
+          'SELECT * FROM pending_cities WHERE city = ?',
+          [city.trim()]
+        )
+        
+        if (existingCity.length === 0) {
+          // Check if it's a standard Romanian city (we'll assume it's new if not in our standard list)
+          // For now, we'll add all cities to pending_cities, and they'll be approved when facility is approved
+          await connection.query(
+            'INSERT INTO pending_cities (city, status) VALUES (?, ?)',
+            [city.trim(), 'pending']
+          )
+        }
+      }
+
+      // Check if sport is new and add to pending_sports if needed
+      if (sport) {
+        const sportLower = sport.trim().toLowerCase()
+        // Check if sport exists in pending_sports
+        const [existingSport] = await connection.query(
+          'SELECT * FROM pending_sports WHERE sport = ?',
+          [sportLower]
+        )
+        
+        if (existingSport.length === 0) {
+          // Add as pending
+          await connection.query(
+            'INSERT INTO pending_sports (sport, status) VALUES (?, ?)',
+            [sportLower, 'pending']
+          )
+        }
+      }
+
       // Create user account
       await connection.query(
         `INSERT INTO users (username, password, email, facility_id, facility_type)

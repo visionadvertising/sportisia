@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
@@ -53,6 +53,8 @@ function Register() {
   const [showAddSportInput, setShowAddSportInput] = useState(false)
   const [newSport, setNewSport] = useState('')
   const [customSports, setCustomSports] = useState<string[]>([]) // Sporturi adăugate de utilizator
+  const [availableCities, setAvailableCities] = useState<string[]>([]) // Orașe aprobate din API
+  const [availableSports, setAvailableSports] = useState<string[]>([]) // Sporturi aprobate din API
   const [pricingDetails, setPricingDetails] = useState<PricingDetail[]>([])
   const [hasParking, setHasParking] = useState(false)
   const [hasShower, setHasShower] = useState(false)
@@ -98,6 +100,45 @@ function Register() {
 
   const removeGalleryImage = (index: number) => {
     setGallery(gallery.filter((_, i) => i !== index))
+  }
+
+  // Load approved cities and sports from API
+  useEffect(() => {
+    loadCities()
+    loadSports()
+  }, [])
+
+  const loadCities = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/cities`)
+      const data = await response.json()
+      if (data.success && data.data) {
+        const cities = data.data.map((item: any) => item.city)
+        setAvailableCities([...new Set([...ROMANIAN_CITIES, ...cities])].sort())
+      } else {
+        setAvailableCities(ROMANIAN_CITIES)
+      }
+    } catch (err) {
+      console.error('Error loading cities:', err)
+      setAvailableCities(ROMANIAN_CITIES)
+    }
+  }
+
+  const loadSports = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/sports`)
+      const data = await response.json()
+      if (data.success && data.data) {
+        const sports = data.data.map((item: any) => item.sport)
+        const standardSports = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans']
+        setAvailableSports([...new Set([...standardSports, ...sports])].sort())
+      } else {
+        setAvailableSports(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans'])
+      }
+    } catch (err) {
+      console.error('Error loading sports:', err)
+      setAvailableSports(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans'])
+    }
   }
 
   const validateStep = (step: number): boolean => {
@@ -573,10 +614,10 @@ function Register() {
                     }}
                   >
                     <option value="">Selectează oraș</option>
-                    {ROMANIAN_CITIES.map(cityOption => (
+                    {availableCities.map(cityOption => (
                       <option key={cityOption} value={cityOption}>{cityOption}</option>
                     ))}
-                    {customCities.map(cityOption => (
+                    {customCities.filter(c => !availableCities.includes(c)).map(cityOption => (
                       <option key={cityOption} value={cityOption}>{cityOption}</option>
                     ))}
                     <option value="__add_new__">+ Adaugă oraș nou</option>
@@ -1038,14 +1079,12 @@ function Register() {
                         }}
                       >
                         <option value="">Selectează sport</option>
-                        <option value="tenis">Tenis</option>
-                        <option value="fotbal">Fotbal</option>
-                        <option value="baschet">Baschet</option>
-                        <option value="volei">Volei</option>
-                        <option value="handbal">Handbal</option>
-                        <option value="badminton">Badminton</option>
-                        <option value="squash">Squash</option>
-                        {customSports.map(sportOption => (
+                        {availableSports.map(sportOption => (
+                          <option key={sportOption} value={sportOption}>
+                            {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
+                          </option>
+                        ))}
+                        {customSports.filter(s => !availableSports.includes(s)).map(sportOption => (
                           <option key={sportOption} value={sportOption}>
                             {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
                           </option>
