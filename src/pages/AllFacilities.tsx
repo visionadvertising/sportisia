@@ -63,6 +63,15 @@ function AllFacilities() {
   
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
   
   // Parse URL to determine filters
   const param1 = params.param1 || ''
@@ -212,18 +221,20 @@ function AllFacilities() {
     <div style={{
       minHeight: '100vh',
       background: '#f8fafc',
-      padding: '1.5rem 1rem'
+      padding: isMobile ? '1rem 0.75rem' : '1.5rem 1rem'
     }}>
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
         <h1 style={{
-          fontSize: '2.5rem',
+          fontSize: isMobile ? '1.5rem' : '2.5rem',
           color: '#1e293b',
-          marginBottom: '1.5rem',
+          marginBottom: isMobile ? '1rem' : '1.5rem',
           textAlign: 'center',
-          fontWeight: '700'
+          fontWeight: '700',
+          lineHeight: '1.2',
+          padding: isMobile ? '0 0.5rem' : '0'
         }}>{getPageTitle()}</h1>
 
         <FacilityFilters
@@ -236,62 +247,71 @@ function AllFacilities() {
         {loading ? (
           <div style={{
             textAlign: 'center',
-            padding: '3rem',
-            color: '#64748b'
+            padding: isMobile ? '2rem 1rem' : '3rem',
+            color: '#64748b',
+            fontSize: isMobile ? '0.9375rem' : '1rem'
           }}>
             Se încarcă...
           </div>
         ) : facilities.length === 0 ? (
           <div style={{
             textAlign: 'center',
-            padding: '3rem',
+            padding: isMobile ? '2rem 1rem' : '3rem',
             background: 'white',
-            borderRadius: '12px',
+            borderRadius: isMobile ? '8px' : '12px',
             color: '#666',
             maxWidth: '600px',
             margin: '0 auto'
           }}>
             <div style={{
-              fontSize: '4rem',
-              marginBottom: '1rem'
+              fontSize: isMobile ? '3rem' : '4rem',
+              marginBottom: isMobile ? '0.75rem' : '1rem'
             }}>🔍</div>
             <h2 style={{
-              fontSize: '1.8rem',
+              fontSize: isMobile ? '1.25rem' : '1.8rem',
               color: '#333',
-              marginBottom: '1rem'
+              marginBottom: isMobile ? '0.75rem' : '1rem',
+              fontWeight: '600'
             }}>Nu am găsit rezultate</h2>
             <p style={{
-              fontSize: '1.2rem',
-              marginBottom: '2rem',
-              lineHeight: '1.6'
+              fontSize: isMobile ? '0.9375rem' : '1.2rem',
+              marginBottom: isMobile ? '1.5rem' : '2rem',
+              lineHeight: '1.6',
+              padding: isMobile ? '0 0.5rem' : '0'
             }}>
               {getEmptyMessage()}
             </p>
             <p style={{
-              fontSize: '1rem',
-              marginBottom: '2rem',
-              color: '#666'
+              fontSize: isMobile ? '0.875rem' : '1rem',
+              marginBottom: isMobile ? '1.5rem' : '2rem',
+              color: '#666',
+              padding: isMobile ? '0 0.5rem' : '0'
             }}>
               Ai o facilitate sau serviciu sportiv? Înregistrează-te și ajută comunitatea să te găsească!
             </p>
             <Link
               to="/register"
               style={{
-                padding: '1rem 2.5rem',
+                padding: isMobile ? '0.875rem 1.5rem' : '1rem 2.5rem',
                 background: '#10b981',
                 color: 'white',
                 textDecoration: 'none',
                 borderRadius: '8px',
                 display: 'inline-block',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                transition: 'background 0.2s'
+                fontWeight: '600',
+                fontSize: isMobile ? '0.9375rem' : '1.1rem',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = '#059669'
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
+                e.currentTarget.style.transform = 'translateY(-1px)'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = '#10b981'
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
+                e.currentTarget.style.transform = 'translateY(0)'
               }}
             >
               Înregistrează-te acum
@@ -300,104 +320,120 @@ function AllFacilities() {
         ) : (
           <div>
             {Object.entries(facilitiesByType).map(([type, typeFacilities]) => (
-              <div key={type} style={{ marginBottom: '3rem' }}>
+              <div key={type} style={{ marginBottom: isMobile ? '2rem' : '3rem' }}>
                 <h2 style={{
-                  fontSize: '1.75rem',
+                  fontSize: isMobile ? '1.25rem' : '1.75rem',
                   color: '#1e293b',
-                  marginBottom: '1.5rem',
+                  marginBottom: isMobile ? '1rem' : '1.5rem',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  flexWrap: 'wrap'
                 }}>
                   <span>{FACILITY_TYPE_ICONS[type]}</span>
-                  {FACILITY_TYPE_LABELS[type]} ({typeFacilities.length})
+                  <span>{FACILITY_TYPE_LABELS[type]} ({typeFacilities.length})</span>
                 </h2>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                  gap: '2rem'
+                  gridTemplateColumns: isMobile 
+                    ? '1fr' 
+                    : 'repeat(auto-fill, minmax(300px, 1fr))',
+                  gap: isMobile ? '1rem' : '2rem'
                 }}>
                   {typeFacilities.map((facility) => (
-                    <div
+                    <Link
                       key={facility.id}
+                      to={`/facility/${facility.id}`}
                       style={{
                         background: 'white',
-                        borderRadius: '12px',
+                        borderRadius: isMobile ? '8px' : '12px',
                         overflow: 'hidden',
                         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                         transition: 'transform 0.2s, box-shadow 0.2s',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        textDecoration: 'none',
+                        display: 'block'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-4px)'
-                        e.currentTarget.style.boxShadow = '0 8px 12px rgba(0,0,0,0.15)'
+                        if (!isMobile) {
+                          e.currentTarget.style.transform = 'translateY(-4px)'
+                          e.currentTarget.style.boxShadow = '0 8px 12px rgba(0,0,0,0.15)'
+                        }
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)'
-                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'
+                        if (!isMobile) {
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'
+                        }
                       }}
                     >
                       {(facility.image_url || facility.logo_url) && (
                         <div style={{
                           width: '100%',
-                          height: '200px',
+                          height: isMobile ? '180px' : '200px',
                           background: `url(${facility.image_url || facility.logo_url}) center/cover`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center'
                         }} />
                       )}
-                      <div style={{ padding: '1.5rem' }}>
+                      <div style={{ padding: isMobile ? '1rem' : '1.5rem' }}>
                         <h3 style={{
                           margin: '0 0 0.5rem 0',
-                          fontSize: '1.3rem',
-                          color: '#333'
+                          fontSize: isMobile ? '1.125rem' : '1.3rem',
+                          color: '#0f172a',
+                          fontWeight: '600'
                         }}>{facility.name}</h3>
                         <p style={{
                           margin: '0 0 0.5rem 0',
-                          color: '#666',
-                          fontSize: '0.9rem'
-                        }}>📍 {facility.city}, {facility.location}</p>
+                          color: '#64748b',
+                          fontSize: isMobile ? '0.8125rem' : '0.9rem'
+                        }}>📍 {facility.city}{facility.location ? `, ${facility.location}` : ''}</p>
                         {facility.sport && (
                           <p style={{
                             margin: '0 0 0.5rem 0',
                             color: '#10b981',
-                            fontWeight: 'bold'
+                            fontWeight: '600',
+                            fontSize: isMobile ? '0.875rem' : '0.9375rem'
                           }}>🎾 {SPORT_NAMES[facility.sport] || facility.sport}</p>
                         )}
                         {facility.price_per_hour && (
                           <p style={{
                             margin: '0 0 1rem 0',
-                            color: '#333',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold'
+                            color: '#0f172a',
+                            fontSize: isMobile ? '1rem' : '1.1rem',
+                            fontWeight: '600'
                           }}>De la {facility.price_per_hour} RON/oră</p>
                         )}
                         {facility.price_per_lesson && (
                           <p style={{
                             margin: '0 0 1rem 0',
-                            color: '#333',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold'
+                            color: '#0f172a',
+                            fontSize: isMobile ? '1rem' : '1.1rem',
+                            fontWeight: '600'
                           }}>De la {facility.price_per_lesson} RON/lecție</p>
                         )}
                         {facility.specialization && (
                           <p style={{
                             margin: '0 0 1rem 0',
-                            color: '#666',
-                            fontSize: '0.9rem'
+                            color: '#64748b',
+                            fontSize: isMobile ? '0.8125rem' : '0.9rem'
                           }}>Specializare: {facility.specialization}</p>
                         )}
                         {facility.description && (
                           <p style={{
                             margin: 0,
-                            color: '#666',
-                            fontSize: '0.9rem',
-                            lineHeight: '1.5'
-                          }}>{facility.description.substring(0, 100)}...</p>
+                            color: '#64748b',
+                            fontSize: isMobile ? '0.8125rem' : '0.9rem',
+                            lineHeight: '1.5',
+                            display: '-webkit-box',
+                            WebkitLineClamp: isMobile ? 2 : 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}>{facility.description}</p>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

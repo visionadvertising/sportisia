@@ -29,6 +29,15 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
   const mapInstanceRef = useRef<L.Map | null>(null)
   const markerRef = useRef<L.Marker | null>(null)
   const [isGeocoding, setIsGeocoding] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     if (!mapRef.current) return

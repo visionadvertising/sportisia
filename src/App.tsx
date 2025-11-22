@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import Home from './pages/Home'
 import AddField from './pages/AddField'
 import Register from './pages/Register'
@@ -15,6 +16,19 @@ import AllFacilities from './pages/AllFacilities'
 function AppContent() {
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith('/admin')
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+      if (window.innerWidth >= 768) {
+        setMenuOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
     <div style={{
@@ -28,7 +42,7 @@ function AppContent() {
       {!isAdminRoute && (
         <header style={{
           background: 'rgba(255, 255, 255, 0.95)',
-          padding: '1rem 2rem',
+          padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
           boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
           position: 'sticky',
           top: 0,
@@ -39,17 +53,20 @@ function AppContent() {
             margin: '0 auto',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: isMobile ? '0.75rem' : '0'
           }}>
             <Link to="/" style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              textDecoration: 'none'
+              gap: isMobile ? '8px' : '10px',
+              textDecoration: 'none',
+              flexShrink: 0
             }}>
               <div style={{
-                width: '32px',
-                height: '32px',
+                width: isMobile ? '28px' : '32px',
+                height: isMobile ? '28px' : '32px',
                 background: '#10b981',
                 borderRadius: '4px',
                 display: 'flex',
@@ -57,33 +74,79 @@ function AppContent() {
                 justifyContent: 'center',
                 color: 'white',
                 fontWeight: 'bold',
-                fontSize: '1.2rem'
+                fontSize: isMobile ? '1rem' : '1.2rem'
               }}>◆</div>
               <h1 style={{
                 margin: 0,
-                fontSize: '1.5rem',
+                fontSize: isMobile ? '1.125rem' : '1.5rem',
                 fontWeight: 'bold',
                 color: '#333',
                 letterSpacing: '0.5px'
               }}>SPORTISIA</h1>
             </Link>
+            {isMobile ? (
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                style={{
+                  background: 'transparent',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
+                  padding: '0.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '40px',
+                  minHeight: '40px'
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
+                  {menuOpen ? (
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                  ) : (
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                  )}
+                </svg>
+              </button>
+            ) : (
+              <nav style={{
+                display: 'flex',
+                gap: '1.5rem',
+                alignItems: 'center',
+                flexWrap: 'wrap'
+              }}>
+                <Link to="/" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Home</Link>
+                <Link to="/terenuri" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Terenuri</Link>
+                <Link to="/antrenori" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Antrenori</Link>
+                <Link to="/magazine-reparatii" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Magazine Reparații</Link>
+                <Link to="/magazine-articole" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Magazine Articole</Link>
+                <div style={{ marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '1px solid #e0e0e0', display: 'flex', gap: '1rem' }}>
+                  <Link to="/register" style={{ textDecoration: 'none', color: '#10b981', fontWeight: '600', fontSize: '0.95rem' }}>Înregistrare</Link>
+                  <Link to="/login" style={{ textDecoration: 'none', color: '#1e3c72', fontWeight: '600', fontSize: '0.95rem' }}>Login</Link>
+                </div>
+              </nav>
+            )}
+          </div>
+          {isMobile && menuOpen && (
             <nav style={{
               display: 'flex',
-              gap: '1.5rem',
-              alignItems: 'center',
-              flexWrap: 'wrap'
+              flexDirection: 'column',
+              gap: '0.5rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid #f1f5f9',
+              marginTop: '0.75rem'
             }}>
-              <Link to="/" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Home</Link>
-              <Link to="/terenuri" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Terenuri</Link>
-              <Link to="/antrenori" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Antrenori</Link>
-              <Link to="/magazine-reparatii" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Magazine Reparații</Link>
-              <Link to="/magazine-articole" style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem' }}>Magazine Articole</Link>
-              <div style={{ marginLeft: '1rem', paddingLeft: '1rem', borderLeft: '1px solid #e0e0e0', display: 'flex', gap: '1rem' }}>
-                <Link to="/register" style={{ textDecoration: 'none', color: '#10b981', fontWeight: '600', fontSize: '0.95rem' }}>Înregistrare</Link>
-                <Link to="/login" style={{ textDecoration: 'none', color: '#1e3c72', fontWeight: '600', fontSize: '0.95rem' }}>Login</Link>
+              <Link to="/" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Home</Link>
+              <Link to="/terenuri" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Terenuri</Link>
+              <Link to="/antrenori" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Antrenori</Link>
+              <Link to="/magazine-reparatii" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Magazine Reparații</Link>
+              <Link to="/magazine-articole" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#333', fontWeight: '500', fontSize: '0.95rem', padding: '0.75rem 0' }}>Magazine Articole</Link>
+              <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <Link to="/register" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#10b981', fontWeight: '600', fontSize: '0.95rem', padding: '0.75rem 0' }}>Înregistrare</Link>
+                <Link to="/login" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#1e3c72', fontWeight: '600', fontSize: '0.95rem', padding: '0.75rem 0' }}>Login</Link>
               </div>
             </nav>
-          </div>
+          )}
         </header>
       )}
 

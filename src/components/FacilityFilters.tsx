@@ -46,6 +46,15 @@ function FacilityFilters({
   const [type, setType] = useState(selectedType)
   const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
   const [availableSports, setAvailableSports] = useState<string[]>(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash'])
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Load cities and sports from backend
   useEffect(() => {
@@ -200,44 +209,55 @@ function FacilityFilters({
   return (
     <div style={{
       background: 'white',
-      borderRadius: '16px',
-      padding: '1.5rem',
+      borderRadius: isMobile ? '12px' : '16px',
+      padding: isMobile ? '1rem' : '1.5rem',
       boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-      marginBottom: '2rem'
+      marginBottom: isMobile ? '1.5rem' : '2rem'
     }}>
-      <div className={`facility-filters-grid ${!showTypeFilter ? 'two-columns' : ''}`}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile 
+          ? '1fr' 
+          : showTypeFilter 
+            ? 'repeat(3, 1fr)' 
+            : 'repeat(2, 1fr)',
+        gap: isMobile ? '1rem' : '1.25rem'
+      }}>
         <div>
           <label style={{
             display: 'block',
-            marginBottom: '0.5rem',
-            color: '#333',
+            marginBottom: isMobile ? '0.5rem' : '0.5rem',
+            color: '#0f172a',
             fontWeight: '600',
-            fontSize: '0.9rem'
+            fontSize: isMobile ? '0.875rem' : '0.9rem'
           }}>Oraș</label>
           <select
             value={selectedCity || city || ''}
             onChange={(e) => handleCityChange(e.target.value)}
             style={{
               width: '100%',
-              padding: '0.75rem',
-              border: '2px solid #e5e7eb',
-              borderRadius: '10px',
-              fontSize: '0.95rem',
+              padding: isMobile ? '0.875rem 1rem' : '0.75rem',
+              paddingRight: '2.5rem',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: isMobile ? '8px' : '10px',
+              fontSize: isMobile ? '16px' : '0.95rem',
               outline: 'none',
               cursor: 'pointer',
               background: 'white',
-              transition: 'border-color 0.2s',
+              transition: 'all 0.2s ease',
               appearance: 'none',
               backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
               backgroundRepeat: 'no-repeat',
               backgroundPosition: 'right 0.75rem center',
-              paddingRight: '2.5rem'
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = '#10b981'
+              e.target.style.borderColor = '#0f172a'
+              e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = '#e5e7eb'
+              e.target.style.borderColor = '#e2e8f0'
+              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
             }}
           >
             <option value="">Toate orașele</option>
@@ -254,35 +274,38 @@ function FacilityFilters({
         <div>
           <label style={{
             display: 'block',
-            marginBottom: '0.5rem',
-            color: '#333',
+            marginBottom: isMobile ? '0.5rem' : '0.5rem',
+            color: '#0f172a',
             fontWeight: '600',
-            fontSize: '0.9rem'
+            fontSize: isMobile ? '0.875rem' : '0.9rem'
           }}>Sport</label>
           <select
             value={selectedSport || sport || ''}
             onChange={(e) => handleSportChange(e.target.value)}
             style={{
               width: '100%',
-              padding: '0.75rem',
-              border: '2px solid #e5e7eb',
-              borderRadius: '10px',
-              fontSize: '0.95rem',
+              padding: isMobile ? '0.875rem 1rem' : '0.75rem',
+              paddingRight: '2.5rem',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: isMobile ? '8px' : '10px',
+              fontSize: isMobile ? '16px' : '0.95rem',
               outline: 'none',
               cursor: 'pointer',
               background: 'white',
-              transition: 'border-color 0.2s',
+              transition: 'all 0.2s ease',
               appearance: 'none',
               backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
               backgroundRepeat: 'no-repeat',
               backgroundPosition: 'right 0.75rem center',
-              paddingRight: '2.5rem'
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = '#10b981'
+              e.target.style.borderColor = '#0f172a'
+              e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = '#e5e7eb'
+              e.target.style.borderColor = '#e2e8f0'
+              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
             }}
           >
             <option value="">Toate sporturile</option>
@@ -298,29 +321,30 @@ function FacilityFilters({
           <div>
             <label style={{
               display: 'block',
-              marginBottom: '0.5rem',
-              color: '#333',
+              marginBottom: isMobile ? '0.5rem' : '0.5rem',
+              color: '#0f172a',
               fontWeight: '600',
-              fontSize: '0.9rem'
+              fontSize: isMobile ? '0.875rem' : '0.9rem'
             }}>Tip serviciu</label>
             <select
               value={selectedType || type || ''}
               onChange={(e) => handleTypeChange(e.target.value)}
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e5e7eb',
-                borderRadius: '10px',
-                fontSize: '0.95rem',
+                padding: isMobile ? '0.875rem 1rem' : '0.75rem',
+                paddingRight: '2.5rem',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: isMobile ? '8px' : '10px',
+                fontSize: isMobile ? '16px' : '0.95rem',
                 outline: 'none',
                 cursor: 'pointer',
                 background: 'white',
-                transition: 'border-color 0.2s',
+                transition: 'all 0.2s ease',
                 appearance: 'none',
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right 0.75rem center',
-                paddingRight: '2.5rem'
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
               }}
               onFocus={(e) => {
                 e.target.style.borderColor = '#10b981'

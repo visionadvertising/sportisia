@@ -17,6 +17,15 @@ function Home() {
   const [activeTab, setActiveTab] = useState<'fields' | 'coaches'>('fields')
   const [fields, setFields] = useState<Field[]>([])
   const [loading, setLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     fetchFields()
@@ -41,22 +50,24 @@ function Home() {
       {/* Hero Section */}
       <div style={{
         background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%)',
-        padding: '6rem 2rem 4rem',
+        padding: isMobile ? '3rem 1rem 2rem' : '6rem 2rem 4rem',
         textAlign: 'center',
         color: 'white'
       }}>
         <h1 style={{
           margin: 0,
-          fontSize: '3.5rem',
+          fontSize: isMobile ? '2rem' : '3.5rem',
           fontWeight: 'bold',
-          marginBottom: '1rem',
-          lineHeight: '1.2'
+          marginBottom: isMobile ? '0.75rem' : '1rem',
+          lineHeight: '1.2',
+          padding: isMobile ? '0 0.5rem' : '0'
         }}>a Worldwide Sport Community</h1>
         <p style={{
           margin: 0,
-          fontSize: '1.5rem',
+          fontSize: isMobile ? '1.125rem' : '1.5rem',
           opacity: 0.95,
-          marginBottom: '3rem'
+          marginBottom: isMobile ? '2rem' : '3rem',
+          padding: isMobile ? '0 0.5rem' : '0'
         }}>Find what you need within seconds</p>
 
         {/* Search Bar */}
@@ -64,20 +75,21 @@ function Home() {
           maxWidth: '1000px',
           margin: '0 auto',
           background: 'white',
-          borderRadius: '12px',
-          padding: '1.5rem',
+          borderRadius: isMobile ? '8px' : '12px',
+          padding: isMobile ? '1rem' : '1.5rem',
           boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
           display: 'flex',
-          gap: '1rem',
-          alignItems: 'flex-end'
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '0.75rem' : '1rem',
+          alignItems: isMobile ? 'stretch' : 'flex-end'
         }}>
-          <div style={{ flex: '1', minWidth: '200px' }}>
+          <div style={{ flex: '1', minWidth: isMobile ? '100%' : '200px' }}>
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
               color: '#333',
               fontWeight: '600',
-              fontSize: '0.9rem',
+              fontSize: isMobile ? '0.8125rem' : '0.9rem',
               textTransform: 'uppercase'
             }}>LOCAȚIE</label>
             <input
@@ -85,30 +97,30 @@ function Home() {
               placeholder="Location"
               style={{
                 width: '100%',
-                padding: '0.75rem',
+                padding: isMobile ? '0.875rem' : '0.75rem',
                 border: '2px solid #e0e0e0',
                 borderRadius: '8px',
-                fontSize: '1rem',
+                fontSize: isMobile ? '16px' : '1rem',
                 outline: 'none'
               }}
             />
           </div>
-          <div style={{ flex: '1', minWidth: '200px' }}>
+          <div style={{ flex: '1', minWidth: isMobile ? '100%' : '200px' }}>
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
               color: '#333',
               fontWeight: '600',
-              fontSize: '0.9rem',
+              fontSize: isMobile ? '0.8125rem' : '0.9rem',
               textTransform: 'uppercase'
             }}>SPORT</label>
             <select
               style={{
                 width: '100%',
-                padding: '0.75rem',
+                padding: isMobile ? '0.875rem' : '0.75rem',
                 border: '2px solid #e0e0e0',
                 borderRadius: '8px',
-                fontSize: '1rem',
+                fontSize: isMobile ? '16px' : '1rem',
                 outline: 'none',
                 background: 'white',
                 cursor: 'pointer'
@@ -121,22 +133,22 @@ function Home() {
               <option value="volei">Volei</option>
             </select>
           </div>
-          <div style={{ flex: '1', minWidth: '200px' }}>
+          <div style={{ flex: '1', minWidth: isMobile ? '100%' : '200px' }}>
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
               color: '#333',
               fontWeight: '600',
-              fontSize: '0.9rem',
+              fontSize: isMobile ? '0.8125rem' : '0.9rem',
               textTransform: 'uppercase'
             }}>TIP SERVICIU</label>
             <select
               style={{
                 width: '100%',
-                padding: '0.75rem',
+                padding: isMobile ? '0.875rem' : '0.75rem',
                 border: '2px solid #e0e0e0',
                 borderRadius: '8px',
-                fontSize: '1rem',
+                fontSize: isMobile ? '16px' : '1rem',
                 outline: 'none',
                 background: 'white',
                 cursor: 'pointer'
@@ -150,16 +162,33 @@ function Home() {
           </div>
           <button
             style={{
-              padding: '0.75rem 2rem',
+              padding: isMobile ? '0.875rem 1.5rem' : '0.75rem 2rem',
               background: '#10b981',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
-              fontSize: '1rem',
-              fontWeight: 'bold',
+              fontSize: isMobile ? '0.9375rem' : '1rem',
+              fontWeight: '600',
               cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              height: 'fit-content'
+              width: isMobile ? '100%' : 'auto',
+              minHeight: isMobile ? '44px' : 'auto',
+              touchAction: 'manipulation',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+            }}
+            onMouseEnter={(e) => {
+              if (!isMobile) {
+                e.currentTarget.style.background = '#059669'
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
+                e.currentTarget.style.transform = 'translateY(-1px)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isMobile) {
+                e.currentTarget.style.background = '#10b981'
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }
             }}
           >
             🔍
@@ -184,28 +213,30 @@ function Home() {
       {/* Fields and Coaches Tabs Section */}
       <div style={{
         maxWidth: '1200px',
-        margin: '4rem auto',
-        padding: '0 2rem'
+        margin: isMobile ? '2rem auto' : '4rem auto',
+        padding: isMobile ? '0 1rem' : '0 2rem'
       }}>
         {/* Tabs */}
         <div style={{
           display: 'flex',
-          gap: '1rem',
-          marginBottom: '2rem',
-          borderBottom: '2px solid #e0e0e0'
+          gap: isMobile ? '0.5rem' : '1rem',
+          marginBottom: isMobile ? '1.5rem' : '2rem',
+          borderBottom: '2px solid #e0e0e0',
+          overflowX: isMobile ? 'auto' : 'visible'
         }}>
           <button
             onClick={() => setActiveTab('fields')}
             style={{
-              padding: '1rem 2rem',
+              padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
               background: 'none',
               border: 'none',
               borderBottom: activeTab === 'fields' ? '3px solid #10b981' : '3px solid transparent',
               color: activeTab === 'fields' ? '#10b981' : '#666',
               fontWeight: activeTab === 'fields' ? 'bold' : 'normal',
               cursor: 'pointer',
-              fontSize: '1.1rem',
-              transition: 'all 0.3s'
+              fontSize: isMobile ? '0.9375rem' : '1.1rem',
+              transition: 'all 0.3s',
+              whiteSpace: 'nowrap'
             }}
           >
             Terenuri
@@ -213,15 +244,16 @@ function Home() {
           <button
             onClick={() => setActiveTab('coaches')}
             style={{
-              padding: '1rem 2rem',
+              padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
               background: 'none',
               border: 'none',
               borderBottom: activeTab === 'coaches' ? '3px solid #10b981' : '3px solid transparent',
               color: activeTab === 'coaches' ? '#10b981' : '#666',
               fontWeight: activeTab === 'coaches' ? 'bold' : 'normal',
               cursor: 'pointer',
-              fontSize: '1.1rem',
-              transition: 'all 0.3s'
+              fontSize: isMobile ? '0.9375rem' : '1.1rem',
+              transition: 'all 0.3s',
+              whiteSpace: 'nowrap'
             }}
           >
             Antrenori
@@ -233,28 +265,34 @@ function Home() {
           <div>
             <div style={{
               display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
               justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '2rem'
+              alignItems: isMobile ? 'flex-start' : 'center',
+              gap: isMobile ? '1rem' : '0',
+              marginBottom: isMobile ? '1.5rem' : '2rem'
             }}>
               <h2 style={{
-                fontSize: '2rem',
+                fontSize: isMobile ? '1.5rem' : '2rem',
                 color: '#333',
                 margin: 0
               }}>Terenuri disponibile</h2>
               <Link
                 to="/adauga-teren"
                 style={{
-                  padding: '0.75rem 2rem',
+                  padding: isMobile ? '0.875rem 1.5rem' : '0.75rem 2rem',
                   background: '#10b981',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
+                  fontSize: isMobile ? '0.9375rem' : '1rem',
+                  fontWeight: '600',
                   cursor: 'pointer',
                   textDecoration: 'none',
-                  display: 'inline-block'
+                  display: 'inline-block',
+                  width: isMobile ? '100%' : 'auto',
+                  textAlign: isMobile ? 'center' : 'left',
+                  minHeight: isMobile ? '44px' : 'auto',
+                  touchAction: 'manipulation'
                 }}
               >
                 + Adaugă Teren
@@ -291,59 +329,65 @@ function Home() {
             ) : (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: '2rem'
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: isMobile ? '1rem' : '2rem'
               }}>
                 {fields.map((field) => (
                   <div
                     key={field.id}
                     style={{
                       background: 'white',
-                      borderRadius: '12px',
+                      borderRadius: isMobile ? '8px' : '12px',
                       overflow: 'hidden',
                       boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                       transition: 'transform 0.2s, box-shadow 0.2s',
                       cursor: 'pointer'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)'
-                      e.currentTarget.style.boxShadow = '0 8px 12px rgba(0,0,0,0.15)'
+                      if (!isMobile) {
+                        e.currentTarget.style.transform = 'translateY(-4px)'
+                        e.currentTarget.style.boxShadow = '0 8px 12px rgba(0,0,0,0.15)'
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'
+                      if (!isMobile) {
+                        e.currentTarget.style.transform = 'translateY(0)'
+                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'
+                      }
                     }}
                   >
                     {field.image_url && (
                       <div style={{
                         width: '100%',
-                        height: '200px',
+                        height: isMobile ? '180px' : '200px',
                         background: `url(${field.image_url}) center/cover`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
                       }} />
                     )}
-                    <div style={{ padding: '1.5rem' }}>
+                    <div style={{ padding: isMobile ? '1rem' : '1.5rem' }}>
                       <h3 style={{
                         margin: '0 0 0.5rem 0',
-                        fontSize: '1.3rem',
-                        color: '#333'
+                        fontSize: isMobile ? '1.125rem' : '1.3rem',
+                        color: '#333',
+                        fontWeight: '600'
                       }}>{field.name}</h3>
                       <p style={{
                         margin: '0 0 0.5rem 0',
                         color: '#666',
-                        fontSize: '0.9rem'
+                        fontSize: isMobile ? '0.8125rem' : '0.9rem'
                       }}>📍 {field.city}, {field.location}</p>
                       <p style={{
                         margin: '0 0 0.5rem 0',
                         color: '#10b981',
-                        fontWeight: 'bold'
+                        fontWeight: '600',
+                        fontSize: isMobile ? '0.875rem' : '0.9375rem'
                       }}>🎾 {field.sport}</p>
                       <p style={{
                         margin: '0 0 1rem 0',
                         color: '#333',
-                        fontSize: '1.1rem',
-                        fontWeight: 'bold'
+                        fontSize: isMobile ? '1rem' : '1.1rem',
+                        fontWeight: '600'
                       }}>De la {field.price} RON/oră</p>
                       {field.description && (
                         <p style={{
