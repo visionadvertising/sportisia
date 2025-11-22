@@ -6,6 +6,7 @@ import RegisterTypeSelector from './pages/RegisterTypeSelector'
 import RegisterSportsBase from './pages/register/RegisterSportsBase'
 import RegisterRepairShop from './pages/register/RegisterRepairShop'
 import RegisterEquipmentShop from './pages/register/RegisterEquipmentShop'
+import RegisterCoach from './pages/register/RegisterCoach'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AdminLogin from './pages/AdminLogin'
@@ -281,7 +282,7 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<RegisterTypeSelector />} />
         <Route path="/register/baze-sportive" element={<RegisterSportsBase />} />
-        <Route path="/register/antrenori" element={<Register />} /> {/* Keep existing Register for coaches for now */}
+        <Route path="/register/antrenori" element={<RegisterCoach />} />
         <Route path="/register/magazine-reparatii" element={<RegisterRepairShop />} />
         <Route path="/register/magazine-articole" element={<RegisterEquipmentShop />} />
         <Route path="/sugereaza" element={<SuggestFacility />} />
