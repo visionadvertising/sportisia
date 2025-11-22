@@ -230,7 +230,13 @@ function Home() {
                 lineHeight: '1.5',
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
               }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#10b981'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
               onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                 setTimeout(() => setShowCityDropdown(false), 200)
               }}
             />
@@ -283,7 +289,7 @@ function Home() {
                         transition: 'background 0.15s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f8fafc'
+                        e.currentTarget.style.background = '#f0fdf4'
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = '#ffffff'
@@ -337,7 +343,13 @@ function Home() {
                 lineHeight: '1.5',
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
               }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#10b981'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
               onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                 setTimeout(() => setShowSportDropdown(false), 200)
               }}
             />
@@ -390,7 +402,7 @@ function Home() {
                         transition: 'background 0.15s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f8fafc'
+                        e.currentTarget.style.background = '#f0fdf4'
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = '#ffffff'
@@ -439,7 +451,13 @@ function Home() {
                 lineHeight: '1.5',
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
               }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#10b981'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
               onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                 setTimeout(() => setShowTypeDropdown(false), 200)
               }}
             />
@@ -491,7 +509,7 @@ function Home() {
                         transition: 'background 0.15s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f8fafc'
+                        e.currentTarget.style.background = '#f0fdf4'
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = '#ffffff'
@@ -515,7 +533,7 @@ function Home() {
               style={{
                 width: '100%',
                 padding: '1rem 2rem',
-                background: '#0f172a',
+                background: '#10b981',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -525,19 +543,19 @@ function Home() {
                 minHeight: '48px',
                 touchAction: 'manipulation',
                 transition: 'all 0.2s ease',
-                boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)'
+                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
               }}
               onMouseEnter={(e) => {
                 if (!isMobile) {
-                  e.currentTarget.style.background = '#1e293b'
-                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(15, 23, 42, 0.3)'
+                  e.currentTarget.style.background = '#059669'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
                   e.currentTarget.style.transform = 'translateY(-1px)'
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isMobile) {
-                  e.currentTarget.style.background = '#0f172a'
-                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(15, 23, 42, 0.2)'
+                  e.currentTarget.style.background = '#10b981'
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
                   e.currentTarget.style.transform = 'translateY(0)'
                 }
               }}
