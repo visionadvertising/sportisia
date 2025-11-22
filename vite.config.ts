@@ -6,6 +6,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true
+    }
+  },
+  optimizeDeps: {
+    include: ['react-quill', 'quill']
   },
   server: {
     proxy: {
