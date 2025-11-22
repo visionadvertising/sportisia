@@ -1008,18 +1008,19 @@ function Register() {
                   <div style={{ marginTop: '1rem' }}>
                     <img
                       src={logoPreview}
-                    alt="Logo preview"
-                    style={{
-                      marginTop: '0.5rem',
-                      maxWidth: '200px',
-                      maxHeight: '200px',
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0'
-                    }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none'
-                    }}
-                  />
+                      alt="Logo preview"
+                      style={{
+                        marginTop: '0.5rem',
+                        maxWidth: '200px',
+                        maxHeight: '200px',
+                        borderRadius: '8px',
+                        border: '1px solid #e0e0e0'
+                      }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                  </div>
                 )}
               </div>
               <div style={{ marginBottom: '1rem' }}>
