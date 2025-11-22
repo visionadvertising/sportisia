@@ -46,7 +46,7 @@ function SuggestFacility() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/suggestions`, {
+      const response = await fetch(`${API_BASE_URL}/suggestions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

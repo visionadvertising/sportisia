@@ -49,7 +49,7 @@ function SEOPages() {
 
   const loadCities = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/cities`)
+      const response = await fetch(`${API_BASE_URL}/cities`)
       const data = await response.json()
       if (data.success && data.data) {
         // Combine standard cities with approved cities from backend
