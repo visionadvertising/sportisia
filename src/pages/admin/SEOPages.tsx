@@ -34,11 +34,50 @@ function SEOPages() {
   const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
+  const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
 
   useEffect(() => {
-    generateAllCombinations()
-    fetchSEOPages()
+    loadCities()
   }, [])
+
+  useEffect(() => {
+    if (availableCities.length > 0) {
+      generateAllCombinations()
+      fetchSEOPages()
+    }
+  }, [availableCities])
+
+  const loadCities = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/cities`)
+      const data = await response.json()
+      if (data.success && data.data) {
+        // Combine standard cities with approved cities from backend
+        const backendCities = data.data.map((item: any) => ({
+          city: item.city,
+          county: item.county || null
+        }))
+        // Create a map to avoid duplicates
+        const cityMap = new Map<string, {city: string, county?: string | null}>()
+        // Add standard cities
+        ROMANIAN_CITIES.forEach(c => {
+          cityMap.set(c.city, c)
+        })
+        // Add API cities
+        backendCities.forEach((c: {city: string, county?: string | null}) => {
+          if (!cityMap.has(c.city)) {
+            cityMap.set(c.city, c)
+          }
+        })
+        setAvailableCities(Array.from(cityMap.values()).sort((a, b) => a.city.localeCompare(b.city)))
+      } else {
+        setAvailableCities(ROMANIAN_CITIES)
+      }
+    } catch (err) {
+      console.error('Error loading cities:', err)
+      setAvailableCities(ROMANIAN_CITIES)
+    }
+  }
 
   const generateAllCombinations = () => {
     const combinations: SEOPage[] = []
@@ -47,7 +86,7 @@ function SEOPages() {
     combinations.push({ url: '/toate' })
 
     // 2. /:city
-    ROMANIAN_CITIES.forEach(city => {
+    availableCities.forEach(city => {
       const citySlug = cityNameToSlug(city.city)
       combinations.push({ url: `/${citySlug}` })
     })
@@ -64,7 +103,7 @@ function SEOPages() {
     })
 
     // 5. /:city/:sport
-    ROMANIAN_CITIES.forEach(city => {
+    availableCities.forEach(city => {
       KNOWN_SPORTS.forEach(sport => {
         const citySlug = cityNameToSlug(city.city)
         const sportSlug = sportNameToSlug(sport)
@@ -73,7 +112,7 @@ function SEOPages() {
     })
 
     // 6. /:city/:type
-    ROMANIAN_CITIES.forEach(city => {
+    availableCities.forEach(city => {
       FACILITY_TYPES.forEach(type => {
         const citySlug = cityNameToSlug(city.city)
         combinations.push({ url: `/${citySlug}/${type.slug}` })
@@ -89,7 +128,7 @@ function SEOPages() {
     })
 
     // 8. /:city/:sport/:type
-    ROMANIAN_CITIES.forEach(city => {
+    availableCities.forEach(city => {
       KNOWN_SPORTS.forEach(sport => {
         FACILITY_TYPES.forEach(type => {
           const citySlug = cityNameToSlug(city.city)
