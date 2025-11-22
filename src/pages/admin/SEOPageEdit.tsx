@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
@@ -520,11 +520,8 @@ function SEOPageEdit() {
               e.currentTarget.style.boxShadow = 'none'
             }}
             >
-              <ReactQuill
-                theme="snow"
-                value={formData.description}
-                onChange={(value) => setFormData({ ...formData, description: value })}
-                modules={{
+              {useMemo(() => {
+                const quillModules = {
                   toolbar: [
                     [{ 'header': [1, 2, 3, false] }],
                     ['bold', 'italic', 'underline', 'strike'],
@@ -532,24 +529,32 @@ function SEOPageEdit() {
                     ['link'],
                     [{ 'color': [] }, { 'background': [] }],
                     ['clean']
-                  ],
-                  link: {
-                    defaultProtocol: 'https'
-                  }
-                }}
-                formats={[
+                  ]
+                }
+                
+                const quillFormats = [
                   'header',
                   'bold', 'italic', 'underline', 'strike',
                   'list', 'bullet',
                   'link',
                   'color', 'background'
-                ]}
-                style={{
-                  background: 'white',
-                  minHeight: '300px'
-                }}
-                placeholder="Scrie descrierea aici. Poți adăuga link-uri interne folosind butonul de link din toolbar. Folosește link-uri relative (ex: /iasi/tenis/antrenori) pentru link-uri interne."
-              />
+                ]
+                
+                return (
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.description}
+                    onChange={(value) => setFormData({ ...formData, description: value })}
+                    modules={quillModules}
+                    formats={quillFormats}
+                    style={{
+                      background: 'white',
+                      minHeight: '300px'
+                    }}
+                    placeholder="Scrie descrierea aici. Poți adăuga link-uri interne folosind butonul de link din toolbar. Folosește link-uri relative (ex: /iasi/tenis/antrenori) pentru link-uri interne."
+                  />
+                )
+              }, [formData.description])}
             </div>
             <p style={{
               marginTop: '0.5rem',
