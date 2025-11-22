@@ -25,11 +25,15 @@ const FACILITY_TYPES = [
   { value: 'equipment_shop', label: 'Magazine Articole', slug: 'magazine-articole' }
 ]
 
+const ITEMS_PER_PAGE = 50
+
 function SEOPages() {
   const [allPages, setAllPages] = useState<SEOPage[]>([])
   const [seoPagesMap, setSeoPagesMap] = useState<Record<string, SEOPage>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     generateAllCombinations()
@@ -171,6 +175,21 @@ function SEOPages() {
     }
   }
 
+  const filteredPages = allPages.filter(page => 
+    !searchTerm || page.url.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const totalPages = Math.ceil(filteredPages.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const currentPages = filteredPages.slice(startIndex, endIndex)
+
+  useEffect(() => {
+    if (searchTerm) {
+      setCurrentPage(1)
+    }
+  }, [searchTerm])
+
   if (loading) {
     return (
       <AdminLayout>
@@ -205,7 +224,7 @@ function SEOPages() {
                 fontSize: '0.9375rem',
                 margin: 0
               }}>
-                {allPages.length} combinații de filtre disponibile
+                {filteredPages.length} combinații de filtre {searchTerm ? 'găsite' : 'disponibile'}
               </p>
             </div>
           </div>
@@ -258,18 +277,8 @@ function SEOPages() {
                   e.target.style.borderColor = '#e2e8f0'
                   e.target.style.boxShadow = 'none'
                 }}
-                onChange={(e) => {
-                  const searchTerm = e.target.value.toLowerCase()
-                  const rows = document.querySelectorAll('tbody tr')
-                  rows.forEach(row => {
-                    const url = row.querySelector('td:first-child code')?.textContent?.toLowerCase() || ''
-                    if (url.includes(searchTerm)) {
-                      (row as HTMLElement).style.display = ''
-                    } else {
-                      (row as HTMLElement).style.display = 'none'
-                    }
-                  })
-                }}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
@@ -329,7 +338,7 @@ function SEOPages() {
                   </tr>
                 </thead>
                 <tbody>
-                  {allPages.map((page, index) => {
+                  {currentPages.map((page, index) => {
                     const pageWithSEO = getPageWithSEO(page.url)
                     const hasSEO = !!seoPagesMap[page.url]
                     return (
@@ -467,6 +476,133 @@ function SEOPages() {
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{
+                padding: '1.5rem',
+                borderTop: '1px solid #e2e8f0',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: '#f8fafc'
+              }}>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: currentPage === 1 ? '#e2e8f0' : 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    color: currentPage === 1 ? '#94a3b8' : '#0f172a',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage !== 1) {
+                      e.currentTarget.style.background = '#f1f5f9'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage !== 1) {
+                      e.currentTarget.style.background = 'white'
+                    }
+                  }}
+                >
+                  ← Anterior
+                </button>
+                
+                <div style={{
+                  display: 'flex',
+                  gap: '0.25rem',
+                  alignItems: 'center'
+                }}>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number
+                    if (totalPages <= 5) {
+                      pageNum = i + 1
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i
+                    } else {
+                      pageNum = currentPage - 2 + i
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        style={{
+                          padding: '0.5rem 0.75rem',
+                          background: currentPage === pageNum ? '#10b981' : 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '6px',
+                          color: currentPage === pageNum ? 'white' : '#0f172a',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                          fontWeight: currentPage === pageNum ? '600' : '500',
+                          transition: 'all 0.2s ease',
+                          minWidth: '40px'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (currentPage !== pageNum) {
+                            e.currentTarget.style.background = '#f1f5f9'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (currentPage !== pageNum) {
+                            e.currentTarget.style.background = 'white'
+                          }
+                        }}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: currentPage === totalPages ? '#e2e8f0' : 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    color: currentPage === totalPages ? '#94a3b8' : '#0f172a',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage !== totalPages) {
+                      e.currentTarget.style.background = '#f1f5f9'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage !== totalPages) {
+                      e.currentTarget.style.background = 'white'
+                    }
+                  }}
+                >
+                  Următor →
+                </button>
+                
+                <span style={{
+                  marginLeft: '1rem',
+                  color: '#64748b',
+                  fontSize: '0.875rem'
+                }}>
+                  Pagina {currentPage} din {totalPages}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

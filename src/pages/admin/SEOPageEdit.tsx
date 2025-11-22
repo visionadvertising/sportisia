@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
+import {
+  parseURLToFilters,
+  getFacilityCount,
+  generateSEOTitle,
+  generateSEODescription,
+  generateH1Title,
+  generateDescription
+} from '../../utils/seoContentGenerator'
 
 function SEOPageEdit() {
   const { id } = useParams<{ id: string }>()
@@ -77,7 +85,8 @@ function SEOPageEdit() {
         return
       }
 
-      const response = await fetch(`${API_BASE_URL}/seo-pages?url=${encodeURIComponent(urlParam)}`, {
+      const decodedUrl = decodeURIComponent(urlParam)
+      const response = await fetch(`${API_BASE_URL}/seo-pages?url=${encodeURIComponent(decodedUrl)}`, {
         headers: {
           'Authorization': `Bearer ${adminToken}`
         }
@@ -86,27 +95,56 @@ function SEOPageEdit() {
       const data = await response.json()
       if (data.success && data.data) {
         setFormData({
-          url: data.data.url || urlParam,
+          url: data.data.url || decodedUrl,
           meta_title: data.data.meta_title || '',
           meta_description: data.data.meta_description || '',
           h1_title: data.data.h1_title || '',
           description: data.data.description || ''
         })
       } else {
-        // Page doesn't exist yet, use URL from param
-        setFormData(prev => ({
-          ...prev,
-          url: decodeURIComponent(urlParam),
-          meta_title: '',
-          meta_description: '',
-          h1_title: '',
-          description: ''
-        }))
+        // Page doesn't exist yet, generate SEO content automatically
+        const filters = parseURLToFilters(decodedUrl)
+        const count = await getFacilityCount(filters, API_BASE_URL)
+        
+        const autoTitle = generateSEOTitle(filters, count)
+        const autoDescription = generateSEODescription(filters, count)
+        const autoH1 = generateH1Title(filters)
+        const autoFullDescription = generateDescription(filters, count, decodedUrl)
+        
+        setFormData({
+          url: decodedUrl,
+          meta_title: autoTitle,
+          meta_description: autoDescription,
+          h1_title: autoH1,
+          description: autoFullDescription
+        })
       }
     } catch (err: any) {
       setError(err.message || 'Eroare la încărcarea paginii SEO')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAutoFill = async () => {
+    if (!formData.url) {
+      alert('URL-ul este obligatoriu pentru auto-completare')
+      return
+    }
+
+    try {
+      const filters = parseURLToFilters(formData.url)
+      const count = await getFacilityCount(filters, API_BASE_URL)
+      
+      setFormData(prev => ({
+        ...prev,
+        meta_title: generateSEOTitle(filters, count),
+        meta_description: generateSEODescription(filters, count),
+        h1_title: generateH1Title(filters),
+        description: generateDescription(filters, count, formData.url)
+      }))
+    } catch (err: any) {
+      alert('Eroare la generarea conținutului SEO: ' + err.message)
     }
   }
 
@@ -206,14 +244,49 @@ function SEOPageEdit() {
           >
             ← Înapoi la listă
           </button>
-          <h1 style={{
-            fontSize: '2rem',
-            fontWeight: '700',
-            color: '#0f172a',
-            margin: 0
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem'
           }}>
-            {isNew && !isEditByUrl ? 'Adaugă pagină SEO' : 'Editează pagină SEO'}
-          </h1>
+            <h1 style={{
+              fontSize: '2rem',
+              fontWeight: '700',
+              color: '#0f172a',
+              margin: 0
+            }}>
+              {isNew && !isEditByUrl ? 'Adaugă pagină SEO' : 'Editează pagină SEO'}
+            </h1>
+            {formData.url && (
+              <button
+                type="button"
+                onClick={handleAutoFill}
+                style={{
+                  padding: '0.625rem 1.25rem',
+                  background: '#6366f1',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(99, 102, 241, 0.2)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#4f46e5'
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(99, 102, 241, 0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#6366f1'
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(99, 102, 241, 0.2)'
+                }}
+              >
+                🔄 Auto-completează SEO
+              </button>
+            )}
+          </div>
         </div>
 
         {error && (
