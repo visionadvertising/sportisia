@@ -67,7 +67,19 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
       const response = await fetch(`${API_BASE_URL}/facilities?${params}`)
       const data = await response.json()
       if (data.success) {
-        setFacilities(data.data)
+        // Double-check: filter out any facilities that don't match the type
+        const filtered = data.data.filter((facility: Facility) => facility.facility_type === type)
+        setFacilities(filtered)
+        
+        // Log if we found mismatches
+        if (data.data.length !== filtered.length) {
+          console.warn(`[FacilitiesList] Filtered out ${data.data.length - filtered.length} facilities with wrong type. Expected: ${type}`)
+          data.data.forEach((f: Facility) => {
+            if (f.facility_type !== type) {
+              console.warn(`[FacilitiesList] Facility "${f.name}" has type "${f.facility_type}" but expected "${type}"`)
+            }
+          })
+        }
       }
     } catch (err) {
       console.error('Error fetching facilities:', err)
