@@ -193,21 +193,21 @@ function AllFacilitiesBySport() {
               <Link
                 to="/sugereaza"
                 style={{
-                  padding: '1.5rem 2rem',
+                  padding: '2rem 2.5rem',
                   background: '#6366f1',
                   color: 'white',
                   textDecoration: 'none',
                   borderRadius: '12px',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   justifyContent: 'center',
-                  gap: '0.75rem',
+                  gap: '0.5rem',
                   fontWeight: '600',
-                  fontSize: '1.125rem',
+                  fontSize: '1.25rem',
                   transition: 'all 0.2s ease',
                   boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)',
-                  textAlign: 'center'
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = '#4f46e5'
@@ -220,30 +220,34 @@ function AllFacilitiesBySport() {
                   e.currentTarget.style.transform = 'translateY(0)'
                 }}
               >
-                <div style={{ fontSize: '2rem' }}>💡</div>
-                <div>Sugerează o locație</div>
-                <div style={{ fontSize: '0.875rem', opacity: 0.9, fontWeight: '400' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '0.25rem' }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <div style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.25rem' }}>Sugerează</div>
+                <div style={{ fontSize: '0.875rem', opacity: 0.9, fontWeight: '400', lineHeight: '1.5' }}>
                   Ajută-ne să descoperim facilități noi
                 </div>
               </Link>
               <Link
                 to="/register"
                 style={{
-                  padding: '1.5rem 2rem',
+                  padding: '2rem 2.5rem',
                   background: '#10b981',
                   color: 'white',
                   textDecoration: 'none',
                   borderRadius: '12px',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   justifyContent: 'center',
-                  gap: '0.75rem',
+                  gap: '0.5rem',
                   fontWeight: '600',
-                  fontSize: '1.125rem',
+                  fontSize: '1.25rem',
                   transition: 'all 0.2s ease',
                   boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)',
-                  textAlign: 'center'
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = '#059669'
@@ -256,9 +260,14 @@ function AllFacilitiesBySport() {
                   e.currentTarget.style.transform = 'translateY(0)'
                 }}
               >
-                <div style={{ fontSize: '2rem' }}>➕</div>
-                <div>Înregistrează-te</div>
-                <div style={{ fontSize: '0.875rem', opacity: 0.9, fontWeight: '400' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '0.25rem' }}>
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <line x1="20" y1="8" x2="20" y2="14"></line>
+                  <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg>
+                <div style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.25rem' }}>Înregistrează</div>
+                <div style={{ fontSize: '0.875rem', opacity: 0.9, fontWeight: '400', lineHeight: '1.5' }}>
                   Adaugă propria ta facilitate
                 </div>
               </Link>
