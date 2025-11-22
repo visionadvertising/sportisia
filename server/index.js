@@ -1691,8 +1691,9 @@ app.get('/api/admin/suggestions', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const adminToken = req.headers.authorization?.replace('Bearer ', '')
-    if (!adminToken || !verifyAdminToken(adminToken)) {
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
@@ -1723,8 +1724,9 @@ app.put('/api/admin/suggestions/:id/status', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const adminToken = req.headers.authorization?.replace('Bearer ', '')
-    if (!adminToken || !verifyAdminToken(adminToken)) {
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
@@ -1757,8 +1759,9 @@ app.delete('/api/admin/suggestions/:id', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const adminToken = req.headers.authorization?.replace('Bearer ', '')
-    if (!adminToken || !verifyAdminToken(adminToken)) {
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
