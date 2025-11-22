@@ -905,6 +905,8 @@ app.get('/api/cities', async (req, res) => {
       FROM pending_cities
       WHERE status = 'approved'
     `)
+    
+    console.log('Approved cities from pending_cities:', approvedCities)
 
     // Combine and deduplicate
     const cityMap = new Map()
