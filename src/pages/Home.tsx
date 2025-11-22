@@ -688,20 +688,26 @@ function Home() {
                 </div>
               </div>
 
-              <button style={{
-                marginTop: '2rem',
-                padding: '1rem 2rem',
-                background: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                width: '100%'
-              }}>
+              <Link
+                to="/register"
+                style={{
+                  marginTop: '2rem',
+                  padding: '1rem 2rem',
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  width: '100%',
+                  display: 'block',
+                  textAlign: 'center',
+                  textDecoration: 'none'
+                }}
+              >
                 Become member
-              </button>
+              </Link>
             </div>
           </div>
         </div>
