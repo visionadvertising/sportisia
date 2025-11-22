@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { citySlugToName, sportSlugToName, slugToFacilityType } from '../utils/seo'
 import FacilityFilters from '../components/FacilityFilters'
+import { parseURLToFilters, getFacilityCount, generateSEOTitle, generateSEODescription, generateDescription } from '../utils/seoContentGenerator'
 
 interface Facility {
   id: number
@@ -138,19 +139,43 @@ function AllFacilities() {
       const response = await fetch(`${API_BASE_URL}/seo-pages?url=${encodeURIComponent(url)}`)
       const data = await response.json()
       if (data.success && data.data) {
-        setSeoData(data.data)
-        // Update document title and meta description
-        if (data.data.meta_title) {
-          document.title = data.data.meta_title
+        // Actualizez numărul de facilități automat
+        const filters = parseURLToFilters(url)
+        const count = await getFacilityCount(filters, API_BASE_URL)
+        
+        // Actualizez conținutul SEO cu numărul actualizat
+        let metaTitle = data.data.meta_title || ''
+        let metaDescription = data.data.meta_description || ''
+        let description = data.data.description || ''
+        
+        // Dacă există conținut, actualizez cu numărul real
+        if (metaTitle || metaDescription || description) {
+          // Regenerăm cu numărul actualizat
+          metaTitle = generateSEOTitle(filters, count)
+          metaDescription = generateSEODescription(filters, count)
+          description = generateDescription(filters, count, url)
         }
-        if (data.data.meta_description) {
+        
+        const updatedSeoData = {
+          ...data.data,
+          meta_title: metaTitle,
+          meta_description: metaDescription,
+          description: description
+        }
+        
+        setSeoData(updatedSeoData)
+        // Update document title and meta description
+        if (updatedSeoData.meta_title) {
+          document.title = updatedSeoData.meta_title
+        }
+        if (updatedSeoData.meta_description) {
           const metaDesc = document.querySelector('meta[name="description"]')
           if (metaDesc) {
-            metaDesc.setAttribute('content', data.data.meta_description)
+            metaDesc.setAttribute('content', updatedSeoData.meta_description)
           } else {
             const meta = document.createElement('meta')
             meta.name = 'description'
-            meta.content = data.data.meta_description
+            meta.content = updatedSeoData.meta_description
             document.head.appendChild(meta)
           }
         }
