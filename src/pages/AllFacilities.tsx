@@ -220,21 +220,22 @@ function AllFacilities() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#f8fafc',
-      padding: isMobile ? '1rem 0.75rem' : '1.5rem 1rem'
+      background: '#ffffff',
+      padding: isMobile ? '2rem 1rem' : '3rem 2rem'
     }}>
       <div style={{
-        maxWidth: '1200px',
+        maxWidth: '1400px',
         margin: '0 auto'
       }}>
         <h1 style={{
-          fontSize: isMobile ? '1.5rem' : '2.5rem',
-          color: '#1e293b',
-          marginBottom: isMobile ? '1rem' : '1.5rem',
-          textAlign: 'center',
+          fontSize: isMobile ? '1.75rem' : '2.75rem',
+          color: '#0f172a',
+          marginBottom: isMobile ? '1.5rem' : '2.5rem',
+          textAlign: 'left',
           fontWeight: '700',
-          lineHeight: '1.2',
-          padding: isMobile ? '0 0.5rem' : '0'
+          lineHeight: '1.1',
+          padding: isMobile ? '0' : '0',
+          letterSpacing: '-0.03em'
         }}>{getPageTitle()}</h1>
 
         <FacilityFilters
@@ -320,26 +321,27 @@ function AllFacilities() {
         ) : (
           <div>
             {Object.entries(facilitiesByType).map(([type, typeFacilities]) => (
-              <div key={type} style={{ marginBottom: isMobile ? '2rem' : '3rem' }}>
+              <div key={type} style={{ marginBottom: isMobile ? '3rem' : '4rem' }}>
                 <h2 style={{
-                  fontSize: isMobile ? '1.25rem' : '1.75rem',
-                  color: '#1e293b',
-                  marginBottom: isMobile ? '1rem' : '1.5rem',
+                  fontSize: isMobile ? '1.5rem' : '2rem',
+                  color: '#0f172a',
+                  marginBottom: isMobile ? '1.5rem' : '2rem',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  fontWeight: '600',
-                  flexWrap: 'wrap'
+                  gap: '0.75rem',
+                  fontWeight: '700',
+                  flexWrap: 'wrap',
+                  letterSpacing: '-0.02em'
                 }}>
-                  <span>{FACILITY_TYPE_ICONS[type]}</span>
-                  <span>{FACILITY_TYPE_LABELS[type]} ({typeFacilities.length})</span>
+                  <span style={{ fontSize: isMobile ? '1.25rem' : '1.5rem' }}>{FACILITY_TYPE_ICONS[type]}</span>
+                  <span>{FACILITY_TYPE_LABELS[type]} <span style={{ color: '#64748b', fontWeight: '500', fontSize: isMobile ? '1.125rem' : '1.375rem' }}>({typeFacilities.length})</span></span>
                 </h2>
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: isMobile 
                     ? '1fr' 
-                    : 'repeat(auto-fill, minmax(300px, 1fr))',
-                  gap: isMobile ? '1rem' : '2rem'
+                    : 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gap: isMobile ? '1.5rem' : '2rem'
                 }}>
                   {typeFacilities.map((facility) => (
                     <Link
@@ -347,71 +349,100 @@ function AllFacilities() {
                       to={`/facility/${facility.id}`}
                       style={{
                         background: 'white',
-                        borderRadius: isMobile ? '8px' : '12px',
+                        borderRadius: '12px',
                         overflow: 'hidden',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                        border: '1px solid #f1f5f9',
+                        transition: 'all 0.3s ease',
                         cursor: 'pointer',
                         textDecoration: 'none',
                         display: 'block'
                       }}
                       onMouseEnter={(e) => {
                         if (!isMobile) {
-                          e.currentTarget.style.transform = 'translateY(-4px)'
-                          e.currentTarget.style.boxShadow = '0 8px 12px rgba(0,0,0,0.15)'
+                          e.currentTarget.style.transform = 'translateY(-6px)'
+                          e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.12)'
+                          e.currentTarget.style.borderColor = '#e2e8f0'
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isMobile) {
                           e.currentTarget.style.transform = 'translateY(0)'
-                          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)'
+                          e.currentTarget.style.borderColor = '#f1f5f9'
                         }
                       }}
                     >
                       {(facility.image_url || facility.logo_url) && (
                         <div style={{
                           width: '100%',
-                          height: isMobile ? '180px' : '200px',
+                          height: isMobile ? '200px' : '220px',
                           background: `url(${facility.image_url || facility.logo_url}) center/cover`,
                           backgroundSize: 'cover',
-                          backgroundPosition: 'center'
+                          backgroundPosition: 'center',
+                          position: 'relative'
                         }} />
                       )}
-                      <div style={{ padding: isMobile ? '1rem' : '1.5rem' }}>
+                      <div style={{ padding: isMobile ? '1.25rem' : '1.75rem' }}>
                         <h3 style={{
-                          margin: '0 0 0.5rem 0',
-                          fontSize: isMobile ? '1.125rem' : '1.3rem',
+                          margin: '0 0 0.75rem 0',
+                          fontSize: isMobile ? '1.25rem' : '1.5rem',
                           color: '#0f172a',
-                          fontWeight: '600'
+                          fontWeight: '700',
+                          lineHeight: '1.3',
+                          letterSpacing: '-0.01em'
                         }}>{facility.name}</h3>
                         <p style={{
-                          margin: '0 0 0.5rem 0',
+                          margin: '0 0 0.75rem 0',
                           color: '#64748b',
-                          fontSize: isMobile ? '0.8125rem' : '0.9rem'
-                        }}>📍 {facility.city}{facility.location ? `, ${facility.location}` : ''}</p>
+                          fontSize: isMobile ? '0.875rem' : '0.9375rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          <span style={{ fontSize: '1rem' }}>📍</span>
+                          <span>{facility.city}{facility.location ? `, ${facility.location}` : ''}</span>
+                        </p>
                         {facility.sport && (
-                          <p style={{
-                            margin: '0 0 0.5rem 0',
+                          <div style={{
+                            margin: '0 0 1rem 0',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.375rem 0.75rem',
+                            background: '#f0fdf4',
+                            borderRadius: '6px',
                             color: '#10b981',
                             fontWeight: '600',
-                            fontSize: isMobile ? '0.875rem' : '0.9375rem'
-                          }}>🎾 {SPORT_NAMES[facility.sport] || facility.sport}</p>
+                            fontSize: isMobile ? '0.8125rem' : '0.875rem'
+                          }}>
+                            <span>🎾</span>
+                            <span>{SPORT_NAMES[facility.sport] || facility.sport}</span>
+                          </div>
                         )}
-                        {facility.price_per_hour && (
-                          <p style={{
-                            margin: '0 0 1rem 0',
-                            color: '#0f172a',
-                            fontSize: isMobile ? '1rem' : '1.1rem',
-                            fontWeight: '600'
-                          }}>De la {facility.price_per_hour} RON/oră</p>
-                        )}
-                        {facility.price_per_lesson && (
-                          <p style={{
-                            margin: '0 0 1rem 0',
-                            color: '#0f172a',
-                            fontSize: isMobile ? '1rem' : '1.1rem',
-                            fontWeight: '600'
-                          }}>De la {facility.price_per_lesson} RON/lecție</p>
+                        {(facility.price_per_hour || facility.price_per_lesson) && (
+                          <div style={{
+                            marginTop: '1rem',
+                            paddingTop: '1rem',
+                            borderTop: '1px solid #f1f5f9'
+                          }}>
+                            {facility.price_per_hour && (
+                              <p style={{
+                                margin: 0,
+                                color: '#0f172a',
+                                fontSize: isMobile ? '1.125rem' : '1.25rem',
+                                fontWeight: '700'
+                              }}>De la {facility.price_per_hour} RON/oră</p>
+                            )}
+                            {facility.price_per_lesson && (
+                              <p style={{
+                                margin: 0,
+                                color: '#0f172a',
+                                fontSize: isMobile ? '1.125rem' : '1.25rem',
+                                fontWeight: '700'
+                              }}>De la {facility.price_per_lesson} RON/lecție</p>
+                            )}
+                          </div>
                         )}
                         {facility.specialization && (
                           <p style={{

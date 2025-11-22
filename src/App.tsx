@@ -42,14 +42,16 @@ function AppContent() {
       {!isAdminRoute && (
         <header style={{
           background: '#ffffff',
-          padding: isMobile ? '1rem' : '1.5rem 2rem',
-          borderBottom: '1px solid #e2e8f0',
+          padding: isMobile ? '1.25rem 1rem' : '1.75rem 2rem',
+          borderBottom: '1px solid #f1f5f9',
           position: 'sticky',
           top: 0,
-          zIndex: 100
+          zIndex: 100,
+          backdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)'
         }}>
           <div style={{
-            maxWidth: '1200px',
+            maxWidth: '1400px',
             margin: '0 auto',
             display: 'flex',
             justifyContent: 'space-between',
@@ -62,14 +64,21 @@ function AppContent() {
               alignItems: 'center',
               gap: isMobile ? '8px' : '10px',
               textDecoration: 'none',
-              flexShrink: 0
-            }}>
+              flexShrink: 0,
+              transition: 'opacity 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
               <h1 style={{
                 margin: 0,
-                fontSize: isMobile ? '1.25rem' : '1.75rem',
-                fontWeight: '600',
-                color: '#0f172a',
-                letterSpacing: '-0.02em'
+                fontSize: isMobile ? '1.375rem' : '1.875rem',
+                fontWeight: '700',
+                background: 'linear-gradient(135deg, #0f172a 0%, #10b981 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                letterSpacing: '-0.03em'
               }}>SPORTISIA</h1>
             </Link>
             {isMobile ? (
@@ -99,18 +108,71 @@ function AppContent() {
             ) : (
               <nav style={{
                 display: 'flex',
-                gap: isMobile ? '1rem' : '2rem',
+                gap: isMobile ? '1rem' : '2.5rem',
                 alignItems: 'center',
                 flexWrap: 'wrap'
               }}>
-                <Link to="/" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Home</Link>
-                <Link to="/terenuri" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Terenuri</Link>
-                <Link to="/antrenori" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Antrenori</Link>
-                <Link to="/magazine-reparatii" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Reparații</Link>
-                <Link to="/magazine-articole" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Articole</Link>
-                <div style={{ marginLeft: isMobile ? '0' : '1rem', paddingLeft: isMobile ? '0' : '1rem', borderLeft: isMobile ? 'none' : '1px solid #e2e8f0', display: 'flex', gap: '1rem' }}>
-                  <Link to="/register" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = '#0f172a'}>Înregistrare</Link>
-                  <Link to="/login" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = '#0f172a'}>Login</Link>
+                <Link to="/" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 0', position: 'relative' }} 
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#0f172a'
+                  }} 
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#64748b'
+                  }}
+                >Home</Link>
+                <Link to="/terenuri" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 0' }} 
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#0f172a'
+                  }} 
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#64748b'
+                  }}
+                >Terenuri</Link>
+                <Link to="/antrenori" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 0' }} 
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#0f172a'
+                  }} 
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#64748b'
+                  }}
+                >Antrenori</Link>
+                <Link to="/magazine-reparatii" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 0' }} 
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#0f172a'
+                  }} 
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#64748b'
+                  }}
+                >Magazine Reparații</Link>
+                <Link to="/magazine-articole" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 0' }} 
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#0f172a'
+                  }} 
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#64748b'
+                  }}
+                >Magazine Articole</Link>
+                <div style={{ marginLeft: isMobile ? '0' : '1.5rem', paddingLeft: isMobile ? '0' : '1.5rem', borderLeft: isMobile ? 'none' : '1px solid #e2e8f0', display: 'flex', gap: '1.25rem' }}>
+                  <Link to="/register" style={{ textDecoration: 'none', color: '#10b981', fontWeight: '600', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 1rem', borderRadius: '6px' }} 
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f0fdf4'
+                      e.currentTarget.style.color = '#059669'
+                    }} 
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.color = '#10b981'
+                    }}
+                  >Înregistrare</Link>
+                  <Link to="/login" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 1rem', borderRadius: '6px', background: '#f8fafc' }} 
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f1f5f9'
+                      e.currentTarget.style.color = '#10b981'
+                    }} 
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#f8fafc'
+                      e.currentTarget.style.color = '#0f172a'
+                    }}
+                  >Login</Link>
                 </div>
               </nav>
             )}

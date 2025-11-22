@@ -209,10 +209,11 @@ function FacilityFilters({
   return (
     <div style={{
       background: 'white',
-      borderRadius: isMobile ? '12px' : '16px',
-      padding: isMobile ? '1rem' : '1.5rem',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-      marginBottom: isMobile ? '1.5rem' : '2rem'
+      borderRadius: '12px',
+      padding: isMobile ? '1.25rem' : '1.75rem',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+      border: '1px solid #f1f5f9',
+      marginBottom: isMobile ? '2rem' : '3rem'
     }}>
       <div style={{
         display: 'grid',
@@ -252,8 +253,8 @@ function FacilityFilters({
               boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = '#0f172a'
-              e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+              e.target.style.borderColor = '#10b981'
+              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#e2e8f0'
@@ -300,8 +301,8 @@ function FacilityFilters({
               boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = '#0f172a'
-              e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+              e.target.style.borderColor = '#10b981'
+              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
             }}
             onBlur={(e) => {
               e.target.style.borderColor = '#e2e8f0'
