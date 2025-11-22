@@ -175,7 +175,7 @@ async function addMissingColumns() {
       AND TABLE_NAME = 'facilities'
     `)
     
-    const existingColumns = columns.map((col: any) => col.COLUMN_NAME)
+    const existingColumns = columns.map((col) => col.COLUMN_NAME)
     
     // Add missing columns
     if (!existingColumns.includes('logo_url')) {
