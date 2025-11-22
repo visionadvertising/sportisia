@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
+import ReactQuill from 'react-quill'
+import 'react-quill/dist/quill.snow.css'
 import {
   parseURLToFilters,
   getFacilityCount,
@@ -438,7 +440,7 @@ function SEOPageEdit() {
                 e.target.style.borderColor = '#e2e8f0'
                 e.target.style.boxShadow = 'none'
               }}
-              placeholder="Descoperă cele mai bune terenuri de fotbal din România. Rezervă online terenuri de fotbal pentru antrenamente și meciuri."
+              placeholder="Descoperă cele mai bune terenuri de fotbal din România. Explorează terenuri de fotbal pentru antrenamente și meciuri."
             />
             <p style={{
               marginTop: '0.5rem',
@@ -501,41 +503,57 @@ function SEOPageEdit() {
               color: '#0f172a',
               fontSize: '0.9375rem'
             }}>
-              Descriere (2-3 rânduri vizibile, cu expand)
+              Descriere (2-3 paragrafe, 400-500 cuvinte, cu link-uri interne)
             </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={8}
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '0.9375rem',
-                color: '#0f172a',
-                outline: 'none',
-                resize: 'vertical',
-                fontFamily: 'inherit',
-                lineHeight: '1.7',
-                transition: 'all 0.2s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#10b981'
-                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0'
-                e.target.style.boxShadow = 'none'
-              }}
-              placeholder="Descoperă cele mai bune terenuri de fotbal din România. Rezervă online terenuri de fotbal pentru antrenamente și meciuri. Găsește terenuri cu iluminat, vestiare și parcare."
-            />
+            <div style={{
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              transition: 'all 0.2s ease'
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = '#10b981'
+              e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = '#e2e8f0'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+            >
+              <ReactQuill
+                theme="snow"
+                value={formData.description}
+                onChange={(value) => setFormData({ ...formData, description: value })}
+                modules={{
+                  toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['clean']
+                  ]
+                }}
+                formats={[
+                  'header',
+                  'bold', 'italic', 'underline', 'strike',
+                  'list', 'bullet',
+                  'link',
+                  'color', 'background'
+                ]}
+                style={{
+                  background: 'white',
+                  minHeight: '300px'
+                }}
+                placeholder="Scrie descrierea aici. Poți adăuga link-uri interne folosind butonul de link din toolbar."
+              />
+            </div>
             <p style={{
               marginTop: '0.5rem',
               fontSize: '0.875rem',
               color: '#64748b'
             }}>
-              Prima linie va fi afișată ca preview. Folosiți linii noi pentru a separa paragrafele.
+              Folosește link-uri interne către alte pagini relevante (ex: /iasi/tenis/antrenori). Prima paragrafă va fi afișată ca preview.
             </p>
           </div>
 
