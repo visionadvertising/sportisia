@@ -7,11 +7,6 @@ import Dashboard from './pages/Dashboard'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import FacilitiesList from './pages/FacilitiesList'
-import SEOFacilityPage from './pages/SEOFacilityPage'
-import AllFacilitiesBySport from './pages/AllFacilitiesBySport'
-import AllFacilitiesByCity from './pages/AllFacilitiesByCity'
-import AllFacilitiesByCityOrSport from './pages/AllFacilitiesByCityOrSport'
-import AllFacilitiesByCityAndSport from './pages/AllFacilitiesByCityAndSport'
 import AllFacilities from './pages/AllFacilities'
 
 function AppContent() {
@@ -96,13 +91,10 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/toate" element={<AllFacilities />} />
-        {/* SEO-friendly routes - must be before simple routes */}
-        <Route path="/:city/:sport/:type" element={<SEOFacilityPage />} />
-        <Route path="/:city/:type" element={<SEOFacilityPage />} />
-        <Route path="/:city/:sport" element={<AllFacilitiesByCityAndSport />} />
-        <Route path="/:sport/:type" element={<SEOFacilityPage />} />
-        {/* City or sport pages - must be after type routes to avoid conflicts */}
-        <Route path="/:cityOrSport" element={<AllFacilitiesByCityOrSport />} />
+        {/* Generic route for all listings - handles all combinations */}
+        <Route path="/:param1/:param2/:param3" element={<AllFacilities />} />
+        <Route path="/:param1/:param2" element={<AllFacilities />} />
+        <Route path="/:param1" element={<AllFacilities />} />
         {/* Simple routes (fallback) */}
         <Route path="/terenuri" element={<FacilitiesList type="field" title="Terenuri Sportive" />} />
         <Route path="/antrenori" element={<FacilitiesList type="coach" title="Antrenori" />} />

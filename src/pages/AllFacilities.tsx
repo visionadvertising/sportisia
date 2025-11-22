@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
+import { citySlugToName, sportSlugToName, slugToFacilityType } from '../utils/seo'
 import FacilityFilters from '../components/FacilityFilters'
 
 interface Facility {
@@ -46,27 +47,97 @@ const SPORT_NAMES: Record<string, string> = {
   'squash': 'Squash'
 }
 
+// List of known sport slugs
+const KNOWN_SPORTS = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans']
+
+// List of facility type slugs
+const FACILITY_TYPE_SLUGS = ['terenuri', 'antrenori', 'magazine-reparatii', 'magazine-articole']
+
 function AllFacilities() {
+  // Read URL parameters - support multiple formats
+  const params = useParams<{ 
+    param1?: string
+    param2?: string
+    param3?: string
+  }>()
+  
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Parse URL to determine filters
+  const param1 = params.param1 || ''
+  const param2 = params.param2 || ''
+  const param3 = params.param3 || ''
+  
+  let city = ''
+  let sport = ''
+  let facilityType = ''
+  
+  // Determine what each parameter represents
+  // Priority: Check facility types first, then sports, then cities
+  if (param1) {
+    if (FACILITY_TYPE_SLUGS.includes(param1.toLowerCase())) {
+      // param1 is a type (e.g., /terenuri, /antrenori)
+      facilityType = slugToFacilityType(param1)
+    } else if (KNOWN_SPORTS.includes(param1.toLowerCase())) {
+      // param1 is a sport (e.g., /tenis, /fotbal)
+      sport = param1
+      
+      if (param2 && FACILITY_TYPE_SLUGS.includes(param2.toLowerCase())) {
+        // param2 is a type (e.g., /tenis/terenuri)
+        facilityType = slugToFacilityType(param2)
+      }
+    } else {
+      // param1 is likely a city (e.g., /iasi, /bucuresti)
+      const cityName = citySlugToName(param1)
+      city = cityName
+      
+      if (param2) {
+        if (FACILITY_TYPE_SLUGS.includes(param2.toLowerCase())) {
+          // param2 is a type (e.g., /iasi/terenuri)
+          facilityType = slugToFacilityType(param2)
+        } else if (KNOWN_SPORTS.includes(param2.toLowerCase())) {
+          // param2 is a sport (e.g., /iasi/tenis)
+          sport = param2
+          
+          if (param3 && FACILITY_TYPE_SLUGS.includes(param3.toLowerCase())) {
+            // param3 is a type (e.g., /iasi/tenis/terenuri)
+            facilityType = slugToFacilityType(param3)
+          }
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     fetchFacilities()
-  }, [])
+  }, [city, sport, facilityType])
 
   const fetchFacilities = async () => {
     setLoading(true)
     try {
-      // Fetch all facility types
-      const types = ['field', 'coach', 'repair_shop', 'equipment_shop']
+      // Determine which types to fetch
+      const typesToFetch = facilityType 
+        ? [facilityType] 
+        : ['field', 'coach', 'repair_shop', 'equipment_shop']
+      
       const allFacilities: Facility[] = []
 
-      for (const type of types) {
-        const params = new URLSearchParams({ 
+      for (const type of typesToFetch) {
+        const queryParams = new URLSearchParams({ 
           type, 
           status: 'active'
         })
-        const response = await fetch(`${API_BASE_URL}/facilities?${params}`)
+        
+        if (city) {
+          queryParams.append('city', city)
+        }
+        
+        if (sport && (type === 'field' || type === 'coach')) {
+          queryParams.append('sport', sport)
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/facilities?${queryParams}`)
         const data = await response.json()
         if (data.success && data.data) {
           allFacilities.push(...data.data)
@@ -90,6 +161,53 @@ function AllFacilities() {
     return acc
   }, {} as Record<string, Facility[]>)
 
+  // Generate page title
+  const getPageTitle = () => {
+    if (facilityType && sport && city) {
+      return `${FACILITY_TYPE_LABELS[facilityType]} - ${SPORT_NAMES[sport] || sport} în ${city}`
+    } else if (facilityType && city) {
+      return `${FACILITY_TYPE_LABELS[facilityType]} în ${city}`
+    } else if (facilityType && sport) {
+      return `${FACILITY_TYPE_LABELS[facilityType]} - ${SPORT_NAMES[sport] || sport}`
+    } else if (sport && city) {
+      return `Toate facilitățile pentru ${SPORT_NAMES[sport] || sport} în ${city}`
+    } else if (city) {
+      return `Toate facilitățile în ${city}`
+    } else if (sport) {
+      return `Toate facilitățile pentru ${SPORT_NAMES[sport] || sport}`
+    } else if (facilityType) {
+      return FACILITY_TYPE_LABELS[facilityType]
+    }
+    return 'Toate facilitățile'
+  }
+
+  // Get empty message
+  const getEmptyMessage = () => {
+    if (facilityType && sport && city) {
+      return `Momentan nu sunt ${FACILITY_TYPE_LABELS[facilityType].toLowerCase()} pentru ${SPORT_NAMES[sport]?.toLowerCase() || sport} în ${city}.`
+    } else if (facilityType && city) {
+      return `Momentan nu sunt ${FACILITY_TYPE_LABELS[facilityType].toLowerCase()} în ${city}.`
+    } else if (facilityType && sport) {
+      return `Momentan nu sunt ${FACILITY_TYPE_LABELS[facilityType].toLowerCase()} pentru ${SPORT_NAMES[sport]?.toLowerCase() || sport}.`
+    } else if (sport && city) {
+      return `Momentan nu sunt facilități disponibile pentru ${SPORT_NAMES[sport]?.toLowerCase() || sport} în ${city}.`
+    } else if (city) {
+      return `Momentan nu sunt facilități disponibile în ${city}.`
+    } else if (sport) {
+      return `Momentan nu sunt facilități disponibile pentru ${SPORT_NAMES[sport]?.toLowerCase() || sport}.`
+    } else if (facilityType) {
+      return `Momentan nu sunt ${FACILITY_TYPE_LABELS[facilityType].toLowerCase()} disponibile.`
+    }
+    return 'Momentan nu sunt facilități disponibile.'
+  }
+
+  // Convert city name to slug for dropdown
+  const citySlug = city ? param1 : ''
+  // Convert sport slug to value for dropdown
+  const sportValue = sport || ''
+  // Convert facility type to value for dropdown
+  const typeValue = facilityType || ''
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -106,12 +224,12 @@ function AllFacilities() {
           marginBottom: '1.5rem',
           textAlign: 'center',
           fontWeight: '700'
-        }}>Toate facilitățile</h1>
+        }}>{getPageTitle()}</h1>
 
         <FacilityFilters
-          selectedCity=""
-          selectedSport=""
-          selectedType=""
+          selectedCity={city}
+          selectedSport={sportValue}
+          selectedType={typeValue}
           showTypeFilter={true}
         />
 
@@ -147,7 +265,7 @@ function AllFacilities() {
               marginBottom: '2rem',
               lineHeight: '1.6'
             }}>
-              Momentan nu sunt facilități disponibile.
+              {getEmptyMessage()}
             </p>
             <p style={{
               fontSize: '1rem',
@@ -292,4 +410,3 @@ function AllFacilities() {
 }
 
 export default AllFacilities
-
