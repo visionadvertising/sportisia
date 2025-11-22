@@ -226,3 +226,13 @@ export function generateFacilityURL(
   }
 }
 
+// Generate URL for sport without city (for sports listing page)
+export function generateSportURL(
+  sport: string,
+  facilityType: string
+): string {
+  const sportSlug = sportNameToSlug(sport)
+  const typeSlug = facilityTypeToSlug(facilityType)
+  return `/${sportSlug}/${typeSlug}`
+}
+

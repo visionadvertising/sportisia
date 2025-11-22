@@ -99,6 +99,7 @@ function AppContent() {
         {/* SEO-friendly routes - must be before simple routes */}
         <Route path="/:city/:sport/:type" element={<SEOFacilityPage />} />
         <Route path="/:city/:type" element={<SEOFacilityPage />} />
+        <Route path="/:sport/:type" element={<SEOFacilityPage />} />
         {/* Simple routes (fallback) */}
         <Route path="/terenuri" element={<FacilitiesList type="field" title="Terenuri Sportive" />} />
         <Route path="/antrenori" element={<FacilitiesList type="coach" title="Antrenori" />} />

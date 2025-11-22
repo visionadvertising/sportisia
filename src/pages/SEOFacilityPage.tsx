@@ -5,7 +5,8 @@ import {
   citySlugToName, 
   sportSlugToName, 
   slugToFacilityType,
-  generateFacilityURL 
+  generateFacilityURL,
+  generateSportURL
 } from '../utils/seo'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 
@@ -55,17 +56,32 @@ function SEOFacilityPage() {
   const [selectedSport, setSelectedSport] = useState('')
 
   // Parse URL parameters
+  // Check if we have city/:sport/:type or just :sport/:type format
+  const hasCity = !!params.city
   const citySlug = params.city || ''
   const sportSlug = params.sport || ''
   const typeSlug = params.type || ''
 
-  const city = citySlug ? citySlugToName(citySlug) : ''
-  const sport = sportSlug ? sportSlugToName(sportSlug) : ''
+  // If we have city param, it's a city. Otherwise, sport param might be the sport (without city)
+  let city = ''
+  let sport = ''
+  
+  if (hasCity) {
+    // Format: /:city/:sport/:type or /:city/:type
+    city = citySlug ? citySlugToName(citySlug) : ''
+    sport = sportSlug ? sportSlugToName(sportSlug) : ''
+  } else {
+    // Format: /:sport/:type (sport without city)
+    sport = sportSlug ? sportSlugToName(sportSlug) : ''
+  }
+  
   const facilityType = typeSlug ? slugToFacilityType(typeSlug) : ''
 
   useEffect(() => {
-    if (city && facilityType) {
-      setSelectedCity(city)
+    if (facilityType) {
+      if (city) {
+        setSelectedCity(city)
+      }
       if (sport) {
         setSelectedSport(sport)
       }
@@ -76,15 +92,15 @@ function SEOFacilityPage() {
   const fetchFacilities = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ type: facilityType, status: 'active' })
-      if (city) params.append('city', city)
+      const queryParams = new URLSearchParams({ type: facilityType, status: 'active' })
+      if (city) queryParams.append('city', city)
       if (sport && (facilityType === 'field' || facilityType === 'coach')) {
         // Convert sport name back to slug for API
         const sportSlug = sport.toLowerCase()
-        params.append('sport', sportSlug)
+        queryParams.append('sport', sportSlug)
       }
 
-      const response = await fetch(`${API_BASE_URL}/facilities?${params}`)
+      const response = await fetch(`${API_BASE_URL}/facilities?${queryParams}`)
       const data = await response.json()
       if (data.success) {
         setFacilities(data.data)
@@ -99,20 +115,56 @@ function SEOFacilityPage() {
   const handleCityChange = (newCity: string) => {
     setSelectedCity(newCity)
     if (newCity) {
-      const url = generateFacilityURL(newCity, sport || null, facilityType)
-      navigate(url)
+      if (sport) {
+        const url = generateFacilityURL(newCity, sport, facilityType)
+        navigate(url)
+      } else {
+        const url = generateFacilityURL(newCity, null, facilityType)
+        navigate(url)
+      }
+    } else {
+      // Navigate to sport-only URL if we have sport
+      if (sport) {
+        const url = generateSportURL(sport, facilityType)
+        navigate(url)
+      } else {
+        // Navigate to base page
+        const baseUrls: Record<string, string> = {
+          'field': '/terenuri',
+          'coach': '/antrenori',
+          'repair_shop': '/magazine-reparatii',
+          'equipment_shop': '/magazine-articole'
+        }
+        navigate(baseUrls[facilityType] || '/')
+      }
     }
   }
 
   const handleSportChange = (newSport: string) => {
     setSelectedSport(newSport)
-    if (newSport && city) {
-      const url = generateFacilityURL(city, newSport, facilityType)
-      navigate(url)
-    } else if (!newSport && city) {
+    if (newSport) {
+      if (city) {
+        const url = generateFacilityURL(city, newSport, facilityType)
+        navigate(url)
+      } else {
+        const url = generateSportURL(newSport, facilityType)
+        navigate(url)
+      }
+    } else {
       // Remove sport from URL
-      const url = generateFacilityURL(city, null, facilityType)
-      navigate(url)
+      if (city) {
+        const url = generateFacilityURL(city, null, facilityType)
+        navigate(url)
+      } else {
+        // Navigate to base page
+        const baseUrls: Record<string, string> = {
+          'field': '/terenuri',
+          'coach': '/antrenori',
+          'repair_shop': '/magazine-reparatii',
+          'equipment_shop': '/magazine-articole'
+        }
+        navigate(baseUrls[facilityType] || '/')
+      }
     }
   }
 
@@ -121,6 +173,8 @@ function SEOFacilityPage() {
       return `${FACILITY_TYPE_TITLES[facilityType]} - ${sport} în ${city}`
     } else if (city) {
       return `${FACILITY_TYPE_TITLES[facilityType]} în ${city}`
+    } else if (sport) {
+      return `${FACILITY_TYPE_TITLES[facilityType]} - ${sport}`
     }
     return FACILITY_TYPE_TITLES[facilityType] || 'Facilități'
   }
@@ -130,6 +184,8 @@ function SEOFacilityPage() {
       return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} pentru ${sport.toLowerCase()} în ${city}.`
     } else if (city) {
       return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} în ${city}.`
+    } else if (sport) {
+      return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} pentru ${sport.toLowerCase()}.`
     }
     return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} disponibile.`
   }
@@ -150,6 +206,9 @@ function SEOFacilityPage() {
       </div>
     )
   }
+
+  // Show city selector only if we don't have a city in URL
+  const showCitySelector = !city
 
   return (
     <div style={{
@@ -178,35 +237,37 @@ function SEOFacilityPage() {
         }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: (facilityType === 'field' || facilityType === 'coach') ? 'repeat(2, 1fr)' : '1fr',
+            gridTemplateColumns: showCitySelector && (facilityType === 'field' || facilityType === 'coach') ? 'repeat(2, 1fr)' : '1fr',
             gap: '1rem'
           }}>
-            <div>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>Oraș</label>
-              <select
-                value={selectedCity}
-                onChange={(e) => handleCityChange(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="">Toate orașele</option>
-                {ROMANIAN_CITIES.map(cityOption => (
-                  <option key={cityOption} value={cityOption}>{cityOption}</option>
-                ))}
-              </select>
-            </div>
+            {showCitySelector && (
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  color: '#333',
+                  fontWeight: '500'
+                }}>Oraș</label>
+                <select
+                  value={selectedCity}
+                  onChange={(e) => handleCityChange(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Toate orașele</option>
+                  {ROMANIAN_CITIES.map(cityOption => (
+                    <option key={cityOption} value={cityOption}>{cityOption}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             {(facilityType === 'field' || facilityType === 'coach') && (
               <div>
                 <label style={{

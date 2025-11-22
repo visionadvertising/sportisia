@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
+import { generateFacilityURL } from '../utils/seo'
 
 interface Facility {
   id: number
@@ -47,11 +48,11 @@ interface FacilitiesListProps {
 }
 
 function FacilitiesList({ type, title }: FacilitiesListProps) {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || '')
-  const [selectedSport, setSelectedSport] = useState(searchParams.get('sport') || '')
+  const [selectedCity, setSelectedCity] = useState('')
+  const [selectedSport, setSelectedSport] = useState('')
 
   useEffect(() => {
     fetchFacilities()
@@ -78,24 +79,31 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
 
   const handleCityChange = (city: string) => {
     setSelectedCity(city)
-    const newParams = new URLSearchParams(searchParams)
     if (city) {
-      newParams.set('city', city)
+      const url = generateFacilityURL(city, selectedSport || null, type)
+      navigate(url)
     } else {
-      newParams.delete('city')
+      // Navigate back to base page
+      const baseUrls: Record<string, string> = {
+        'field': '/terenuri',
+        'coach': '/antrenori',
+        'repair_shop': '/magazine-reparatii',
+        'equipment_shop': '/magazine-articole'
+      }
+      navigate(baseUrls[type] || '/')
     }
-    setSearchParams(newParams)
   }
 
   const handleSportChange = (sport: string) => {
     setSelectedSport(sport)
-    const newParams = new URLSearchParams(searchParams)
-    if (sport) {
-      newParams.set('sport', sport)
-    } else {
-      newParams.delete('sport')
+    if (sport && selectedCity) {
+      const url = generateFacilityURL(selectedCity, sport, type)
+      navigate(url)
+    } else if (!sport && selectedCity) {
+      // Remove sport from URL
+      const url = generateFacilityURL(selectedCity, null, type)
+      navigate(url)
     }
-    setSearchParams(newParams)
   }
 
   return (
