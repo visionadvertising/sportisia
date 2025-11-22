@@ -81,12 +81,33 @@ function SEOPageEdit() {
 
       const data = await response.json()
       if (data.success) {
+        const url = data.data.url || ''
+        // Actualizez numărul de facilități automat
+        const filters = parseURLToFilters(url)
+        const count = await getFacilityCount(filters, API_BASE_URL)
+        
+        // Actualizez Meta Title și Meta Description cu numărul actualizat
+        let metaTitle = data.data.meta_title || ''
+        let metaDescription = data.data.meta_description || ''
+        let description = data.data.description || ''
+        
+        // Dacă conținutul a fost generat automat (conține număr), actualizez numărul
+        if (metaTitle && count > 0) {
+          metaTitle = generateSEOTitle(filters, count)
+        }
+        if (metaDescription && count > 0) {
+          metaDescription = generateSEODescription(filters, count)
+        }
+        if (description && count > 0) {
+          description = generateDescription(filters, count, url)
+        }
+        
         setFormData({
-          url: data.data.url || '',
-          meta_title: data.data.meta_title || '',
-          meta_description: data.data.meta_description || '',
+          url,
+          meta_title: metaTitle,
+          meta_description: metaDescription,
           h1_title: data.data.h1_title || '',
-          description: data.data.description || ''
+          description
         })
       } else {
         setError(data.error || 'Eroare la încărcarea paginii SEO')
@@ -116,12 +137,32 @@ function SEOPageEdit() {
 
       const data = await response.json()
       if (data.success && data.data) {
+        // Actualizez numărul de facilități automat
+        const filters = parseURLToFilters(decodedUrl)
+        const count = await getFacilityCount(filters, API_BASE_URL)
+        
+        // Actualizez Meta Title și Meta Description cu numărul actualizat
+        let metaTitle = data.data.meta_title || ''
+        let metaDescription = data.data.meta_description || ''
+        let description = data.data.description || ''
+        
+        // Dacă conținutul a fost generat automat (conține număr), actualizez numărul
+        if (metaTitle && count > 0) {
+          metaTitle = generateSEOTitle(filters, count)
+        }
+        if (metaDescription && count > 0) {
+          metaDescription = generateSEODescription(filters, count)
+        }
+        if (description && count > 0) {
+          description = generateDescription(filters, count, decodedUrl)
+        }
+        
         setFormData({
           url: data.data.url || decodedUrl,
-          meta_title: data.data.meta_title || '',
-          meta_description: data.data.meta_description || '',
+          meta_title: metaTitle,
+          meta_description: metaDescription,
           h1_title: data.data.h1_title || '',
-          description: data.data.description || ''
+          description
         })
       } else {
         // Page doesn't exist yet, generate SEO content automatically
