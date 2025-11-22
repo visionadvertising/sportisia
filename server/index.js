@@ -273,6 +273,21 @@ async function addMissingColumns() {
       console.log('✅ Added county column')
     }
 
+    if (!existingColumns.includes('contact_person')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN contact_person VARCHAR(255) AFTER email`)
+      console.log('✅ Added contact_person column')
+    }
+
+    if (!existingColumns.includes('location_not_specified')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN location_not_specified BOOLEAN DEFAULT FALSE AFTER location`)
+      console.log('✅ Added location_not_specified column')
+    }
+
+    if (!existingColumns.includes('map_coordinates')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN map_coordinates JSON AFTER location_not_specified`)
+      console.log('✅ Added map_coordinates column')
+    }
+
     // Check pending_cities table for county column
     const [pendingCitiesColumns] = await pool.query(`
       SELECT COLUMN_NAME 
@@ -409,9 +424,9 @@ app.post('/api/register', async (req, res) => {
 
     const {
       facilityType, // 'field', 'coach', 'repair_shop', 'equipment_shop'
-      name, city, county, location, phone, email, description, imageUrl,
+      name, city, county, location, locationNotSpecified, mapCoordinates, phone, email, contactPerson, description, imageUrl,
       // New common fields
-      logoUrl, socialMedia, gallery,
+      logoFile, socialMedia, gallery,
       // Field specific
       sport, pricePerHour, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
       // Coach specific
@@ -425,7 +440,7 @@ app.post('/api/register', async (req, res) => {
     } = req.body
 
     // Validate required fields
-    if (!facilityType || !name || !city || !location || !phone || !email) {
+    if (!facilityType || !name || !city || (!location && !locationNotSpecified) || !phone || !email) {
       return res.status(400).json({
         success: false,
         error: 'Lipsește informație obligatorie'
@@ -459,6 +474,20 @@ app.post('/api/register', async (req, res) => {
       pricePerLesson = pricingDetails[0].price
     }
 
+    // Process logo file (base64 to URL or save)
+    let logoUrlFinal = null
+    if (logoFile) {
+      // For now, save as base64 data URL. Later can be uploaded to storage
+      logoUrlFinal = logoFile
+    }
+
+    // Process gallery files (base64 to array)
+    let galleryFinal = null
+    if (gallery && Array.isArray(gallery) && gallery.length > 0) {
+      // For now, save as base64 data URLs. Later can be uploaded to storage
+      galleryFinal = gallery
+    }
+
     // Generate username and password
     const username = generateUsername(name, facilityType)
     const password = crypto.randomBytes(8).toString('hex') // Generate random password
@@ -471,10 +500,15 @@ app.post('/api/register', async (req, res) => {
     try {
       // Prepare values array
       const values = [
-        facilityType, name, city, county || null, location, phone, email || null, description || null, imageUrl || null,
-        logoUrl || null, 
+        facilityType, name, city, county || null, 
+        locationNotSpecified ? null : (location || null), 
+        locationNotSpecified || false,
+        mapCoordinates ? JSON.stringify(mapCoordinates) : null,
+        phone, email || null, contactPerson || null, 
+        description || null, imageUrl || null,
+        logoUrlFinal || null, 
         socialMedia ? JSON.stringify(socialMedia) : null,
-        gallery ? JSON.stringify(gallery) : null,
+        galleryFinal ? JSON.stringify(galleryFinal) : null,
         sport || null, pricePerHour ? parseFloat(pricePerHour) : null,
         pricingDetails ? JSON.stringify(pricingDetails) : null,
         hasParking || false, hasShower || false, hasChangingRoom || false,
@@ -487,22 +521,22 @@ app.post('/api/register', async (req, res) => {
         'pending' // status
       ]
 
-      // Verify values count - MUST BE 34 (added county)
-      if (values.length !== 34) {
-        const errorMsg = `Values array must have 34 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
+      // Verify values count - MUST BE 38 (added county, contactPerson, locationNotSpecified, mapCoordinates)
+      if (values.length !== 38) {
+        const errorMsg = `Values array must have 38 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
         console.error(`[REGISTER ERROR] ${errorMsg}`)
         throw new Error(errorMsg)
       }
 
       // Debug: log values count
       console.log(`[REGISTER] Inserting facility: ${name}`)
-      console.log(`[REGISTER] Values count: ${values.length}, expected: 34`)
-      console.log(`[REGISTER] Last value (status): ${values[33]}`)
+      console.log(`[REGISTER] Values count: ${values.length}, expected: 38`)
+      console.log(`[REGISTER] Last value (status): ${values[37]}`)
 
       // Insert facility
       const [facilityResult] = await connection.query(
         `INSERT INTO facilities (
-          facility_type, name, city, county, location, phone, email, description, image_url,
+          facility_type, name, city, county, location, location_not_specified, map_coordinates, phone, email, contact_person, description, image_url,
           logo_url, social_media, gallery,
           sport, price_per_hour, pricing_details, has_parking, has_shower, has_changing_room, 
           has_air_conditioning, has_lighting,
@@ -510,7 +544,7 @@ app.post('/api/register', async (req, res) => {
           services_offered, brands_serviced, average_repair_time,
           products_categories, brands_available, delivery_available,
           website, opening_hours, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         values
       )
 

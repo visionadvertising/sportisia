@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 import { ROMANIAN_COUNTIES } from '../data/romanian-counties'
+import MapSelector from '../components/MapSelector'
 
 type FacilityType = 'field' | 'coach' | 'repair_shop' | 'equipment_shop'
 
@@ -25,9 +26,12 @@ function Register() {
   // Step 2: Contact Details
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
+  const [contactPerson, setContactPerson] = useState('')
   const [city, setCity] = useState('')
   const [county, setCounty] = useState('')
   const [location, setLocation] = useState('')
+  const [locationNotSpecified, setLocationNotSpecified] = useState(false)
+  const [mapCoordinates, setMapCoordinates] = useState<{lat: number, lng: number} | null>(null)
   const [showAddCityInput, setShowAddCityInput] = useState(false)
   const [newCity, setNewCity] = useState('')
   const [newCityCounty, setNewCityCounty] = useState('')
@@ -35,21 +39,37 @@ function Register() {
 
   // Step 3: Branding
   const [name, setName] = useState('')
-  const [logoUrl, setLogoUrl] = useState('')
+  const [description, setDescription] = useState('')
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>('')
   const [website, setWebsite] = useState('')
   const [socialMedia, setSocialMedia] = useState({
     facebook: '',
     instagram: '',
-    twitter: '',
+    x: '',
+    tiktok: '',
+    youtube: '',
     linkedin: ''
   })
 
   // Step 4: Gallery
-  const [gallery, setGallery] = useState<string[]>([])
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([])
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
 
   // Step 5: Specific Details
-  const [description, setDescription] = useState('')
-  const [openingHours, setOpeningHours] = useState('')
+  const [openingHours, setOpeningHours] = useState<Record<string, {
+    isOpen: boolean | null, // null = not specified, false = closed, true = open
+    openTime: string,
+    closeTime: string
+  }>>({
+    monday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+    tuesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+    wednesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+    thursday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+    friday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+    saturday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+    sunday: { isOpen: null, openTime: '09:00', closeTime: '18:00' }
+  })
   
   // Field specific
   const [sport, setSport] = useState('')
@@ -95,14 +115,68 @@ function Register() {
     setPricingDetails(updated)
   }
 
-  const addGalleryImage = (url: string) => {
-    if (url.trim()) {
-      setGallery([...gallery, url.trim()])
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Logo-ul trebuie să fie maxim 2MB')
+      return
     }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Fișierul trebuie să fie o imagine')
+      return
+    }
+
+    setLogoFile(file)
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    
+    // Validate number of files (max 10 total)
+    if (galleryFiles.length + files.length > 10) {
+      setError('Poți încărca maxim 10 imagini în galerie')
+      return
+    }
+
+    // Validate each file
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError(`Imaginea ${file.name} depășește 5MB`)
+        return
+      }
+      if (!file.type.startsWith('image/')) {
+        setError(`Fișierul ${file.name} trebuie să fie o imagine`)
+        return
+      }
+    }
+
+    const newFiles = [...galleryFiles, ...files]
+    setGalleryFiles(newFiles)
+
+    // Create previews
+    files.forEach(file => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setGalleryPreviews(prev => [...prev, reader.result as string])
+      }
+      reader.readAsDataURL(file)
+    })
   }
 
   const removeGalleryImage = (index: number) => {
-    setGallery(gallery.filter((_, i) => i !== index))
+    setGalleryFiles(galleryFiles.filter((_, i) => i !== index))
+    setGalleryPreviews(galleryPreviews.filter((_, i) => i !== index))
   }
 
   // Load approved cities and sports from API
@@ -169,8 +243,8 @@ function Register() {
         }
         break
       case 2:
-        if (!phone || !email || !city || !location) {
-          setError('Toate câmpurile de contact sunt obligatorii')
+        if (!phone || !email || !city || (!location && !locationNotSpecified)) {
+          setError('Telefon, email și oraș sunt obligatorii. Adresa este obligatorie dacă nu este bifată opțiunea "Nespecificat"')
           return false
         }
         break
@@ -221,8 +295,40 @@ function Register() {
       const socialMediaFiltered: any = {}
       if (socialMedia.facebook) socialMediaFiltered.facebook = socialMedia.facebook
       if (socialMedia.instagram) socialMediaFiltered.instagram = socialMedia.instagram
-      if (socialMedia.twitter) socialMediaFiltered.twitter = socialMedia.twitter
+      if (socialMedia.x) socialMediaFiltered.x = socialMedia.x
+      if (socialMedia.tiktok) socialMediaFiltered.tiktok = socialMedia.tiktok
+      if (socialMedia.youtube) socialMediaFiltered.youtube = socialMedia.youtube
       if (socialMedia.linkedin) socialMediaFiltered.linkedin = socialMedia.linkedin
+
+      // Convert logo file to base64
+      let logoBase64 = null
+      if (logoFile) {
+        logoBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(logoFile)
+        })
+      }
+
+      // Convert gallery files to base64
+      const galleryBase64: string[] = []
+      for (const file of galleryFiles) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        galleryBase64.push(base64)
+      }
+
+      // Format opening hours
+      const formattedOpeningHours = Object.entries(openingHours).map(([day, data]) => {
+        if (data.isOpen === null) return null
+        if (data.isOpen === false) return `${day}: closed`
+        return `${day}: ${data.openTime}-${data.closeTime}`
+      }).filter(Boolean).join('; ')
 
       const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
@@ -234,15 +340,18 @@ function Register() {
           name,
           city,
           county: county || null,
-          location,
+          location: locationNotSpecified ? null : location,
+          locationNotSpecified,
+          mapCoordinates,
           phone,
           email,
+          contactPerson: contactPerson || null,
           description: description || null,
-          logoUrl: logoUrl || null,
+          logoFile: logoBase64,
           website: website || null,
           socialMedia: Object.keys(socialMediaFiltered).length > 0 ? socialMediaFiltered : null,
-          gallery: gallery.length > 0 ? gallery : null,
-          openingHours: openingHours || null,
+          gallery: galleryBase64.length > 0 ? galleryBase64 : null,
+          openingHours: formattedOpeningHours || null,
           // Field specific
           sport: facilityType === 'field' ? sport : null,
           pricePerHour: facilityType === 'field' && pricingDetails.length > 0 ? pricingDetails[0].price : null,
@@ -603,6 +712,28 @@ function Register() {
                     }}
                   />
                 </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    color: '#333',
+                    fontWeight: '500'
+                  }}>Persoană de contact</label>
+                  <input
+                    type="text"
+                    value={contactPerson}
+                    onChange={(e) => setContactPerson(e.target.value)}
+                    placeholder="Numele persoanei de contact"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
               </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{
@@ -745,27 +876,58 @@ function Register() {
                   </div>
                 )}
               </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>Adresă completă *</label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <label style={{
+                    display: 'block',
+                    color: '#333',
+                    fontWeight: '500',
+                    margin: 0
+                  }}>Adresă completă {!locationNotSpecified && '*'}</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginLeft: 'auto' }}>
+                    <input
+                      type="checkbox"
+                      checked={locationNotSpecified}
+                      onChange={(e) => {
+                        setLocationNotSpecified(e.target.checked)
+                        if (e.target.checked) {
+                          setLocation('')
+                          setMapCoordinates(null)
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: '0.9rem', color: '#666' }}>Nespecificat</span>
+                  </label>
+                </div>
+                {!locationNotSpecified && (
+                  <>
+                    <textarea
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Introdu adresa completă (str., nr., bloc, etc.)"
+                      required={!locationNotSpecified}
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        marginBottom: '1rem'
+                      }}
+                    />
+                    <MapSelector
+                      location={location}
+                      coordinates={mapCoordinates}
+                      onLocationChange={setLocation}
+                      onCoordinatesChange={setMapCoordinates}
+                    />
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -804,12 +966,35 @@ function Register() {
                   marginBottom: '0.5rem',
                   color: '#333',
                   fontWeight: '500'
-                }}>URL Logo</label>
+                }}>Descriere</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Descrie facilitatea ta..."
+                  rows={5}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.5rem',
+                  color: '#333',
+                  fontWeight: '500'
+                }}>Logo (max 2MB)</label>
                 <input
-                  type="url"
-                  value={logoUrl}
-                  onChange={(e) => setLogoUrl(e.target.value)}
-                  placeholder="https://example.com/logo.png"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -819,9 +1004,10 @@ function Register() {
                     outline: 'none'
                   }}
                 />
-                {logoUrl && (
-                  <img
-                    src={logoUrl}
+                {logoPreview && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <img
+                      src={logoPreview}
                     alt="Logo preview"
                     style={{
                       marginTop: '0.5rem',
@@ -900,9 +1086,37 @@ function Register() {
                   />
                   <input
                     type="url"
-                    value={socialMedia.twitter}
-                    onChange={(e) => setSocialMedia({ ...socialMedia, twitter: e.target.value })}
-                    placeholder="Twitter URL"
+                    value={socialMedia.x}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, x: e.target.value })}
+                    placeholder="X.com (Twitter) URL"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.tiktok}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, tiktok: e.target.value })}
+                    placeholder="TikTok URL"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.youtube}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, youtube: e.target.value })}
+                    placeholder="YouTube URL"
                     style={{
                       width: '100%',
                       padding: '0.75rem',
@@ -943,61 +1157,42 @@ function Register() {
                   marginBottom: '0.5rem',
                   color: '#333',
                   fontWeight: '500'
-                }}>Adaugă URL imagine</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input
-                    type="url"
-                    placeholder="https://example.com/image.jpg"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        const input = e.target as HTMLInputElement
-                        addGalleryImage(input.value)
-                        input.value = ''
-                      }
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none'
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      const input = (e.target as HTMLButtonElement).previousElementSibling as HTMLInputElement
-                      addGalleryImage(input.value)
-                      input.value = ''
-                    }}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      background: '#10b981',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Adaugă
-                  </button>
-                </div>
+                }}>
+                  Încarcă imagini (max 10, 5MB/fișier)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleGalleryUpload}
+                  disabled={galleryFiles.length >= 10}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    cursor: galleryFiles.length >= 10 ? 'not-allowed' : 'pointer'
+                  }}
+                />
+                {galleryFiles.length > 0 && (
+                  <p style={{ marginTop: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
+                    {galleryFiles.length} / 10 imagini selectate
+                  </p>
+                )}
               </div>
-              {gallery.length > 0 && (
+              {galleryPreviews.length > 0 && (
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
                   gap: '1rem',
                   marginTop: '1rem'
                 }}>
-                  {gallery.map((url, index) => (
+                  {galleryPreviews.map((preview, index) => (
                     <div key={index} style={{ position: 'relative' }}>
                       <img
-                        src={url}
+                        src={preview}
                         alt={`Gallery ${index + 1}`}
                         style={{
                           width: '100%',
@@ -1005,9 +1200,6 @@ function Register() {
                           objectFit: 'cover',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0'
-                        }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none'
                         }}
                       />
                       <button
@@ -1036,7 +1228,7 @@ function Register() {
                   ))}
                 </div>
               )}
-              {gallery.length === 0 && (
+              {galleryPreviews.length === 0 && (
                 <p style={{ color: '#666', fontStyle: 'italic', textAlign: 'center', padding: '2rem' }}>
                   Nu ai adăugat imagini încă. Poți sări peste acest pas.
                 </p>
@@ -1080,20 +1272,108 @@ function Register() {
                   marginBottom: '0.5rem',
                   color: '#333',
                   fontWeight: '500'
-                }}>Program (ex: Luni-Vineri 9:00-18:00)</label>
-                <input
-                  type="text"
-                  value={openingHours}
-                  onChange={(e) => setOpeningHours(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
+                }}>Program</label>
+                <div style={{
+                  background: '#f9fafb',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  border: '1px solid #e0e0e0'
+                }}>
+                  {[
+                    { key: 'monday', label: 'Luni' },
+                    { key: 'tuesday', label: 'Marți' },
+                    { key: 'wednesday', label: 'Miercuri' },
+                    { key: 'thursday', label: 'Joi' },
+                    { key: 'friday', label: 'Vineri' },
+                    { key: 'saturday', label: 'Sâmbătă' },
+                    { key: 'sunday', label: 'Duminică' }
+                  ].map((day) => {
+                    const dayData = openingHours[day.key as keyof typeof openingHours]
+                    return (
+                      <div key={day.key} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        marginBottom: '1rem',
+                        paddingBottom: '1rem',
+                        borderBottom: '1px solid #e0e0e0'
+                      }}>
+                        <div style={{ width: '100px', fontWeight: '500', color: '#333' }}>
+                          {day.label}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
+                          <select
+                            value={dayData.isOpen === null ? 'not_specified' : dayData.isOpen ? 'open' : 'closed'}
+                            onChange={(e) => {
+                              const newValue = e.target.value === 'not_specified' ? null : e.target.value === 'open'
+                              setOpeningHours({
+                                ...openingHours,
+                                [day.key]: {
+                                  ...dayData,
+                                  isOpen: newValue
+                                }
+                              })
+                            }}
+                            style={{
+                              padding: '0.5rem',
+                              border: '2px solid #e0e0e0',
+                              borderRadius: '6px',
+                              fontSize: '0.9rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <option value="not_specified">Nu specifică</option>
+                            <option value="open">Deschis</option>
+                            <option value="closed">Închis</option>
+                          </select>
+                          {dayData.isOpen === true && (
+                            <>
+                              <input
+                                type="time"
+                                value={dayData.openTime}
+                                onChange={(e) => {
+                                  setOpeningHours({
+                                    ...openingHours,
+                                    [day.key]: {
+                                      ...dayData,
+                                      openTime: e.target.value
+                                    }
+                                  })
+                                }}
+                                style={{
+                                  padding: '0.5rem',
+                                  border: '2px solid #e0e0e0',
+                                  borderRadius: '6px',
+                                  fontSize: '0.9rem'
+                                }}
+                              />
+                              <span style={{ color: '#666' }}>-</span>
+                              <input
+                                type="time"
+                                value={dayData.closeTime}
+                                onChange={(e) => {
+                                  setOpeningHours({
+                                    ...openingHours,
+                                    [day.key]: {
+                                      ...dayData,
+                                      closeTime: e.target.value
+                                    }
+                                  })
+                                }}
+                                style={{
+                                  padding: '0.5rem',
+                                  border: '2px solid #e0e0e0',
+                                  borderRadius: '6px',
+                                  fontSize: '0.9rem'
+                                }}
+                              />
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
 
               {/* Field Specific */}
