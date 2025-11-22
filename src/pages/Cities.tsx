@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
-import { generateFacilityURL } from '../utils/seo'
+import { cityNameToSlug } from '../utils/seo'
 
 interface City {
   city: string
@@ -101,7 +101,7 @@ function Cities() {
           </select>
           {selectedCity && (
             <Link
-              to={generateFacilityURL(selectedCity, null, 'field')}
+              to={`/oras/${cityNameToSlug(selectedCity)}`}
               style={{
                 display: 'block',
                 marginTop: '1rem',
@@ -136,7 +136,7 @@ function Cities() {
             {allCities.map((cityData) => (
               <Link
                 key={cityData.city}
-                to={generateFacilityURL(cityData.city, null, 'field')}
+                to={`/oras/${cityNameToSlug(cityData.city)}`}
                 style={{
                   textDecoration: 'none',
                   color: 'inherit'

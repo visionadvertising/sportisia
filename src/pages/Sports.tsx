@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
-import { generateSportURL } from '../utils/seo'
+import { sportNameToSlug } from '../utils/seo'
 
 interface Sport {
   sport: string
@@ -116,7 +116,7 @@ function Sports() {
             {sports.map((sport) => (
               <Link
                 key={sport.sport}
-                to={generateSportURL(sport.sport, 'field')}
+                to={`/sport/${sportNameToSlug(sport.sport)}`}
                 style={{
                   textDecoration: 'none',
                   color: 'inherit'

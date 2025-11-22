@@ -10,6 +10,8 @@ import Sports from './pages/Sports'
 import Cities from './pages/Cities'
 import FacilitiesList from './pages/FacilitiesList'
 import SEOFacilityPage from './pages/SEOFacilityPage'
+import AllFacilitiesBySport from './pages/AllFacilitiesBySport'
+import AllFacilitiesByCity from './pages/AllFacilitiesByCity'
 
 function AppContent() {
   const location = useLocation()
@@ -96,6 +98,9 @@ function AppContent() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/sporturi" element={<Sports />} />
         <Route path="/orase" element={<Cities />} />
+        {/* All facilities by sport or city - must be before other dynamic routes */}
+        <Route path="/sport/:sport" element={<AllFacilitiesBySport />} />
+        <Route path="/oras/:city" element={<AllFacilitiesByCity />} />
         {/* SEO-friendly routes - must be before simple routes */}
         <Route path="/:city/:sport/:type" element={<SEOFacilityPage />} />
         <Route path="/:city/:type" element={<SEOFacilityPage />} />
