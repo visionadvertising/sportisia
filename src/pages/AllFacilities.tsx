@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { citySlugToName, sportSlugToName, slugToFacilityType } from '../utils/seo'
 import FacilityFilters from '../components/FacilityFilters'
@@ -60,6 +60,7 @@ function AllFacilities() {
     param2?: string
     param3?: string
   }>()
+  const navigate = useNavigate()
   
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(true)
@@ -351,6 +352,26 @@ function AllFacilities() {
                 }}
                 dangerouslySetInnerHTML={{
                   __html: descriptionExpanded ? getDescription() : `<p>${getDescriptionPreview()}...</p>`
+                }}
+                onClick={(e) => {
+                  // Handle clicks on internal links - navigate with React Router
+                  const target = e.target as HTMLElement
+                  if (target.tagName === 'A') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    const href = target.getAttribute('href')
+                    if (href && (href.startsWith('/') || href.startsWith(window.location.origin))) {
+                      // Extract path from href
+                      let path = href
+                      if (href.startsWith(window.location.origin)) {
+                        path = new URL(href).pathname
+                      }
+                      navigate(path)
+                    } else if (href && !href.startsWith('#')) {
+                      // External links open in new tab
+                      window.open(href, '_blank', 'noopener,noreferrer')
+                    }
+                  }
                 }}
               />
               {hasMoreContent() && (
