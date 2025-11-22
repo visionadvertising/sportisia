@@ -8,7 +8,7 @@ import {
   generateFacilityURL,
   generateSportURL
 } from '../utils/seo'
-import { ROMANIAN_CITIES } from '../data/romanian-cities'
+import FacilityFilters from '../components/FacilityFilters'
 
 interface Facility {
   id: number
@@ -213,101 +213,33 @@ function SEOFacilityPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem'
+      background: '#f8fafc',
+      padding: '1.5rem 1rem'
     }}>
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
         <h1 style={{
-          fontSize: '3rem',
-          color: 'white',
-          marginBottom: '2rem',
-          textAlign: 'center'
+          fontSize: '2.5rem',
+          color: '#1e293b',
+          marginBottom: '1.5rem',
+          textAlign: 'center',
+          fontWeight: '700'
         }}>{getPageTitle()}</h1>
 
-        {/* Search Box */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          padding: '2rem',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: showCitySelector && (facilityType === 'field' || facilityType === 'coach') ? 'repeat(2, 1fr)' : '1fr',
-            gap: '1rem'
-          }}>
-            {showCitySelector && (
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>Oraș</label>
-                <select
-                  value={selectedCity}
-                  onChange={(e) => handleCityChange(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="">Toate orașele</option>
-                  {ROMANIAN_CITIES.map(cityOption => (
-                    <option key={cityOption} value={cityOption}>{cityOption}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {(facilityType === 'field' || facilityType === 'coach') && (
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>Sport</label>
-                <select
-                  value={selectedSport}
-                  onChange={(e) => handleSportChange(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="">Toate sporturile</option>
-                  <option value="tenis">Tenis</option>
-                  <option value="fotbal">Fotbal</option>
-                  <option value="baschet">Baschet</option>
-                  <option value="volei">Volei</option>
-                  <option value="handbal">Handbal</option>
-                  <option value="badminton">Badminton</option>
-                  <option value="squash">Squash</option>
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
+        <FacilityFilters
+          selectedCity={city}
+          selectedSport={sport}
+          selectedType={facilityType}
+          showTypeFilter={true}
+        />
 
         {loading ? (
           <div style={{
             textAlign: 'center',
             padding: '3rem',
-            color: 'white'
+            color: '#64748b'
           }}>
             Se încarcă...
           </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { citySlugToName } from '../utils/seo'
+import FacilityFilters from '../components/FacilityFilters'
 
 interface Facility {
   id: number
@@ -117,25 +118,34 @@ function AllFacilitiesByCity() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem'
+      background: '#f8fafc',
+      padding: '1.5rem 1rem'
     }}>
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
         <h1 style={{
-          fontSize: '3rem',
-          color: 'white',
-          marginBottom: '2rem',
-          textAlign: 'center'
+          fontSize: '2.5rem',
+          color: '#1e293b',
+          marginBottom: '1.5rem',
+          textAlign: 'center',
+          fontWeight: '700'
         }}>Toate facilitățile din {city}</h1>
+
+        <FacilityFilters
+          selectedCity={city}
+          showTypeFilter={true}
+          onFiltersChange={(filters) => {
+            // Handle filter changes
+          }}
+        />
 
         {loading ? (
           <div style={{
             textAlign: 'center',
             padding: '3rem',
-            color: 'white'
+            color: '#64748b'
           }}>
             Se încarcă...
           </div>
@@ -200,12 +210,13 @@ function AllFacilitiesByCity() {
             {Object.entries(facilitiesByType).map(([type, typeFacilities]) => (
               <div key={type} style={{ marginBottom: '3rem' }}>
                 <h2 style={{
-                  fontSize: '2rem',
-                  color: 'white',
+                  fontSize: '1.75rem',
+                  color: '#1e293b',
                   marginBottom: '1.5rem',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
+                  fontWeight: '600'
                 }}>
                   <span>{FACILITY_TYPE_ICONS[type]}</span>
                   {FACILITY_TYPE_LABELS[type]} ({typeFacilities.length})
