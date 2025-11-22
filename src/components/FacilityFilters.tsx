@@ -111,8 +111,8 @@ function FacilityFilters({
       return baseUrls[type] || '/'
     }
     
-    // 7. No filters - go to home
-    return '/'
+    // 7. No filters - go to all facilities page
+    return '/toate'
   }
 
   const updateFilters = (newCity: string, newSport: string, newType: string) => {

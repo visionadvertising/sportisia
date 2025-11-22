@@ -11,6 +11,7 @@ import SEOFacilityPage from './pages/SEOFacilityPage'
 import AllFacilitiesBySport from './pages/AllFacilitiesBySport'
 import AllFacilitiesByCity from './pages/AllFacilitiesByCity'
 import AllFacilitiesByCityOrSport from './pages/AllFacilitiesByCityOrSport'
+import AllFacilities from './pages/AllFacilities'
 
 function AppContent() {
   const location = useLocation()
