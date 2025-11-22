@@ -19,7 +19,7 @@ function Home() {
   const [showSportDropdown, setShowSportDropdown] = useState(false)
   const [typeSearch, setTypeSearch] = useState('')
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
-  const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
+  const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string | null}>>(ROMANIAN_CITIES)
   const [availableSports, setAvailableSports] = useState<string[]>(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash'])
   
   const FACILITY_TYPES = [
