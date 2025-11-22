@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
+import { ROMANIAN_CITIES } from '../data/romanian-cities'
 
 type FacilityType = 'field' | 'coach' | 'repair_shop' | 'equipment_shop'
 
@@ -25,6 +26,8 @@ function Register() {
   const [email, setEmail] = useState('')
   const [city, setCity] = useState('')
   const [location, setLocation] = useState('')
+  const [showAddCityInput, setShowAddCityInput] = useState(false)
+  const [newCity, setNewCity] = useState('')
 
   // Step 3: Branding
   const [name, setName] = useState('')
@@ -46,6 +49,8 @@ function Register() {
   
   // Field specific
   const [sport, setSport] = useState('')
+  const [showAddSportInput, setShowAddSportInput] = useState(false)
+  const [newSport, setNewSport] = useState('')
   const [pricingDetails, setPricingDetails] = useState<PricingDetail[]>([])
   const [hasParking, setHasParking] = useState(false)
   const [hasShower, setHasShower] = useState(false)
@@ -544,20 +549,105 @@ function Register() {
                   color: '#333',
                   fontWeight: '500'
                 }}>Oraș *</label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
+                {!showAddCityInput ? (
+                  <select
+                    value={city}
+                    onChange={(e) => {
+                      if (e.target.value === '__add_new__') {
+                        setShowAddCityInput(true)
+                        setCity('')
+                      } else {
+                        setCity(e.target.value)
+                      }
+                    }}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '2px solid #e0e0e0',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="">Selectează oraș</option>
+                    {ROMANIAN_CITIES.map(cityOption => (
+                      <option key={cityOption} value={cityOption}>{cityOption}</option>
+                    ))}
+                    <option value="__add_new__">+ Adaugă oraș nou</option>
+                  </select>
+                ) : (
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      value={newCity}
+                      onChange={(e) => setNewCity(e.target.value)}
+                      placeholder="Introdu numele orașului"
+                      required
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        border: '2px solid #e0e0e0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newCity.trim()) {
+                          setCity(newCity.trim())
+                          setNewCity('')
+                          setShowAddCityInput(false)
+                        }
+                      }}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Adaugă
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddCityInput(false)
+                        setNewCity('')
+                        setCity('')
+                      }}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        background: '#e5e7eb',
+                        color: '#333',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Anulează
+                    </button>
+                  </div>
+                )}
+                {showAddCityInput && (
+                  <p style={{
+                    marginTop: '0.5rem',
+                    fontSize: '0.85rem',
+                    color: '#666',
+                    fontStyle: 'italic'
+                  }}>
+                    Orașul va fi trimis pentru aprobare. Vei putea continua după aprobare.
+                  </p>
+                )}
               </div>
               <div>
                 <label style={{
@@ -926,25 +1016,109 @@ function Register() {
                       color: '#333',
                       fontWeight: '500'
                     }}>Sport *</label>
-                    <select
-                      value={sport}
-                      onChange={(e) => setSport(e.target.value)}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        outline: 'none'
-                      }}
-                    >
-                      <option value="">Selectează sport</option>
-                      <option value="tenis">Tenis</option>
-                      <option value="fotbal">Fotbal</option>
-                      <option value="baschet">Baschet</option>
-                      <option value="volei">Volei</option>
-                    </select>
+                    {!showAddSportInput ? (
+                      <select
+                        value={sport}
+                        onChange={(e) => {
+                          if (e.target.value === '__add_new__') {
+                            setShowAddSportInput(true)
+                            setSport('')
+                          } else {
+                            setSport(e.target.value)
+                          }
+                        }}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '2px solid #e0e0e0',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          outline: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="">Selectează sport</option>
+                        <option value="tenis">Tenis</option>
+                        <option value="fotbal">Fotbal</option>
+                        <option value="baschet">Baschet</option>
+                        <option value="volei">Volei</option>
+                        <option value="handbal">Handbal</option>
+                        <option value="badminton">Badminton</option>
+                        <option value="squash">Squash</option>
+                        <option value="__add_new__">+ Adaugă sport nou</option>
+                      </select>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={newSport}
+                          onChange={(e) => setNewSport(e.target.value)}
+                          placeholder="Introdu numele sportului"
+                          required
+                          style={{
+                            flex: 1,
+                            padding: '0.75rem',
+                            border: '2px solid #e0e0e0',
+                            borderRadius: '8px',
+                            fontSize: '1rem',
+                            outline: 'none'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newSport.trim()) {
+                              setSport(newSport.trim().toLowerCase())
+                              setNewSport('')
+                              setShowAddSportInput(false)
+                            }
+                          }}
+                          style={{
+                            padding: '0.75rem 1.5rem',
+                            background: '#10b981',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '1rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Adaugă
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddSportInput(false)
+                            setNewSport('')
+                            setSport('')
+                          }}
+                          style={{
+                            padding: '0.75rem 1.5rem',
+                            background: '#e5e7eb',
+                            color: '#333',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '1rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Anulează
+                        </button>
+                      </div>
+                    )}
+                    {showAddSportInput && (
+                      <p style={{
+                        marginTop: '0.5rem',
+                        fontSize: '0.85rem',
+                        color: '#666',
+                        fontStyle: 'italic'
+                      }}>
+                        Sportul va fi trimis pentru aprobare. Vei putea continua după aprobare.
+                      </p>
+                    )}
                   </div>
 
                   <div style={{ marginBottom: '1rem' }}>

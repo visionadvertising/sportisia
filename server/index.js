@@ -130,6 +130,30 @@ async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `)
 
+    // Create pending_cities table for new city submissions
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pending_cities (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        city VARCHAR(255) NOT NULL UNIQUE,
+        status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_status (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    // Create pending_sports table for new sport submissions
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pending_sports (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sport VARCHAR(100) NOT NULL UNIQUE,
+        status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_status (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
     // Keep sports_fields for backward compatibility (will migrate later)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS sports_fields (
@@ -879,10 +903,90 @@ app.put('/api/admin/facilities/:id/status', async (req, res) => {
       })
     }
 
+    // Get facility details before updating
+    const [facilities] = await pool.query(
+      'SELECT city, sport FROM facilities WHERE id = ?',
+      [facilityId]
+    )
+
+    if (facilities.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Facilitatea nu a fost găsită'
+      })
+    }
+
+    const facility = facilities[0]
+
+    // Update facility status
     await pool.query(
       'UPDATE facilities SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [status, facilityId]
     )
+
+    // If approving facility, also approve city and sport if they are new
+    if (status === 'active') {
+      // Check if city is new (not in standard list)
+      // We'll check if it exists in pending_cities
+      if (facility.city) {
+        const [pendingCity] = await pool.query(
+          'SELECT * FROM pending_cities WHERE city = ? AND status = ?',
+          [facility.city, 'pending']
+        )
+        
+        if (pendingCity.length > 0) {
+          // Approve the city automatically
+          await pool.query(
+            'UPDATE pending_cities SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE city = ?',
+            ['approved', facility.city]
+          )
+        } else {
+          // If not in pending, check if it's a new city and add it as approved
+          const [existingCity] = await pool.query(
+            'SELECT * FROM pending_cities WHERE city = ?',
+            [facility.city]
+          )
+          
+          if (existingCity.length === 0) {
+            // Add as approved directly
+            await pool.query(
+              'INSERT INTO pending_cities (city, status) VALUES (?, ?)',
+              [facility.city, 'approved']
+            )
+          }
+        }
+      }
+
+      // Check if sport is new (not in standard list)
+      if (facility.sport) {
+        const [pendingSport] = await pool.query(
+          'SELECT * FROM pending_sports WHERE sport = ? AND status = ?',
+          [facility.sport.toLowerCase(), 'pending']
+        )
+        
+        if (pendingSport.length > 0) {
+          // Approve the sport automatically
+          await pool.query(
+            'UPDATE pending_sports SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE sport = ?',
+            ['approved', facility.sport.toLowerCase()]
+          )
+        } else {
+          // If not in pending, check if it's a new sport and add it as approved
+          const [existingSport] = await pool.query(
+            'SELECT * FROM pending_sports WHERE sport = ?',
+            [facility.sport.toLowerCase()]
+          )
+          
+          if (existingSport.length === 0) {
+            // Add as approved directly
+            await pool.query(
+              'INSERT INTO pending_sports (sport, status) VALUES (?, ?)',
+              [facility.sport.toLowerCase(), 'approved']
+            )
+          }
+        }
+      }
+    }
 
     res.json({
       success: true,
@@ -1004,6 +1108,196 @@ app.use((err, req, res, next) => {
 })
 
 // Start server
+// POST submit new city for approval
+app.post('/api/pending-cities', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const { city } = req.body
+
+    if (!city || !city.trim()) {
+      return res.status(400).json({ success: false, error: 'Orașul este obligatoriu' })
+    }
+
+    // Check if city already exists (pending or approved)
+    const [existing] = await pool.query(
+      'SELECT * FROM pending_cities WHERE city = ?',
+      [city.trim()]
+    )
+
+    if (existing.length > 0) {
+      return res.json({
+        success: true,
+        message: 'Orașul a fost deja trimis pentru aprobare',
+        data: existing[0]
+      })
+    }
+
+    // Insert new pending city
+    const [result] = await pool.query(
+      'INSERT INTO pending_cities (city, status) VALUES (?, ?)',
+      [city.trim(), 'pending']
+    )
+
+    res.json({
+      success: true,
+      message: 'Orașul a fost trimis pentru aprobare',
+      data: { id: result.insertId, city: city.trim(), status: 'pending' }
+    })
+  } catch (error) {
+    console.error('Error submitting pending city:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// POST submit new sport for approval
+app.post('/api/pending-sports', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const { sport } = req.body
+
+    if (!sport || !sport.trim()) {
+      return res.status(400).json({ success: false, error: 'Sportul este obligatoriu' })
+    }
+
+    // Check if sport already exists (pending or approved)
+    const [existing] = await pool.query(
+      'SELECT * FROM pending_sports WHERE sport = ?',
+      [sport.trim().toLowerCase()]
+    )
+
+    if (existing.length > 0) {
+      return res.json({
+        success: true,
+        message: 'Sportul a fost deja trimis pentru aprobare',
+        data: existing[0]
+      })
+    }
+
+    // Insert new pending sport
+    const [result] = await pool.query(
+      'INSERT INTO pending_sports (sport, status) VALUES (?, ?)',
+      [sport.trim().toLowerCase(), 'pending']
+    )
+
+    res.json({
+      success: true,
+      message: 'Sportul a fost trimis pentru aprobare',
+      data: { id: result.insertId, sport: sport.trim().toLowerCase(), status: 'pending' }
+    })
+  } catch (error) {
+    console.error('Error submitting pending sport:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET pending cities (admin only)
+app.get('/api/admin/pending-cities', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const [rows] = await pool.query(
+      'SELECT * FROM pending_cities WHERE status = ? ORDER BY created_at DESC',
+      ['pending']
+    )
+
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    console.error('Error fetching pending cities:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET pending sports (admin only)
+app.get('/api/admin/pending-sports', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const [rows] = await pool.query(
+      'SELECT * FROM pending_sports WHERE status = ? ORDER BY created_at DESC',
+      ['pending']
+    )
+
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    console.error('Error fetching pending sports:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// PUT approve/reject pending city
+app.put('/api/admin/pending-cities/:id/status', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const cityId = req.params.id
+    const { status } = req.body // 'approved' or 'rejected'
+
+    if (!status || !['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Status invalid. Trebuie să fie "approved" sau "rejected"'
+      })
+    }
+
+    await pool.query(
+      'UPDATE pending_cities SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [status, cityId]
+    )
+
+    res.json({
+      success: true,
+      message: `Orașul a fost ${status === 'approved' ? 'aprobat' : 'respins'} cu succes`
+    })
+  } catch (error) {
+    console.error('Error updating pending city status:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// PUT approve/reject pending sport
+app.put('/api/admin/pending-sports/:id/status', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const sportId = req.params.id
+    const { status } = req.body // 'approved' or 'rejected'
+
+    if (!status || !['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Status invalid. Trebuie să fie "approved" sau "rejected"'
+      })
+    }
+
+    await pool.query(
+      'UPDATE pending_sports SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [status, sportId]
+    )
+
+    res.json({
+      success: true,
+      message: `Sportul a fost ${status === 'approved' ? 'aprobat' : 'respins'} cu succes`
+    })
+  } catch (error) {
+    console.error('Error updating pending sport status:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`)
   console.log(`📡 API available at http://localhost:${PORT}/api`)
