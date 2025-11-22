@@ -19,6 +19,15 @@ function Register() {
   const [loading, setLoading] = useState(false)
   const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null)
   const [error, setError] = useState('')
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Step 1: Facility Type
   const [facilityType, setFacilityType] = useState<FacilityType | ''>('')
@@ -535,13 +544,13 @@ function Register() {
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '5rem 2rem',
+        padding: isMobile ? '2rem 1rem' : '5rem 2rem',
         width: '100%'
       }}>
         <h1 style={{
-          fontSize: '2.5rem',
+          fontSize: isMobile ? '1.75rem' : '2.5rem',
           color: '#0f172a',
-          marginBottom: '4rem',
+          marginBottom: isMobile ? '2rem' : '4rem',
           fontWeight: '600',
           letterSpacing: '-0.03em',
           lineHeight: '1.2'
@@ -551,22 +560,29 @@ function Register() {
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginBottom: '5rem',
+          marginBottom: isMobile ? '2rem' : '5rem',
           position: 'relative',
-          paddingBottom: '3rem',
-          borderBottom: '1px solid #f1f5f9'
+          paddingBottom: isMobile ? '1.5rem' : '3rem',
+          borderBottom: '1px solid #f1f5f9',
+          flexWrap: isMobile ? 'wrap' : 'nowrap',
+          gap: isMobile ? '1rem' : '0'
         }}>
           {steps.map((step, index) => (
-            <div key={step.number} style={{ flex: 1, position: 'relative', zIndex: 1 }}>
+            <div key={step.number} style={{ 
+              flex: isMobile ? '0 0 calc(50% - 0.5rem)' : 1, 
+              position: 'relative', 
+              zIndex: 1,
+              marginBottom: isMobile && index < steps.length - 2 ? '1rem' : '0'
+            }}>
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '1rem'
+                gap: isMobile ? '0.5rem' : '1rem'
               }}>
                 <div style={{
-                  width: '40px',
-                  height: '40px',
+                  width: isMobile ? '32px' : '40px',
+                  height: isMobile ? '32px' : '40px',
                   borderRadius: '50%',
                   background: currentStep > step.number ? '#10b981' : currentStep === step.number ? '#0f172a' : '#f1f5f9',
                   color: currentStep > step.number ? 'white' : currentStep === step.number ? 'white' : '#94a3b8',
@@ -574,22 +590,23 @@ function Register() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: '600',
-                  fontSize: '0.9375rem',
+                  fontSize: isMobile ? '0.8125rem' : '0.9375rem',
                   transition: 'all 0.3s ease',
                   boxShadow: currentStep >= step.number ? (currentStep > step.number ? '0 2px 8px rgba(16, 185, 129, 0.25)' : '0 2px 8px rgba(15, 23, 42, 0.15)') : 'none'
                 }}>
                   {step.number}
                 </div>
                 <span style={{
-                  fontSize: '0.8125rem',
+                  fontSize: isMobile ? '0.6875rem' : '0.8125rem',
                   color: currentStep > step.number ? '#10b981' : currentStep >= step.number ? '#0f172a' : '#94a3b8',
                   fontWeight: currentStep >= step.number ? '600' : '500',
                   textAlign: 'center',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.1em'
+                  letterSpacing: '0.1em',
+                  lineHeight: '1.2'
                 }}>{step.title}</span>
               </div>
-              {index < steps.length - 1 && (
+              {index < steps.length - 1 && !isMobile && (
                 <div style={{
                   position: 'absolute',
                   top: '20px',
@@ -626,9 +643,9 @@ function Register() {
           {currentStep === 1 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.75rem', 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
                 color: '#0f172a', 
-                marginBottom: '2.5rem',
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
                 fontWeight: '600',
                 letterSpacing: '-0.02em',
                 lineHeight: '1.3'
@@ -637,8 +654,8 @@ function Register() {
               </h2>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1.25rem'
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                gap: isMobile ? '0.75rem' : '1.25rem'
               }}>
                 {[
                   { 
@@ -690,20 +707,21 @@ function Register() {
                     type="button"
                     onClick={() => setFacilityType(type.value as FacilityType)}
                     style={{
-                      padding: '1.5rem',
+                      padding: isMobile ? '1rem' : '1.5rem',
                       border: facilityType === type.value ? '2px solid #0f172a' : '1.5px solid #e2e8f0',
                       borderRadius: '12px',
                       background: facilityType === type.value ? '#0f172a' : '#ffffff',
                       color: facilityType === type.value ? 'white' : '#0f172a',
                       cursor: 'pointer',
-                      fontSize: '1rem',
+                      fontSize: isMobile ? '0.9375rem' : '1rem',
                       fontWeight: '600',
                       textAlign: 'left',
                       transition: 'all 0.2s ease',
                       boxShadow: facilityType === type.value ? '0 4px 12px rgba(15, 23, 42, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.05)',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '1rem'
+                      gap: isMobile ? '0.75rem' : '1rem',
+                      minHeight: isMobile ? '60px' : 'auto'
                     }}
                     onMouseEnter={(e) => {
                       if (facilityType !== type.value) {
@@ -724,13 +742,21 @@ function Register() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: '40px',
-                      height: '40px',
+                      width: isMobile ? '36px' : '40px',
+                      height: isMobile ? '36px' : '40px',
                       borderRadius: '8px',
                       background: facilityType === type.value ? 'rgba(255, 255, 255, 0.15)' : '#f8fafc',
                       flexShrink: 0
                     }}>
-                      {type.icon}
+                      <div style={{ 
+                        width: isMobile ? '20px' : '24px', 
+                        height: isMobile ? '20px' : '24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {type.icon}
+                      </div>
                     </div>
                     <span>{type.label}</span>
                   </button>
@@ -743,9 +769,9 @@ function Register() {
           {currentStep === 2 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.75rem', 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
                 color: '#0f172a', 
-                marginBottom: '2.5rem',
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
                 fontWeight: '600',
                 letterSpacing: '-0.02em',
                 lineHeight: '1.3'
@@ -754,9 +780,9 @@ function Register() {
               </h2>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '2rem',
-                marginBottom: '2.5rem'
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                gap: isMobile ? '1.5rem' : '2rem',
+                marginBottom: isMobile ? '1.5rem' : '2.5rem'
               }}>
                 <div>
                   <label style={{
@@ -772,20 +798,22 @@ function Register() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -810,20 +838,22 @@ function Register() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -848,20 +878,22 @@ function Register() {
                     value={contactPerson}
                     onChange={(e) => setContactPerson(e.target.value)}
                     placeholder="Ex: Ion Popescu"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -873,7 +905,7 @@ function Register() {
                   />
                 </div>
               </div>
-              <div style={{ marginBottom: '2.5rem', position: 'relative' }}>
+              <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem', position: 'relative' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',
@@ -898,21 +930,23 @@ function Register() {
                       onFocus={() => setShowCityDropdown(true)}
                       placeholder="Caută sau selectează oraș"
                       required={!city}
-                      style={{
-                        width: '100%',
-                        padding: '0.875rem 1rem',
-                        paddingRight: '2.5rem',
-                        border: '1.5px solid #e2e8f0',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        outline: 'none',
-                        background: '#ffffff',
-                        color: '#0f172a',
-                        transition: 'all 0.2s ease',
-                        fontWeight: '400',
-                        lineHeight: '1.5',
-                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                      }}
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      paddingRight: isMobile ? '2.25rem' : '2.5rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
                       onBlur={(e) => {
                         setTimeout(() => setShowCityDropdown(false), 200)
                       }}
@@ -929,7 +963,7 @@ function Register() {
                       </svg>
                     </div>
                     {showCityDropdown && (
-                      <div style={{
+                      <div                       style={{
                         position: 'absolute',
                         top: '100%',
                         left: 0,
@@ -939,9 +973,10 @@ function Register() {
                         border: '1.5px solid #e2e8f0',
                         borderRadius: '8px',
                         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                        maxHeight: '300px',
+                        maxHeight: isMobile ? '250px' : '300px',
                         overflowY: 'auto',
-                        zIndex: 1000
+                        zIndex: 1000,
+                        WebkitOverflowScrolling: 'touch'
                       }}>
                         {[...availableCities, ...customCities.filter(c => !availableCities.some(ac => ac.city === c.city))]
                           .filter(cityOption => 
@@ -1068,7 +1103,12 @@ function Register() {
                         ))}
                       </select>
                     </div>
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: isMobile ? 'column' : 'row',
+                      gap: isMobile ? '0.75rem' : '1rem', 
+                      marginTop: '1rem' 
+                    }}>
                       <button
                         type="button"
                         onClick={() => {
@@ -1144,21 +1184,26 @@ function Register() {
                 )}
               </div>
               <div style={{ marginBottom: '2.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: isMobile ? 'column' : 'row',
+                  alignItems: isMobile ? 'flex-start' : 'center', 
+                  gap: isMobile ? '0.75rem' : '0.5rem', 
+                  marginBottom: '0.75rem' 
+                }}>
                   <label style={{
                     display: 'block',
-                    color: '#1a1a1a',
-                    fontWeight: '400',
+                    color: '#0f172a',
+                    fontWeight: '600',
                     fontSize: '0.875rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
+                    letterSpacing: '0.01em',
                     margin: 0
                   }}>Adresă completă {!locationNotSpecified && '*'}</label>
                   <div style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: '0.75rem', 
-                    marginLeft: 'auto'
+                    gap: '0.75rem',
+                    marginLeft: isMobile ? '0' : 'auto'
                   }}>
                     <span style={{
                       fontSize: '0.875rem',
@@ -1177,15 +1222,17 @@ function Register() {
                       }}
                       style={{
                         position: 'relative',
-                        width: '44px',
-                        height: '24px',
-                        borderRadius: '12px',
+                        width: isMobile ? '48px' : '44px',
+                        height: isMobile ? '28px' : '24px',
+                        borderRadius: '14px',
                         border: 'none',
                         background: locationNotSpecified ? '#10b981' : '#cbd5e1',
                         cursor: 'pointer',
                         transition: 'background 0.2s ease',
                         outline: 'none',
-                        padding: 0
+                        padding: 0,
+                        touchAction: 'manipulation',
+                        minWidth: isMobile ? '48px' : '44px'
                       }}
                       onFocus={(e) => {
                         e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)'
@@ -1197,9 +1244,9 @@ function Register() {
                       <div style={{
                         position: 'absolute',
                         top: '2px',
-                        left: locationNotSpecified ? '22px' : '2px',
-                        width: '20px',
-                        height: '20px',
+                        left: locationNotSpecified ? (isMobile ? '22px' : '22px') : '2px',
+                        width: isMobile ? '24px' : '20px',
+                        height: isMobile ? '24px' : '20px',
                         borderRadius: '50%',
                         background: '#ffffff',
                         transition: 'left 0.2s ease',
@@ -1225,29 +1272,33 @@ function Register() {
                         outline: 'none',
                         fontFamily: 'inherit',
                         resize: 'vertical',
-                        marginBottom: '1.5rem',
-                        background: '#ffffff',
-                        color: '#0f172a',
-                        transition: 'all 0.2s ease',
-                        fontWeight: '400',
-                        lineHeight: '1.5',
-                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#0f172a'
-                        e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#e2e8f0'
-                        e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                      }}
+                      marginBottom: isMobile ? '1rem' : '1.5rem',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
                     />
-                    <MapSelector
-                      location={location}
-                      coordinates={mapCoordinates}
-                      onLocationChange={setLocation}
-                      onCoordinatesChange={setMapCoordinates}
-                    />
+                    <div style={{ marginBottom: isMobile ? '1rem' : '1.5rem' }}>
+                        <MapSelector
+                        location={location}
+                        coordinates={mapCoordinates}
+                        onLocationChange={setLocation}
+                        onCoordinatesChange={setMapCoordinates}
+                      />
+                    </div>
                   </>
                 )}
               </div>
@@ -1258,9 +1309,9 @@ function Register() {
           {currentStep === 3 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.75rem', 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
                 color: '#0f172a', 
-                marginBottom: '2.5rem',
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
                 fontWeight: '600',
                 letterSpacing: '-0.02em',
                 lineHeight: '1.3'
@@ -1317,22 +1368,24 @@ function Register() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Descrie facilitatea ta..."
                   rows={5}
-                  style={{
-                    width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -1443,28 +1496,30 @@ function Register() {
                 }}>Rețele sociale</label>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '2rem'
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                  gap: isMobile ? '1.5rem' : '2rem'
                 }}>
                   <input
                     type="url"
                     value={socialMedia.facebook}
                     onChange={(e) => setSocialMedia({ ...socialMedia, facebook: e.target.value })}
                     placeholder="Facebook URL"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -1479,20 +1534,22 @@ function Register() {
                     value={socialMedia.instagram}
                     onChange={(e) => setSocialMedia({ ...socialMedia, instagram: e.target.value })}
                     placeholder="Instagram URL"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -1507,20 +1564,22 @@ function Register() {
                     value={socialMedia.x}
                     onChange={(e) => setSocialMedia({ ...socialMedia, x: e.target.value })}
                     placeholder="X.com URL"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -1535,20 +1594,22 @@ function Register() {
                     value={socialMedia.tiktok}
                     onChange={(e) => setSocialMedia({ ...socialMedia, tiktok: e.target.value })}
                     placeholder="TikTok URL"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -1563,20 +1624,22 @@ function Register() {
                     value={socialMedia.youtube}
                     onChange={(e) => setSocialMedia({ ...socialMedia, youtube: e.target.value })}
                     placeholder="YouTube URL"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -1591,20 +1654,22 @@ function Register() {
                     value={socialMedia.linkedin}
                     onChange={(e) => setSocialMedia({ ...socialMedia, linkedin: e.target.value })}
                     placeholder="LinkedIn URL"
-                    style={{
-                      width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -1623,9 +1688,9 @@ function Register() {
           {currentStep === 4 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.75rem', 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
                 color: '#0f172a', 
-                marginBottom: '2.5rem',
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
                 fontWeight: '600',
                 letterSpacing: '-0.02em',
                 lineHeight: '1.3'
@@ -1682,9 +1747,9 @@ function Register() {
               {galleryPreviews.length > 0 && (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                  gap: '1.5rem',
-                  marginTop: '2rem'
+                  gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: isMobile ? '0.75rem' : '1.5rem',
+                  marginTop: isMobile ? '1.5rem' : '2rem'
                 }}>
                   {galleryPreviews.map((preview, index) => (
                     <div key={index} style={{ position: 'relative' }}>
@@ -1693,7 +1758,7 @@ function Register() {
                         alt={`Gallery ${index + 1}`}
                         style={{
                           width: '100%',
-                          height: '200px',
+                          height: isMobile ? '150px' : '200px',
                           objectFit: 'cover',
                           border: '1px solid #e5e5e5'
                         }}
@@ -1749,9 +1814,9 @@ function Register() {
           {currentStep === 5 && (
             <div>
               <h2 style={{ 
-                fontSize: '1.75rem', 
+                fontSize: isMobile ? '1.25rem' : '1.75rem', 
                 color: '#0f172a', 
-                marginBottom: '2.5rem',
+                marginBottom: isMobile ? '1.5rem' : '2.5rem',
                 fontWeight: '600',
                 letterSpacing: '-0.02em',
                 lineHeight: '1.3'
@@ -1785,23 +1850,31 @@ function Register() {
                     return (
                       <div key={day.key} style={{
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '2rem',
-                        marginBottom: '1.5rem',
-                        paddingBottom: '1.5rem',
+                        flexDirection: isMobile ? 'column' : 'row',
+                        alignItems: isMobile ? 'flex-start' : 'center',
+                        gap: isMobile ? '0.75rem' : '2rem',
+                        marginBottom: isMobile ? '1rem' : '1.5rem',
+                        paddingBottom: isMobile ? '1rem' : '1.5rem',
                         borderBottom: '1px solid #e5e5e5'
                       }}>
                         <div style={{ 
-                          width: '120px', 
+                          width: isMobile ? '100%' : '120px', 
                           fontWeight: '400', 
-                          color: '#1a1a1a',
+                          color: '#0f172a',
                           fontSize: '0.875rem',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em'
                         }}>
                           {day.label}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: isMobile ? 'column' : 'row',
+                          alignItems: isMobile ? 'stretch' : 'center', 
+                          gap: isMobile ? '0.75rem' : '1rem', 
+                          flex: 1,
+                          width: isMobile ? '100%' : 'auto'
+                        }}>
                           <select
                             value={dayData.isOpen === null ? 'not_specified' : dayData.isOpen ? 'open' : 'closed'}
                             onChange={(e) => {
@@ -1815,21 +1888,35 @@ function Register() {
                               })
                             }}
                             style={{
-                              padding: '0.5rem 0',
-                              border: 'none',
-                              borderBottom: '1px solid #e5e5e5',
-                              borderRadius: '0',
-                              fontSize: '0.875rem',
+                              padding: isMobile ? '0.75rem 1rem' : '0.5rem 0',
+                              border: isMobile ? '1.5px solid #e2e8f0' : 'none',
+                              borderBottom: isMobile ? 'none' : '1px solid #e5e5e5',
+                              borderRadius: isMobile ? '8px' : '0',
+                              fontSize: isMobile ? '16px' : '0.875rem',
                               cursor: 'pointer',
-                              background: 'transparent',
-                              color: '#1a1a1a',
-                              transition: 'border-color 0.2s'
+                              background: isMobile ? '#ffffff' : 'transparent',
+                              color: '#0f172a',
+                              transition: 'all 0.2s ease',
+                              boxShadow: isMobile ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none',
+                              width: isMobile ? '100%' : 'auto',
+                              WebkitAppearance: 'none',
+                              touchAction: 'manipulation'
                             }}
                             onFocus={(e) => {
-                              e.target.style.borderBottomColor = '#1a1a1a'
+                              if (isMobile) {
+                                e.target.style.borderColor = '#0f172a'
+                                e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                              } else {
+                                e.target.style.borderBottomColor = '#0f172a'
+                              }
                             }}
                             onBlur={(e) => {
-                              e.target.style.borderBottomColor = '#e5e5e5'
+                              if (isMobile) {
+                                e.target.style.borderColor = '#e2e8f0'
+                                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                              } else {
+                                e.target.style.borderBottomColor = '#e5e5e5'
+                              }
                             }}
                           >
                             <option value="not_specified">Nu specifică</option>
@@ -1851,15 +1938,18 @@ function Register() {
                                   })
                                 }}
                                 style={{
-                      padding: '0.75rem 1rem',
+                      padding: isMobile ? '0.875rem 1rem' : '0.75rem 1rem',
                       border: '1.5px solid #e2e8f0',
                       borderRadius: '8px',
-                      fontSize: '0.875rem',
+                      fontSize: isMobile ? '16px' : '0.875rem',
                       background: '#ffffff',
                       color: '#0f172a',
                       transition: 'all 0.2s ease',
                       fontWeight: '400',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      width: isMobile ? '100%' : 'auto',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
                     }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
@@ -1870,7 +1960,7 @@ function Register() {
                       e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                               />
-                              <span style={{ color: '#999', fontSize: '0.875rem' }}>—</span>
+                              {!isMobile && <span style={{ color: '#999', fontSize: '0.875rem' }}>—</span>}
                               <input
                                 type="time"
                                 value={dayData.closeTime}
@@ -1916,19 +2006,19 @@ function Register() {
               {facilityType === 'field' && (
                 <div style={{
                   padding: '0',
-                  marginBottom: '3rem',
+                  marginBottom: isMobile ? '2rem' : '3rem',
                   borderTop: '1px solid #e5e5e5',
-                  paddingTop: '3rem'
+                  paddingTop: isMobile ? '2rem' : '3rem'
                 }}>
                   <h3 style={{ 
                     color: '#0f172a', 
-                    marginBottom: '2rem',
-                    fontSize: '1.375rem',
+                    marginBottom: isMobile ? '1.5rem' : '2rem',
+                    fontSize: isMobile ? '1.125rem' : '1.375rem',
                     fontWeight: '600',
                     letterSpacing: '-0.01em',
                     lineHeight: '1.3'
                   }}>Detalii Teren</h3>
-                  <div style={{ marginBottom: '2.5rem', position: 'relative' }}>
+                  <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem', position: 'relative' }}>
                     <label style={{
                       display: 'block',
                       marginBottom: '0.75rem',
@@ -1952,21 +2042,23 @@ function Register() {
                           onFocus={() => setShowSportDropdown(true)}
                           placeholder="Caută sau selectează sport"
                           required={!sport}
-                          style={{
-                            width: '100%',
-                            padding: '0.875rem 1rem',
-                            paddingRight: '2.5rem',
-                            border: '1.5px solid #e2e8f0',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            outline: 'none',
-                            background: '#ffffff',
-                            color: '#0f172a',
-                            transition: 'all 0.2s ease',
-                            fontWeight: '400',
-                            lineHeight: '1.5',
-                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                          }}
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      paddingRight: isMobile ? '2.25rem' : '2.5rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
                           onBlur={(e) => {
                             setTimeout(() => setShowSportDropdown(false), 200)
                           }}
@@ -1983,20 +2075,21 @@ function Register() {
                           </svg>
                         </div>
                         {showSportDropdown && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: 0,
-                            right: 0,
-                            marginTop: '0.25rem',
-                            background: '#ffffff',
-                            border: '1.5px solid #e2e8f0',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                            maxHeight: '300px',
-                            overflowY: 'auto',
-                            zIndex: 1000
-                          }}>
+                          <div                       style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: '0.25rem',
+                        background: '#ffffff',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        maxHeight: isMobile ? '250px' : '300px',
+                        overflowY: 'auto',
+                        zIndex: 1000,
+                        WebkitOverflowScrolling: 'touch'
+                      }}>
                             {[...availableSports, ...customSports.filter(s => !availableSports.includes(s))]
                               .filter(sportOption => 
                                 !sportSearch || 
@@ -2059,27 +2152,33 @@ function Register() {
                         )}
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', gap: '1rem' }}>
+                      <div style={{ 
+                      display: 'flex', 
+                      flexDirection: isMobile ? 'column' : 'row',
+                      gap: isMobile ? '0.75rem' : '1rem' 
+                    }}>
                         <input
                           type="text"
                           value={newSport}
                           onChange={(e) => setNewSport(e.target.value)}
                           placeholder="Introdu numele sportului"
                           required
-                          style={{
-                            flex: 1,
-                            padding: '0.875rem 1rem',
-                            border: '1.5px solid #e2e8f0',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            outline: 'none',
-                            background: '#ffffff',
-                            color: '#0f172a',
-                            transition: 'all 0.2s ease',
-                            fontWeight: '400',
-                            lineHeight: '1.5',
-                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                          }}
+                        style={{
+                          flex: 1,
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
                           onFocus={(e) => {
                             e.target.style.borderColor = '#0f172a'
                             e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -2104,18 +2203,21 @@ function Register() {
                               setShowAddSportInput(false)
                             }
                           }}
-                          style={{
-                            padding: '0.875rem 2rem',
-                            background: '#0f172a',
-                            color: 'white',
-                            border: '1.5px solid #0f172a',
-                            borderRadius: '8px',
-                            fontSize: '0.875rem',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)'
-                          }}
+                      style={{
+                        padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
+                        background: '#0f172a',
+                        color: 'white',
+                        border: '1.5px solid #0f172a',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '1rem' : '0.875rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)',
+                        width: isMobile ? '100%' : 'auto',
+                        touchAction: 'manipulation',
+                        minHeight: isMobile ? '48px' : 'auto'
+                      }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = '#1e293b'
                             e.currentTarget.style.borderColor = '#1e293b'
@@ -2271,22 +2373,24 @@ function Register() {
                             value={detail.description}
                             onChange={(e) => updatePricingDetail(index, 'description', e.target.value)}
                             rows={2}
-                            style={{
-                              width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -2342,9 +2446,9 @@ function Register() {
 
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '1.5rem',
-                    marginTop: '2rem'
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                    gap: isMobile ? '1rem' : '1.5rem',
+                    marginTop: isMobile ? '1.5rem' : '2rem'
                   }}>
                     <label style={{ 
                       display: 'flex', 
@@ -2464,14 +2568,14 @@ function Register() {
               {facilityType === 'coach' && (
                 <div style={{
                   padding: '0',
-                  marginBottom: '3rem',
+                  marginBottom: isMobile ? '2rem' : '3rem',
                   borderTop: '1px solid #e5e5e5',
-                  paddingTop: '3rem'
+                  paddingTop: isMobile ? '2rem' : '3rem'
                 }}>
                   <h3 style={{ 
                     color: '#0f172a', 
-                    marginBottom: '2rem',
-                    fontSize: '1.375rem',
+                    marginBottom: isMobile ? '1.5rem' : '2rem',
+                    fontSize: isMobile ? '1.125rem' : '1.375rem',
                     fontWeight: '600',
                     letterSpacing: '-0.01em',
                     lineHeight: '1.3'
@@ -2569,20 +2673,22 @@ function Register() {
                       rows={3}
                       style={{
                         width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -2635,14 +2741,14 @@ function Register() {
               {facilityType === 'repair_shop' && (
                 <div style={{
                   padding: '0',
-                  marginBottom: '3rem',
+                  marginBottom: isMobile ? '2rem' : '3rem',
                   borderTop: '1px solid #e5e5e5',
-                  paddingTop: '3rem'
+                  paddingTop: isMobile ? '2rem' : '3rem'
                 }}>
                   <h3 style={{ 
                     color: '#0f172a', 
-                    marginBottom: '2rem',
-                    fontSize: '1.375rem',
+                    marginBottom: isMobile ? '1.5rem' : '2rem',
+                    fontSize: isMobile ? '1.125rem' : '1.375rem',
                     fontWeight: '600',
                     letterSpacing: '-0.01em',
                     lineHeight: '1.3'
@@ -2663,20 +2769,22 @@ function Register() {
                       rows={4}
                       style={{
                         width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -2769,14 +2877,14 @@ function Register() {
               {facilityType === 'equipment_shop' && (
                 <div style={{
                   padding: '0',
-                  marginBottom: '3rem',
+                  marginBottom: isMobile ? '2rem' : '3rem',
                   borderTop: '1px solid #e5e5e5',
-                  paddingTop: '3rem'
+                  paddingTop: isMobile ? '2rem' : '3rem'
                 }}>
                   <h3 style={{ 
                     color: '#0f172a', 
-                    marginBottom: '2rem',
-                    fontSize: '1.375rem',
+                    marginBottom: isMobile ? '1.5rem' : '2rem',
+                    fontSize: isMobile ? '1.125rem' : '1.375rem',
                     fontWeight: '600',
                     letterSpacing: '-0.01em',
                     lineHeight: '1.3'
@@ -2797,20 +2905,22 @@ function Register() {
                       rows={4}
                       style={{
                         width: '100%',
-                      padding: '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                      background: '#ffffff',
-                      color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
                     onFocus={(e) => {
                       e.target.style.borderColor = '#0f172a'
                       e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
@@ -2884,62 +2994,82 @@ function Register() {
           )}
 
           {/* Navigation Buttons */}
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'space-between' }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column-reverse' : 'row',
+            gap: isMobile ? '0.75rem' : '1rem', 
+            marginTop: isMobile ? '2rem' : '2rem', 
+            justifyContent: 'space-between' 
+          }}>
             {currentStep > 1 && (
               <button
                 type="button"
                 onClick={prevStep}
                 style={{
-                  padding: '0.875rem 2rem',
+                  padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
                   background: '#ffffff',
                   color: '#0f172a',
                   border: '1.5px solid #e2e8f0',
                   borderRadius: '8px',
-                  fontSize: '0.875rem',
+                  fontSize: isMobile ? '1rem' : '0.875rem',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                  width: isMobile ? '100%' : 'auto',
+                  touchAction: 'manipulation',
+                  minHeight: isMobile ? '48px' : 'auto'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#0f172a'
-                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                  if (!isMobile) {
+                    e.currentTarget.style.borderColor = '#0f172a'
+                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#e2e8f0'
-                  e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  if (!isMobile) {
+                    e.currentTarget.style.borderColor = '#e2e8f0'
+                    e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }
                 }}
               >
                 Înapoi
               </button>
             )}
-            <div style={{ flex: 1 }} />
+            {!isMobile && <div style={{ flex: 1 }} />}
             {currentStep < 5 ? (
               <button
                 type="submit"
                 style={{
-                  padding: '0.875rem 2rem',
+                  padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
                   background: '#0f172a',
                   color: 'white',
                   border: '1.5px solid #0f172a',
                   borderRadius: '8px',
-                  fontSize: '0.875rem',
+                  fontSize: isMobile ? '1rem' : '0.875rem',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)'
+                  boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)',
+                  width: isMobile ? '100%' : 'auto',
+                  touchAction: 'manipulation',
+                  minHeight: isMobile ? '48px' : 'auto'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#1e293b'
-                  e.currentTarget.style.borderColor = '#1e293b'
-                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(15, 23, 42, 0.3)'
-                  e.currentTarget.style.transform = 'translateY(-1px)'
+                  if (!isMobile) {
+                    e.currentTarget.style.background = '#1e293b'
+                    e.currentTarget.style.borderColor = '#1e293b'
+                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(15, 23, 42, 0.3)'
+                    e.currentTarget.style.transform = 'translateY(-1px)'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#0f172a'
-                  e.currentTarget.style.borderColor = '#0f172a'
-                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(15, 23, 42, 0.2)'
-                  e.currentTarget.style.transform = 'translateY(0)'
+                  if (!isMobile) {
+                    e.currentTarget.style.background = '#0f172a'
+                    e.currentTarget.style.borderColor = '#0f172a'
+                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(15, 23, 42, 0.2)'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }
                 }}
               >
                 Următorul
@@ -2949,17 +3079,19 @@ function Register() {
                 type="submit"
                 disabled={loading}
                 style={{
-                  padding: '0.875rem 2rem',
-                  background: loading ? '#999' : '#1a1a1a',
+                  padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
+                  background: loading ? '#999' : '#0f172a',
                   color: 'white',
-                  border: '1px solid ' + (loading ? '#999' : '#1a1a1a'),
-                  borderRadius: '0',
-                  fontSize: '0.875rem',
-                  fontWeight: '400',
+                  border: '1.5px solid ' + (loading ? '#999' : '#0f172a'),
+                  borderRadius: '8px',
+                  fontSize: isMobile ? '1rem' : '0.875rem',
+                  fontWeight: '600',
                   cursor: loading ? 'not-allowed' : 'pointer',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s ease',
+                  boxShadow: loading ? 'none' : '0 2px 4px rgba(15, 23, 42, 0.2)',
+                  width: isMobile ? '100%' : 'auto',
+                  touchAction: 'manipulation',
+                  minHeight: isMobile ? '48px' : 'auto'
                 }}
               >
                 {loading ? 'Se înregistrează...' : 'Finalizează'}

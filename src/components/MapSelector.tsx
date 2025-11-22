@@ -182,23 +182,33 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
 
   return (
     <div>
-      <div style={{ marginBottom: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+      <div style={{ 
+        marginBottom: '0.5rem', 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: '0.5rem' 
+      }}>
         <button
           type="button"
           onClick={handleGeocode}
           disabled={isGeocoding || !location.trim()}
           style={{
-            padding: '0.5rem 1rem',
-            background: isGeocoding || !location.trim() ? '#e5e7eb' : '#1e3c72',
+            padding: isMobile ? '0.75rem 1rem' : '0.5rem 1rem',
+            background: isGeocoding || !location.trim() ? '#e5e7eb' : '#0f172a',
             color: 'white',
             border: 'none',
-            borderRadius: '6px',
+            borderRadius: '8px',
             cursor: isGeocoding || !location.trim() ? 'not-allowed' : 'pointer',
-            fontSize: '0.9rem',
-            fontWeight: '500'
+            fontSize: isMobile ? '0.9375rem' : '0.9rem',
+            fontWeight: '600',
+            width: isMobile ? '100%' : 'auto',
+            touchAction: 'manipulation',
+            minHeight: isMobile ? '44px' : 'auto',
+            transition: 'all 0.2s ease',
+            boxShadow: isGeocoding || !location.trim() ? 'none' : '0 2px 4px rgba(15, 23, 42, 0.2)'
           }}
         >
-          {isGeocoding ? 'Căutare...' : '📍 Găsește pe hartă'}
+          {isGeocoding ? 'Căutare...' : 'Găsește pe hartă'}
         </button>
         {coordinates && (
           <button
@@ -211,14 +221,19 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
               }
             }}
             style={{
-              padding: '0.5rem 1rem',
+              padding: isMobile ? '0.75rem 1rem' : '0.5rem 1rem',
               background: '#ef4444',
               color: 'white',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '0.9rem',
-              fontWeight: '500'
+              fontSize: isMobile ? '0.9375rem' : '0.9rem',
+              fontWeight: '600',
+              width: isMobile ? '100%' : 'auto',
+              touchAction: 'manipulation',
+              minHeight: isMobile ? '44px' : 'auto',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
             }}
           >
             Șterge pin
@@ -229,7 +244,7 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
         ref={mapRef}
         style={{
           width: '100%',
-          height: '300px',
+          height: isMobile ? '250px' : '300px',
           borderRadius: '8px',
           border: '2px solid #e0e0e0',
           zIndex: 0
