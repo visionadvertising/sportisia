@@ -397,8 +397,10 @@ app.post('/api/register', async (req, res) => {
         'pending' // status
       ]
 
-      // Debug: log values count
+      // Debug: log values count and last value
       console.log(`Inserting facility: ${name}, values count: ${values.length}, expected: 33`)
+      console.log(`Last value in array: ${values[values.length - 1]}`)
+      console.log(`Values array:`, values.map((v, i) => `${i + 1}. ${v === null ? 'NULL' : typeof v === 'string' ? `'${v.substring(0, 20)}...'` : v}`).join(', '))
 
       // Insert facility
       const [facilityResult] = await connection.query(
