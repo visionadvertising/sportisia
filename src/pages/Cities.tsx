@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 import { cityNameToSlug } from '../utils/seo'
+import FacilityFilters from '../components/FacilityFilters'
 
 interface City {
   city: string
@@ -10,9 +11,12 @@ interface City {
 }
 
 function Cities() {
+  const [searchParams] = useSearchParams()
   const [cities, setCities] = useState<City[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedCity, setSelectedCity] = useState('')
+  const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || '')
+  const [selectedSport, setSelectedSport] = useState(searchParams.get('sport') || '')
+  const [selectedType, setSelectedType] = useState(searchParams.get('type') || '')
 
   useEffect(() => {
     fetchCities()
@@ -52,78 +56,33 @@ function Cities() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem'
+      background: '#f8fafc',
+      padding: '1.5rem 1rem'
     }}>
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
         <h1 style={{
-          fontSize: '3rem',
-          color: 'white',
-          marginBottom: '1rem',
-          textAlign: 'center'
+          fontSize: '2.5rem',
+          color: '#1e293b',
+          marginBottom: '1.5rem',
+          textAlign: 'center',
+          fontWeight: '700'
         }}>Orașe</h1>
 
-        {/* City Selector Dropdown */}
-        <div style={{
-          maxWidth: '500px',
-          margin: '0 auto 2rem',
-          background: 'white',
-          borderRadius: '12px',
-          padding: '1rem',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
-        }}>
-          <label style={{
-            display: 'block',
-            marginBottom: '0.5rem',
-            color: '#333',
-            fontWeight: '500'
-          }}>Caută oraș:</label>
-          <select
-            value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            <option value="">Selectează un oraș</option>
-            {ROMANIAN_CITIES.map(city => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </select>
-          {selectedCity && (
-            <Link
-              to={`/oras/${cityNameToSlug(selectedCity)}`}
-              style={{
-                display: 'block',
-                marginTop: '1rem',
-                padding: '0.75rem',
-                background: '#10b981',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                textAlign: 'center',
-                fontWeight: 'bold'
-              }}
-            >
-              Vezi facilități în {selectedCity}
-            </Link>
-          )}
-        </div>
+        <FacilityFilters
+          selectedCity={selectedCity}
+          selectedSport={selectedSport}
+          selectedType={selectedType}
+          showTypeFilter={true}
+        />
 
         {loading ? (
           <div style={{
             textAlign: 'center',
             padding: '3rem',
-            color: 'white'
+            color: '#64748b'
           }}>
             Se încarcă...
           </div>

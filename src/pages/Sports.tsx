@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { sportNameToSlug } from '../utils/seo'
+import FacilityFilters from '../components/FacilityFilters'
 
 interface Sport {
   sport: string
@@ -45,8 +46,12 @@ const SPORT_NAMES: Record<string, string> = {
 }
 
 function Sports() {
+  const [searchParams] = useSearchParams()
   const [sports, setSports] = useState<Sport[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || '')
+  const [selectedSport, setSelectedSport] = useState(searchParams.get('sport') || '')
+  const [selectedType, setSelectedType] = useState(searchParams.get('type') || '')
 
   useEffect(() => {
     fetchSports()
@@ -77,25 +82,33 @@ function Sports() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem'
+      background: '#f8fafc',
+      padding: '1.5rem 1rem'
     }}>
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
         <h1 style={{
-          fontSize: '3rem',
-          color: 'white',
-          marginBottom: '2rem',
-          textAlign: 'center'
+          fontSize: '2.5rem',
+          color: '#1e293b',
+          marginBottom: '1.5rem',
+          textAlign: 'center',
+          fontWeight: '700'
         }}>Sporturi</h1>
+
+        <FacilityFilters
+          selectedCity={selectedCity}
+          selectedSport={selectedSport}
+          selectedType={selectedType}
+          showTypeFilter={true}
+        />
 
         {loading ? (
           <div style={{
             textAlign: 'center',
             padding: '3rem',
-            color: 'white'
+            color: '#64748b'
           }}>
             Se încarcă...
           </div>
@@ -103,7 +116,7 @@ function Sports() {
           <div style={{
             textAlign: 'center',
             padding: '3rem',
-            color: 'white'
+            color: '#64748b'
           }}>
             Nu există sporturi disponibile momentan.
           </div>
