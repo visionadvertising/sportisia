@@ -29,7 +29,10 @@ let pool
 
 async function initDatabase() {
   try {
-    const dbUrl = process.env.DATABASE_URL || 'mysql://u328389087_sportisia:Csl19920903@localhost:3306/u328389087_sportisia'
+    const dbUrl = process.env.DATABASE_URL
+    if (!dbUrl) {
+      throw new Error('DATABASE_URL environment variable is required')
+    }
     
     // Parse DATABASE_URL
     const url = new URL(dbUrl.replace('mysql://', 'http://'))
