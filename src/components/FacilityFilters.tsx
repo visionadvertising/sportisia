@@ -144,7 +144,7 @@ function FacilityFilters({
             fontSize: '0.9rem'
           }}>Oraș</label>
           <select
-            value={city || selectedCity || ''}
+            value={selectedCity || city || ''}
             onChange={(e) => handleCityChange(e.target.value)}
             style={{
               width: '100%',
@@ -185,7 +185,7 @@ function FacilityFilters({
             fontSize: '0.9rem'
           }}>Sport</label>
           <select
-            value={sport || selectedSport || ''}
+            value={selectedSport || sport || ''}
             onChange={(e) => handleSportChange(e.target.value)}
             style={{
               width: '100%',
@@ -228,7 +228,7 @@ function FacilityFilters({
               fontSize: '0.9rem'
             }}>Tip serviciu</label>
             <select
-              value={type || selectedType || ''}
+              value={selectedType || type || ''}
               onChange={(e) => handleTypeChange(e.target.value)}
               style={{
                 width: '100%',

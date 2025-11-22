@@ -135,10 +135,9 @@ function AllFacilitiesByCity() {
 
         <FacilityFilters
           selectedCity={city}
+          selectedSport=""
+          selectedType=""
           showTypeFilter={true}
-          onFiltersChange={(filters) => {
-            // Handle filter changes
-          }}
         />
 
         {loading ? (

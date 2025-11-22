@@ -135,11 +135,10 @@ function AllFacilitiesBySport() {
         }}>Toate facilitățile pentru {sport}</h1>
 
         <FacilityFilters
+          selectedCity=""
           selectedSport={sportSlugValue}
+          selectedType=""
           showTypeFilter={true}
-          onFiltersChange={(filters) => {
-            // Handle filter changes - could navigate or update state
-          }}
         />
 
         {loading ? (
