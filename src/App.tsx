@@ -9,6 +9,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import Sports from './pages/Sports'
 import Cities from './pages/Cities'
 import FacilitiesList from './pages/FacilitiesList'
+import SEOFacilityPage from './pages/SEOFacilityPage'
 
 function AppContent() {
   const location = useLocation()
@@ -95,6 +96,10 @@ function AppContent() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/sporturi" element={<Sports />} />
         <Route path="/orase" element={<Cities />} />
+        {/* SEO-friendly routes - must be before simple routes */}
+        <Route path="/:city/:sport/:type" element={<SEOFacilityPage />} />
+        <Route path="/:city/:type" element={<SEOFacilityPage />} />
+        {/* Simple routes (fallback) */}
         <Route path="/terenuri" element={<FacilitiesList type="field" title="Terenuri Sportive" />} />
         <Route path="/antrenori" element={<FacilitiesList type="coach" title="Antrenori" />} />
         <Route path="/magazine-reparatii" element={<FacilitiesList type="repair_shop" title="Magazine Reparații Articole Sportive" />} />

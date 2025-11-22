@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
+import { 
+  citySlugToName, 
+  sportSlugToName, 
+  slugToFacilityType,
+  generateFacilityURL 
+} from '../utils/seo'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 
 interface Facility {
@@ -22,11 +28,11 @@ interface Facility {
   products_categories?: string
 }
 
-const FACILITY_TYPE_LABELS: Record<string, string> = {
-  'field': 'Teren Sportiv',
-  'coach': 'Antrenor',
-  'repair_shop': 'Magazin Reparații',
-  'equipment_shop': 'Magazin Articole Sportive'
+const FACILITY_TYPE_TITLES: Record<string, string> = {
+  'field': 'Terenuri Sportive',
+  'coach': 'Antrenori',
+  'repair_shop': 'Magazine Reparații Articole Sportive',
+  'equipment_shop': 'Magazine Articole Sportive'
 }
 
 const SPORT_NAMES: Record<string, string> = {
@@ -39,30 +45,44 @@ const SPORT_NAMES: Record<string, string> = {
   'squash': 'Squash'
 }
 
-type FacilityType = 'field' | 'coach' | 'repair_shop' | 'equipment_shop'
-
-interface FacilitiesListProps {
-  type: FacilityType
-  title: string
-}
-
-function FacilitiesList({ type, title }: FacilitiesListProps) {
-  const [searchParams, setSearchParams] = useSearchParams()
+function SEOFacilityPage() {
+  const params = useParams<{ city?: string; sport?: string; type?: string }>()
+  const navigate = useNavigate()
+  
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || '')
-  const [selectedSport, setSelectedSport] = useState(searchParams.get('sport') || '')
+  const [selectedCity, setSelectedCity] = useState('')
+  const [selectedSport, setSelectedSport] = useState('')
+
+  // Parse URL parameters
+  const citySlug = params.city || ''
+  const sportSlug = params.sport || ''
+  const typeSlug = params.type || ''
+
+  const city = citySlug ? citySlugToName(citySlug) : ''
+  const sport = sportSlug ? sportSlugToName(sportSlug) : ''
+  const facilityType = typeSlug ? slugToFacilityType(typeSlug) : ''
 
   useEffect(() => {
-    fetchFacilities()
-  }, [selectedCity, selectedSport])
+    if (city && facilityType) {
+      setSelectedCity(city)
+      if (sport) {
+        setSelectedSport(sport)
+      }
+      fetchFacilities()
+    }
+  }, [city, sport, facilityType])
 
   const fetchFacilities = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ type, status: 'active' })
-      if (selectedCity) params.append('city', selectedCity)
-      if (selectedSport && type === 'field') params.append('sport', selectedSport)
+      const params = new URLSearchParams({ type: facilityType, status: 'active' })
+      if (city) params.append('city', city)
+      if (sport && (facilityType === 'field' || facilityType === 'coach')) {
+        // Convert sport name back to slug for API
+        const sportSlug = sport.toLowerCase()
+        params.append('sport', sportSlug)
+      }
 
       const response = await fetch(`${API_BASE_URL}/facilities?${params}`)
       const data = await response.json()
@@ -76,26 +96,59 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
     }
   }
 
-  const handleCityChange = (city: string) => {
-    setSelectedCity(city)
-    const newParams = new URLSearchParams(searchParams)
-    if (city) {
-      newParams.set('city', city)
-    } else {
-      newParams.delete('city')
+  const handleCityChange = (newCity: string) => {
+    setSelectedCity(newCity)
+    if (newCity) {
+      const url = generateFacilityURL(newCity, sport || null, facilityType)
+      navigate(url)
     }
-    setSearchParams(newParams)
   }
 
-  const handleSportChange = (sport: string) => {
-    setSelectedSport(sport)
-    const newParams = new URLSearchParams(searchParams)
-    if (sport) {
-      newParams.set('sport', sport)
-    } else {
-      newParams.delete('sport')
+  const handleSportChange = (newSport: string) => {
+    setSelectedSport(newSport)
+    if (newSport && city) {
+      const url = generateFacilityURL(city, newSport, facilityType)
+      navigate(url)
+    } else if (!newSport && city) {
+      // Remove sport from URL
+      const url = generateFacilityURL(city, null, facilityType)
+      navigate(url)
     }
-    setSearchParams(newParams)
+  }
+
+  const getPageTitle = () => {
+    if (sport && city) {
+      return `${FACILITY_TYPE_TITLES[facilityType]} - ${sport} în ${city}`
+    } else if (city) {
+      return `${FACILITY_TYPE_TITLES[facilityType]} în ${city}`
+    }
+    return FACILITY_TYPE_TITLES[facilityType] || 'Facilități'
+  }
+
+  const getEmptyMessage = () => {
+    if (sport && city) {
+      return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} pentru ${sport.toLowerCase()} în ${city}.`
+    } else if (city) {
+      return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} în ${city}.`
+    }
+    return `Momentan nu sunt ${FACILITY_TYPE_TITLES[facilityType].toLowerCase()} disponibile.`
+  }
+
+  if (!facilityType) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '2rem',
+        textAlign: 'center',
+        color: 'white'
+      }}>
+        <h1>Pagina nu a fost găsită</h1>
+        <Link to="/" style={{ color: 'white', textDecoration: 'underline' }}>
+          Înapoi la Home
+        </Link>
+      </div>
+    )
   }
 
   return (
@@ -113,7 +166,7 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
           color: 'white',
           marginBottom: '2rem',
           textAlign: 'center'
-        }}>{title}</h1>
+        }}>{getPageTitle()}</h1>
 
         {/* Search Box */}
         <div style={{
@@ -125,7 +178,7 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
         }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: type === 'field' ? 'repeat(2, 1fr)' : '1fr',
+            gridTemplateColumns: (facilityType === 'field' || facilityType === 'coach') ? 'repeat(2, 1fr)' : '1fr',
             gap: '1rem'
           }}>
             <div>
@@ -149,12 +202,12 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
                 }}
               >
                 <option value="">Toate orașele</option>
-                {ROMANIAN_CITIES.map(city => (
-                  <option key={city} value={city}>{city}</option>
+                {ROMANIAN_CITIES.map(cityOption => (
+                  <option key={cityOption} value={cityOption}>{cityOption}</option>
                 ))}
               </select>
             </div>
-            {type === 'field' && (
+            {(facilityType === 'field' || facilityType === 'coach') && (
               <div>
                 <label style={{
                   display: 'block',
@@ -221,11 +274,7 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
               marginBottom: '2rem',
               lineHeight: '1.6'
             }}>
-              {selectedCity && selectedSport
-                ? `Momentan nu sunt ${title.toLowerCase()} pentru ${selectedSport.toLowerCase()} în ${selectedCity}.`
-                : selectedCity
-                ? `Momentan nu sunt ${title.toLowerCase()} în ${selectedCity}.`
-                : `Momentan nu sunt ${title.toLowerCase()} disponibile pentru criteriile selectate.`}
+              {getEmptyMessage()}
             </p>
             <p style={{
               fontSize: '1rem',
@@ -351,5 +400,5 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
   )
 }
 
-export default FacilitiesList
+export default SEOFacilityPage
 
