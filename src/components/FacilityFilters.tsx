@@ -47,6 +47,12 @@ function FacilityFilters({
   const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
   const [availableSports, setAvailableSports] = useState<string[]>(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash'])
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [citySearch, setCitySearch] = useState('')
+  const [showCityDropdown, setShowCityDropdown] = useState(false)
+  const [sportSearch, setSportSearch] = useState('')
+  const [showSportDropdown, setShowSportDropdown] = useState(false)
+  const [typeSearch, setTypeSearch] = useState('')
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false)
 
   useEffect(() => {
     const handleResize = () => {
@@ -116,6 +122,8 @@ function FacilityFilters({
   const handleCityChange = (newCity: string) => {
     const updatedCity = newCity || ''
     setCity(updatedCity)
+    setCitySearch('')
+    setShowCityDropdown(false)
     // Use current state values, but override with new city
     updateFilters(updatedCity, sport || selectedSport || '', type || selectedType || '')
   }
@@ -123,6 +131,8 @@ function FacilityFilters({
   const handleSportChange = (newSport: string) => {
     const updatedSport = newSport || ''
     setSport(updatedSport)
+    setSportSearch('')
+    setShowSportDropdown(false)
     // Use current state values, but override with new sport
     updateFilters(city || selectedCity || '', updatedSport, type || selectedType || '')
   }
@@ -130,6 +140,8 @@ function FacilityFilters({
   const handleTypeChange = (newType: string) => {
     const updatedType = newType || ''
     setType(updatedType)
+    setTypeSearch('')
+    setShowTypeDropdown(false)
     // Use current state values, but override with new type
     updateFilters(city || selectedCity || '', sport || selectedSport || '', updatedType)
   }

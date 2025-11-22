@@ -220,23 +220,38 @@ function AllFacilities() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#ffffff',
-      padding: isMobile ? '2rem 1rem' : '3rem 2rem'
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
+      padding: 0
     }}>
+      {/* Hero Section */}
       <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto'
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
+        padding: isMobile ? '3rem 1rem 2rem' : '5rem 2rem 3rem',
+        textAlign: 'center',
+        color: 'white'
       }}>
         <h1 style={{
-          fontSize: isMobile ? '1.75rem' : '2.75rem',
-          color: '#0f172a',
-          marginBottom: isMobile ? '1.5rem' : '2.5rem',
-          textAlign: 'left',
-          fontWeight: '700',
-          lineHeight: '1.1',
-          padding: isMobile ? '0' : '0',
-          letterSpacing: '-0.03em'
+          fontSize: isMobile ? '2rem' : '3rem',
+          color: 'white',
+          marginBottom: isMobile ? '0.75rem' : '1rem',
+          fontWeight: '600',
+          lineHeight: '1.2',
+          padding: isMobile ? '0 0.5rem' : '0',
+          letterSpacing: '-0.02em'
         }}>{getPageTitle()}</h1>
+      </div>
+
+      {/* Content Section */}
+      <div style={{
+        background: '#ffffff',
+        borderRadius: isMobile ? '24px 24px 0 0' : '32px 32px 0 0',
+        padding: isMobile ? '2rem 1rem' : '3rem 2rem',
+        marginTop: '-1px'
+      }}>
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto'
+        }}>
 
         <FacilityFilters
           selectedCity={city}
@@ -245,16 +260,16 @@ function AllFacilities() {
           showTypeFilter={true}
         />
 
-        {loading ? (
-          <div style={{
-            textAlign: 'center',
-            padding: isMobile ? '2rem 1rem' : '3rem',
-            color: '#64748b',
-            fontSize: isMobile ? '0.9375rem' : '1rem'
-          }}>
-            Se încarcă...
-          </div>
-        ) : facilities.length === 0 ? (
+          {loading ? (
+            <div style={{
+              textAlign: 'center',
+              padding: isMobile ? '2rem 1rem' : '3rem',
+              color: '#64748b',
+              fontSize: isMobile ? '0.9375rem' : '1rem'
+            }}>
+              Se încarcă...
+            </div>
+          ) : facilities.length === 0 ? (
           <div style={{
             textAlign: 'center',
             padding: isMobile ? '2rem 1rem' : '3rem',
@@ -318,9 +333,9 @@ function AllFacilities() {
               Înregistrează-te acum
             </Link>
           </div>
-        ) : (
-          <div>
-            {Object.entries(facilitiesByType).map(([type, typeFacilities]) => (
+          ) : (
+            <div>
+              {Object.entries(facilitiesByType).map(([type, typeFacilities]) => (
               <div key={type} style={{ marginBottom: isMobile ? '3rem' : '4rem' }}>
                 <h2 style={{
                   fontSize: isMobile ? '1.5rem' : '2rem',
@@ -469,8 +484,9 @@ function AllFacilities() {
                 </div>
               </div>
             ))}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

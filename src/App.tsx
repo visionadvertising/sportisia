@@ -152,25 +152,52 @@ function AppContent() {
                     e.currentTarget.style.color = '#64748b'
                   }}
                 >Magazine Articole</Link>
-                <div style={{ marginLeft: isMobile ? '0' : '1.5rem', paddingLeft: isMobile ? '0' : '1.5rem', borderLeft: isMobile ? 'none' : '1px solid #e2e8f0', display: 'flex', gap: '1.25rem' }}>
-                  <Link to="/register" style={{ textDecoration: 'none', color: '#10b981', fontWeight: '600', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 1rem', borderRadius: '6px' }} 
+                <div style={{ marginLeft: isMobile ? '0' : '1.5rem', paddingLeft: isMobile ? '0' : '1.5rem', borderLeft: isMobile ? 'none' : '1px solid #e2e8f0', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <Link to="/register" style={{ 
+                    textDecoration: 'none', 
+                    color: 'white', 
+                    fontWeight: '600', 
+                    fontSize: '0.9375rem', 
+                    transition: 'all 0.2s', 
+                    padding: '0.625rem 1.25rem', 
+                    borderRadius: '8px',
+                    background: '#10b981',
+                    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+                  }} 
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#f0fdf4'
-                      e.currentTarget.style.color = '#059669'
+                      e.currentTarget.style.background = '#059669'
+                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
+                      e.currentTarget.style.transform = 'translateY(-1px)'
                     }} 
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent'
-                      e.currentTarget.style.color = '#10b981'
+                      e.currentTarget.style.background = '#10b981'
+                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
+                      e.currentTarget.style.transform = 'translateY(0)'
                     }}
                   >Înregistrare</Link>
-                  <Link to="/login" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 1rem', borderRadius: '6px', background: '#f8fafc' }} 
+                  <Link to="/login" style={{ 
+                    textDecoration: 'none', 
+                    color: '#0f172a', 
+                    fontWeight: '600', 
+                    fontSize: '0.9375rem', 
+                    transition: 'all 0.2s', 
+                    padding: '0.625rem 1.25rem', 
+                    borderRadius: '8px', 
+                    background: 'white',
+                    border: '1.5px solid #e2e8f0',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }} 
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#f1f5f9'
+                      e.currentTarget.style.background = '#f8fafc'
+                      e.currentTarget.style.borderColor = '#10b981'
                       e.currentTarget.style.color = '#10b981'
+                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
                     }} 
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#f8fafc'
+                      e.currentTarget.style.background = 'white'
+                      e.currentTarget.style.borderColor = '#e2e8f0'
                       e.currentTarget.style.color = '#0f172a'
+                      e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                     }}
                   >Login</Link>
                 </div>
@@ -191,9 +218,52 @@ function AppContent() {
               <Link to="/antrenori" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Antrenori</Link>
               <Link to="/magazine-reparatii" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Reparații</Link>
               <Link to="/magazine-articole" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Articole</Link>
-              <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <Link to="/register" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = '#0f172a'}>Înregistrare</Link>
-                <Link to="/login" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = '#0f172a'}>Login</Link>
+              <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <Link to="/register" onClick={() => setMenuOpen(false)} style={{ 
+                  textDecoration: 'none', 
+                  color: 'white', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem', 
+                  padding: '0.75rem 1.25rem', 
+                  borderRadius: '8px',
+                  background: '#10b981',
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+                }} 
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#059669'
+                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
+                  }} 
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#10b981'
+                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
+                  }}
+                >Înregistrare</Link>
+                <Link to="/login" onClick={() => setMenuOpen(false)} style={{ 
+                  textDecoration: 'none', 
+                  color: '#0f172a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem', 
+                  padding: '0.75rem 1.25rem', 
+                  borderRadius: '8px',
+                  background: 'white',
+                  border: '1.5px solid #e2e8f0',
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                }} 
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f8fafc'
+                    e.currentTarget.style.borderColor = '#10b981'
+                    e.currentTarget.style.color = '#10b981'
+                  }} 
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'white'
+                    e.currentTarget.style.borderColor = '#e2e8f0'
+                    e.currentTarget.style.color = '#0f172a'
+                  }}
+                >Login</Link>
               </div>
             </nav>
           )}
