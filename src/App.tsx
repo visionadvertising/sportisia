@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import AddField from './pages/AddField'
 import Register from './pages/Register'
@@ -7,17 +7,20 @@ import Dashboard from './pages/Dashboard'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 
-function App() {
+function AppContent() {
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
+
   return (
-    <Router>
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'white',
-        fontFamily: 'Arial, sans-serif'
-      }}>
-        {/* Header */}
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'white',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      {/* Header - doar pentru rute non-admin */}
+      {!isAdminRoute && (
         <header style={{
           background: 'rgba(255, 255, 255, 0.95)',
           padding: '1rem 2rem',
@@ -79,17 +82,25 @@ function App() {
             </nav>
           </div>
         </header>
+      )}
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/adauga-teren" element={<AddField />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/adauga-teren" element={<AddField />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Routes>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   )
 }
