@@ -28,6 +28,7 @@ function Register() {
   const [location, setLocation] = useState('')
   const [showAddCityInput, setShowAddCityInput] = useState(false)
   const [newCity, setNewCity] = useState('')
+  const [customCities, setCustomCities] = useState<string[]>([]) // Orașe adăugate de utilizator
 
   // Step 3: Branding
   const [name, setName] = useState('')
@@ -51,6 +52,7 @@ function Register() {
   const [sport, setSport] = useState('')
   const [showAddSportInput, setShowAddSportInput] = useState(false)
   const [newSport, setNewSport] = useState('')
+  const [customSports, setCustomSports] = useState<string[]>([]) // Sporturi adăugate de utilizator
   const [pricingDetails, setPricingDetails] = useState<PricingDetail[]>([])
   const [hasParking, setHasParking] = useState(false)
   const [hasShower, setHasShower] = useState(false)
@@ -183,7 +185,7 @@ function Register() {
           // Field specific
           sport: facilityType === 'field' ? sport : null,
           pricePerHour: facilityType === 'field' && pricingDetails.length > 0 ? pricingDetails[0].price : null,
-          pricingDetails: facilityType === 'field' && pricingDetails.length > 0 ? pricingDetails : null,
+          pricingDetails: (facilityType === 'field' || facilityType === 'coach') && pricingDetails.length > 0 ? pricingDetails : null,
           hasParking: facilityType === 'field' ? hasParking : false,
           hasShower: facilityType === 'field' ? hasShower : false,
           hasChangingRoom: facilityType === 'field' ? hasChangingRoom : false,
@@ -193,7 +195,6 @@ function Register() {
           specialization: facilityType === 'coach' ? specialization : null,
           experienceYears: facilityType === 'coach' ? experienceYears : null,
           pricePerLesson: facilityType === 'coach' && pricingDetails.length > 0 ? pricingDetails[0].price : null,
-          pricingDetails: facilityType === 'coach' && pricingDetails.length > 0 ? pricingDetails : null,
           certifications: facilityType === 'coach' ? certifications : null,
           languages: facilityType === 'coach' ? languages : null,
           // Repair shop specific
@@ -575,6 +576,9 @@ function Register() {
                     {ROMANIAN_CITIES.map(cityOption => (
                       <option key={cityOption} value={cityOption}>{cityOption}</option>
                     ))}
+                    {customCities.map(cityOption => (
+                      <option key={cityOption} value={cityOption}>{cityOption}</option>
+                    ))}
                     <option value="__add_new__">+ Adaugă oraș nou</option>
                   </select>
                 ) : (
@@ -598,7 +602,12 @@ function Register() {
                       type="button"
                       onClick={() => {
                         if (newCity.trim()) {
-                          setCity(newCity.trim())
+                          const cityName = newCity.trim()
+                          // Adaugă orașul în lista locală pentru a-l putea selecta
+                          if (!customCities.includes(cityName) && !ROMANIAN_CITIES.includes(cityName)) {
+                            setCustomCities([...customCities, cityName])
+                          }
+                          setCity(cityName)
                           setNewCity('')
                           setShowAddCityInput(false)
                         }
@@ -637,16 +646,6 @@ function Register() {
                       Anulează
                     </button>
                   </div>
-                )}
-                {showAddCityInput && (
-                  <p style={{
-                    marginTop: '0.5rem',
-                    fontSize: '0.85rem',
-                    color: '#666',
-                    fontStyle: 'italic'
-                  }}>
-                    Orașul va fi trimis pentru aprobare. Vei putea continua după aprobare.
-                  </p>
                 )}
               </div>
               <div>
@@ -1046,6 +1045,11 @@ function Register() {
                         <option value="handbal">Handbal</option>
                         <option value="badminton">Badminton</option>
                         <option value="squash">Squash</option>
+                        {customSports.map(sportOption => (
+                          <option key={sportOption} value={sportOption}>
+                            {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
+                          </option>
+                        ))}
                         <option value="__add_new__">+ Adaugă sport nou</option>
                       </select>
                     ) : (
@@ -1069,7 +1073,13 @@ function Register() {
                           type="button"
                           onClick={() => {
                             if (newSport.trim()) {
-                              setSport(newSport.trim().toLowerCase())
+                              const sportName = newSport.trim().toLowerCase()
+                              // Adaugă sportul în lista locală pentru a-l putea selecta
+                              const standardSports = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash']
+                              if (!customSports.includes(sportName) && !standardSports.includes(sportName)) {
+                                setCustomSports([...customSports, sportName])
+                              }
+                              setSport(sportName)
                               setNewSport('')
                               setShowAddSportInput(false)
                             }
@@ -1108,16 +1118,6 @@ function Register() {
                           Anulează
                         </button>
                       </div>
-                    )}
-                    {showAddSportInput && (
-                      <p style={{
-                        marginTop: '0.5rem',
-                        fontSize: '0.85rem',
-                        color: '#666',
-                        fontStyle: 'italic'
-                      }}>
-                        Sportul va fi trimis pentru aprobare. Vei putea continua după aprobare.
-                      </p>
                     )}
                   </div>
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug } from '../utils/seo'
+import API_BASE_URL from '../config'
 import './FacilityFilters.css'
 
 interface FacilityFiltersProps {
@@ -43,6 +44,45 @@ function FacilityFilters({
   const [city, setCity] = useState(selectedCity)
   const [sport, setSport] = useState(selectedSport)
   const [type, setType] = useState(selectedType)
+  const [availableCities, setAvailableCities] = useState<string[]>(ROMANIAN_CITIES)
+  const [availableSports, setAvailableSports] = useState<string[]>(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash'])
+
+  // Load cities and sports from backend
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/cities`)
+        const data = await response.json()
+        if (data.success && data.data) {
+          // Combine standard cities with approved cities from backend
+          const backendCities = data.data.map((item: any) => item.city)
+          const allCities = [...new Set([...ROMANIAN_CITIES, ...backendCities])].sort()
+          setAvailableCities(allCities)
+        }
+      } catch (err) {
+        console.error('Error loading cities:', err)
+      }
+    }
+
+    const loadSports = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/sports`)
+        const data = await response.json()
+        if (data.success && data.data) {
+          // Combine standard sports with approved sports from backend
+          const backendSports = data.data.map((item: any) => item.sport)
+          const standardSports = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash']
+          const allSports = [...new Set([...standardSports, ...backendSports])].sort()
+          setAvailableSports(allSports)
+        }
+      } catch (err) {
+        console.error('Error loading sports:', err)
+      }
+    }
+
+    loadCities()
+    loadSports()
+  }, [])
 
   useEffect(() => {
     setCity(selectedCity)
@@ -187,7 +227,7 @@ function FacilityFilters({
             }}
           >
             <option value="">Toate orașele</option>
-            {ROMANIAN_CITIES.map(cityOption => (
+            {availableCities.map(cityOption => (
               <option key={cityOption} value={cityOption}>{cityOption}</option>
             ))}
           </select>
@@ -227,9 +267,10 @@ function FacilityFilters({
               e.target.style.borderColor = '#e5e7eb'
             }}
           >
-            {SPORTS.map(sportOption => (
-              <option key={sportOption.value} value={sportOption.value}>
-                {sportOption.label}
+            <option value="">Toate sporturile</option>
+            {availableSports.map(sportOption => (
+              <option key={sportOption} value={sportOption}>
+                {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
               </option>
             ))}
           </select>

@@ -719,48 +719,110 @@ app.put('/api/facilities/:id', async (req, res) => {
 
 // ==================== PUBLIC ENDPOINTS ====================
 
-// GET all sports with facility counts
+// GET all sports with facility counts (including approved sports from pending_sports)
 app.get('/api/sports', async (req, res) => {
   try {
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const [rows] = await pool.query(`
+    // Get sports from active facilities
+    const [facilitySports] = await pool.query(`
       SELECT 
         sport,
         COUNT(*) as facility_count
       FROM facilities
       WHERE sport IS NOT NULL AND sport != '' AND status = 'active'
       GROUP BY sport
-      ORDER BY facility_count DESC, sport ASC
     `)
 
-    res.json({ success: true, data: rows })
+    // Get approved sports from pending_sports
+    const [approvedSports] = await pool.query(`
+      SELECT sport, 0 as facility_count
+      FROM pending_sports
+      WHERE status = 'approved'
+    `)
+
+    // Combine and deduplicate
+    const sportMap = new Map()
+    
+    facilitySports.forEach((row: any) => {
+      sportMap.set(row.sport, row.facility_count)
+    })
+    
+    approvedSports.forEach((row: any) => {
+      if (!sportMap.has(row.sport)) {
+        sportMap.set(row.sport, 0)
+      }
+    })
+
+    // Convert to array and sort
+    const sports = Array.from(sportMap.entries()).map(([sport, count]) => ({
+      sport,
+      facility_count: count
+    })).sort((a, b) => {
+      if (b.facility_count !== a.facility_count) {
+        return b.facility_count - a.facility_count
+      }
+      return a.sport.localeCompare(b.sport)
+    })
+
+    res.json({ success: true, data: sports })
   } catch (error) {
     console.error('Error fetching sports:', error)
     res.status(500).json({ success: false, error: error.message })
   }
 })
 
-// GET all cities with facility counts
+// GET all cities with facility counts (including approved cities from pending_cities)
 app.get('/api/cities', async (req, res) => {
   try {
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const [rows] = await pool.query(`
+    // Get cities from active facilities
+    const [facilityCities] = await pool.query(`
       SELECT 
         city,
         COUNT(*) as facility_count
       FROM facilities
       WHERE city IS NOT NULL AND city != '' AND status = 'active'
       GROUP BY city
-      ORDER BY facility_count DESC, city ASC
     `)
 
-    res.json({ success: true, data: rows })
+    // Get approved cities from pending_cities
+    const [approvedCities] = await pool.query(`
+      SELECT city, 0 as facility_count
+      FROM pending_cities
+      WHERE status = 'approved'
+    `)
+
+    // Combine and deduplicate
+    const cityMap = new Map()
+    
+    facilityCities.forEach((row: any) => {
+      cityMap.set(row.city, row.facility_count)
+    })
+    
+    approvedCities.forEach((row: any) => {
+      if (!cityMap.has(row.city)) {
+        cityMap.set(row.city, 0)
+      }
+    })
+
+    // Convert to array and sort
+    const cities = Array.from(cityMap.entries()).map(([city, count]) => ({
+      city,
+      facility_count: count
+    })).sort((a, b) => {
+      if (b.facility_count !== a.facility_count) {
+        return b.facility_count - a.facility_count
+      }
+      return a.city.localeCompare(b.city)
+    })
+
+    res.json({ success: true, data: cities })
   } catch (error) {
     console.error('Error fetching cities:', error)
     res.status(500).json({ success: false, error: error.message })
