@@ -25,7 +25,7 @@ fi
 # Verifică că server_name este corect
 if ! grep -q "server_name.*$DOMAIN" "$NGINX_CONF"; then
     echo "⚠️  server_name nu conține $DOMAIN, actualizez..."
-    sed -i "s/server_name.*/server_name $DOMAIN www.$DOMAIN;/" "$NGINX_CONF
+    sed -i "s/server_name.*/server_name $DOMAIN www.$DOMAIN;/" "$NGINX_CONF"
     systemctl restart nginx
 fi
 
