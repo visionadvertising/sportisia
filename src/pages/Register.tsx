@@ -742,6 +742,7 @@ function Register() {
                       Anulează
                     </button>
                   </div>
+                  </div>
                 )}
               </div>
               <div>
