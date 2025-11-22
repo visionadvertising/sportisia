@@ -94,6 +94,7 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/toate" element={<AllFacilities />} />
         {/* SEO-friendly routes - must be before simple routes */}
         <Route path="/:city/:sport/:type" element={<SEOFacilityPage />} />
         <Route path="/:city/:type" element={<SEOFacilityPage />} />
