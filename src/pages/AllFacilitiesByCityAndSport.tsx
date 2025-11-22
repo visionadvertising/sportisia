@@ -185,28 +185,86 @@ function AllFacilitiesByCityAndSport() {
             }}>
               Ai o facilitate sau serviciu sportiv? Înregistrează-te și ajută comunitatea să te găsească!
             </p>
-            <Link
-              to="/register"
-              style={{
-                padding: '1rem 2.5rem',
-                background: '#10b981',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                display: 'inline-block',
-                fontWeight: 'bold',
-                fontSize: '1.1rem',
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#059669'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#10b981'
-              }}
-            >
-              Înregistrează-te acum
-            </Link>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '1.5rem',
+              maxWidth: '600px',
+              margin: '0 auto'
+            }}>
+              <Link
+                to="/sugereaza"
+                style={{
+                  padding: '1.5rem 2rem',
+                  background: '#6366f1',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  fontWeight: '600',
+                  fontSize: '1.125rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)',
+                  textAlign: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#4f46e5'
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(99, 102, 241, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#6366f1'
+                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.2)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <div style={{ fontSize: '2rem' }}>💡</div>
+                <div>Sugerează o locație</div>
+                <div style={{ fontSize: '0.875rem', opacity: 0.9, fontWeight: '400' }}>
+                  Ajută-ne să descoperim facilități noi
+                </div>
+              </Link>
+              <Link
+                to="/register"
+                style={{
+                  padding: '1.5rem 2rem',
+                  background: '#10b981',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  fontWeight: '600',
+                  fontSize: '1.125rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)',
+                  textAlign: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#059669'
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(16, 185, 129, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#10b981'
+                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.2)'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <div style={{ fontSize: '2rem' }}>➕</div>
+                <div>Înregistrează-te</div>
+                <div style={{ fontSize: '0.875rem', opacity: 0.9, fontWeight: '400' }}>
+                  Adaugă propria ta facilitate
+                </div>
+              </Link>
+            </div>
           </div>
         ) : (
           <div>
