@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES, getCityNames } from '../../data/romanian-cities'
 
@@ -76,7 +75,7 @@ function ApprovedRepairShops() {
   const currentFacilities = facilities.slice(startIndex, endIndex)
 
   return (
-    <AdminLayout>
+    <div>
       <div style={{ padding: '2rem' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: '600', marginBottom: '2rem', color: '#0f172a' }}>
           Magazine Reparații Aprobate
@@ -236,7 +235,7 @@ function ApprovedRepairShops() {
           </>
         )}
       </div>
-    </AdminLayout>
+    </div>
   )
 }
 

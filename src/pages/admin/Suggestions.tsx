@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
 
 interface Suggestion {
@@ -150,16 +149,13 @@ function Suggestions() {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <p>Se încarcă...</p>
-        </div>
-      </AdminLayout>
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Se încarcă...</p>
+      </div>
     )
   }
 
   return (
-    <AdminLayout>
       <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div style={{

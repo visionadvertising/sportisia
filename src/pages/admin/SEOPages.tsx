@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES } from '../../data/romanian-cities'
 import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug } from '../../utils/seo'
@@ -300,16 +299,13 @@ function SEOPages() {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <p>Se încarcă...</p>
-        </div>
-      </AdminLayout>
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Se încarcă...</p>
+      </div>
     )
   }
 
   return (
-    <AdminLayout>
       <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div style={{
@@ -766,7 +762,7 @@ function SEOPages() {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   )
 }
 

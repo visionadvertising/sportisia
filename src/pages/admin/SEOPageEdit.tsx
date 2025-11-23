@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
@@ -279,7 +278,7 @@ function SEOPageEdit() {
   }
 
   return (
-    <AdminLayout>
+    <div>
       <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         <div style={{ marginBottom: '2rem' }}>
@@ -667,7 +666,7 @@ function SEOPageEdit() {
         </form>
       </div>
     </div>
-    </AdminLayout>
+    </div>
   )
 }
 

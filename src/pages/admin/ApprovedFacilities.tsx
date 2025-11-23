@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES, getCityNames } from '../../data/romanian-cities'
 
@@ -145,7 +144,7 @@ function ApprovedFacilities() {
   }
 
   return (
-    <AdminLayout>
+    <div>
       <div style={{ padding: '2rem' }}>
       <h1 style={{ fontSize: '2rem', color: '#1e3c72', marginBottom: '2rem' }}>
         Facilități aprobate ({filteredFacilities.length})
@@ -362,7 +361,7 @@ function ApprovedFacilities() {
         </>
       )}
       </div>
-    </AdminLayout>
+    </div>
   )
 }
 

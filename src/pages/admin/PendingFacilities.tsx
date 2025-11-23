@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
 
 interface Facility {
@@ -120,7 +119,7 @@ function PendingFacilities() {
   }
 
   return (
-    <AdminLayout>
+    <div>
       <div style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2rem', color: '#1e3c72', margin: 0 }}>
@@ -319,7 +318,7 @@ function PendingFacilities() {
         </>
       )}
       </div>
-    </AdminLayout>
+    </div>
   )
 }
 

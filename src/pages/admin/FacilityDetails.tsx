@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import AdminLayout from './AdminLayout'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES, getCityNames } from '../../data/romanian-cities'
 
@@ -214,7 +213,7 @@ function FacilityDetails() {
   }
 
   return (
-    <AdminLayout>
+    <div>
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
@@ -795,7 +794,7 @@ function FacilityDetails() {
         </p>
       </div>
       </div>
-    </AdminLayout>
+    </div>
   )
 }
 
