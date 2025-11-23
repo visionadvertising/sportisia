@@ -38,10 +38,10 @@ function AdminLayout() {
     }}>
       <AdminSidebar onLogout={handleLogout} />
       <main style={{
-        marginLeft: '250px',
+        marginLeft: '280px',
         flex: 1,
         minHeight: '100vh',
-        width: 'calc(100% - 250px)',
+        width: 'calc(100% - 280px)',
         overflow: 'auto',
         position: 'relative',
         zIndex: 1

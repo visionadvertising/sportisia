@@ -110,24 +110,55 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
 
   return (
     <div style={{
-      width: '250px',
-      background: '#1e3c72',
+      width: '280px',
+      background: '#0f172a',
       color: 'white',
       minHeight: '100vh',
-      padding: '2rem 0',
+      padding: '0',
       position: 'fixed',
       left: 0,
       top: 0,
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      boxShadow: '2px 0 8px rgba(0, 0, 0, 0.1)',
+      zIndex: 1000
     }}>
-      <div style={{ padding: '0 1.5rem', marginBottom: '2rem' }}>
-        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>
+      <div style={{
+        padding: '2rem 1.5rem',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        marginBottom: '1rem'
+      }}>
+        <h2 style={{
+          margin: 0,
+          fontSize: '1.5rem',
+          fontWeight: '700',
+          letterSpacing: '-0.02em',
+          background: 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>
           Admin Panel
         </h2>
+        <p style={{
+          margin: '0.5rem 0 0 0',
+          fontSize: '0.75rem',
+          color: 'rgba(255, 255, 255, 0.6)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          fontWeight: '500'
+        }}>
+          Panou de administrare
+        </p>
       </div>
 
-      <nav style={{ flex: 1, overflowY: 'auto' }}>
+      <nav style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '0.5rem 0',
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent'
+      }}>
         {menuItems.map(item => (
           <div key={item.path}>
             <Link
@@ -136,30 +167,50 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.75rem',
-                padding: '1rem 1.5rem',
-                color: 'white',
+                padding: '0.875rem 1.5rem',
+                color: isActive(item.path) ? 'white' : 'rgba(255, 255, 255, 0.7)',
                 textDecoration: 'none',
-                background: isActive(item.path) ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                borderLeft: isActive(item.path) ? '4px solid white' : '4px solid transparent',
-                transition: 'all 0.2s',
-                fontWeight: isActive(item.path) ? 'bold' : 'normal'
+                background: isActive(item.path) ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                borderLeft: isActive(item.path) ? '3px solid #10b981' : '3px solid transparent',
+                transition: 'all 0.2s ease',
+                fontWeight: isActive(item.path) ? '600' : '500',
+                fontSize: '0.875rem',
+                position: 'relative'
               }}
               onMouseEnter={(e) => {
                 if (!isActive(item.path)) {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive(item.path)) {
                   e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'
                 }
               }}
             >
-              {item.icon && <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>}
+              {item.icon && <span style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}>{item.icon}</span>}
               <span>{item.label}</span>
+              {isActive(item.path) && (
+                <div style={{
+                  position: 'absolute',
+                  right: '1rem',
+                  width: '6px',
+                  height: '6px',
+                  background: '#10b981',
+                  borderRadius: '50%',
+                  boxShadow: '0 0 8px rgba(16, 185, 129, 0.5)'
+                }} />
+              )}
             </Link>
             {item.submenu && (location.pathname === '/admin/seo-pages' || location.pathname.startsWith('/admin/seo-pages/')) && (
-              <div style={{ paddingLeft: '1.5rem', background: 'rgba(0, 0, 0, 0.1)' }}>
+              <div style={{
+                paddingLeft: '2rem',
+                background: 'rgba(0, 0, 0, 0.2)',
+                borderLeft: '2px solid rgba(255, 255, 255, 0.1)',
+                marginLeft: '1.5rem'
+              }}>
                 {item.submenu.map(subItem => (
                   <Link
                     key={subItem.path}
@@ -168,27 +219,29 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.75rem',
-                      padding: '0.75rem 1.5rem',
-                      color: 'white',
+                      padding: '0.625rem 1.5rem',
+                      color: isSEOActive(subItem.path) ? 'white' : 'rgba(255, 255, 255, 0.6)',
                       textDecoration: 'none',
-                      background: isSEOActive(subItem.path) ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                      borderLeft: isSEOActive(subItem.path) ? '3px solid white' : '3px solid transparent',
-                      transition: 'all 0.2s',
-                      fontWeight: isSEOActive(subItem.path) ? '600' : 'normal',
-                      fontSize: '0.9rem'
+                      background: isSEOActive(subItem.path) ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                      borderLeft: isSEOActive(subItem.path) ? '2px solid #10b981' : '2px solid transparent',
+                      transition: 'all 0.2s ease',
+                      fontWeight: isSEOActive(subItem.path) ? '600' : '400',
+                      fontSize: '0.8125rem'
                     }}
                     onMouseEnter={(e) => {
                       if (!isSEOActive(subItem.path)) {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+                        e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isSEOActive(subItem.path)) {
                         e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'
                       }
                     }}
                   >
-                    {subItem.icon && <span style={{ fontSize: '1rem' }}>{subItem.icon}</span>}
+                    {subItem.icon && <span style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>{subItem.icon}</span>}
                     <span>{subItem.label}</span>
                   </Link>
                 ))}
@@ -198,27 +251,45 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
         ))}
       </nav>
 
-      <div style={{ padding: '0 1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.2)', paddingTop: '1rem' }}>
+      <div style={{
+        padding: '1.5rem',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        marginTop: 'auto'
+      }}>
         <button
           onClick={onLogout}
           style={{
             width: '100%',
-            padding: '0.75rem',
-            background: 'rgba(239, 68, 68, 0.2)',
+            padding: '0.875rem 1rem',
+            background: 'rgba(239, 68, 68, 0.15)',
             color: 'white',
-            border: '1px solid rgba(239, 68, 68, 0.5)',
-            borderRadius: '6px',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '8px',
             cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '0.9rem'
+            fontWeight: '600',
+            fontSize: '0.875rem',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)'
+            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)'
+            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)'
+            e.currentTarget.style.transform = 'translateY(-1px)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'
+            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)'
+            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)'
+            e.currentTarget.style.transform = 'translateY(0)'
           }}
         >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
           Deconectare
         </button>
       </div>
