@@ -400,7 +400,7 @@ function RegisterCoach() {
         )}
 
         <form onSubmit={currentStep === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
-          {/* Step 1-3: Contact, Branding, Gallery - Same as RegisterRepairShop */}
+          {/* Step 1: Contact Details - Identical to RegisterRepairShop */}
           {currentStep === 1 && (
             <div>
               <h2 style={{ 
@@ -413,13 +413,567 @@ function RegisterCoach() {
               }}>
                 Date de contact
               </h2>
-              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
-                Câmpurile de contact sunt identice cu cele din RegisterRepairShop.
-                Implementarea completă va include toate câmpurile (telefon, email, persoană contact, oraș, adresă, hartă).
-              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                gap: isMobile ? '1.5rem' : '2rem',
+                marginBottom: isMobile ? '1.5rem' : '2.5rem'
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Telefon *</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Email *</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Persoană de contact</label>
+                  <input
+                    type="text"
+                    value={contactPerson}
+                    onChange={(e) => setContactPerson(e.target.value)}
+                    placeholder="Ex: Ion Popescu"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {/* City Selection - Identical to RegisterRepairShop */}
+              <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem', position: 'relative' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Oraș *</label>
+                {!showAddCityInput ? (
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={city || citySearch}
+                      onChange={(e) => {
+                        setCitySearch(e.target.value)
+                        setShowCityDropdown(true)
+                        if (!e.target.value) {
+                          setCity('')
+                          setCounty('')
+                        }
+                      }}
+                      onClick={() => setShowCityDropdown(true)}
+                      onFocus={() => setShowCityDropdown(true)}
+                      placeholder="Caută sau selectează oraș"
+                      required={!city}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        paddingRight: isMobile ? '2.25rem' : '2.5rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
+                      onBlur={(e) => {
+                        setTimeout(() => setShowCityDropdown(false), 250)
+                      }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none'
+                    }}>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                        <path d="M5 7.5l5 5 5-5"/>
+                      </svg>
+                    </div>
+                    {showCityDropdown && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: '0.25rem',
+                        background: '#ffffff',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        maxHeight: isMobile ? '250px' : '300px',
+                        overflowY: 'auto',
+                        zIndex: 1000,
+                        WebkitOverflowScrolling: 'touch'
+                      }}>
+                        {[...availableCities, ...customCities.filter(c => !availableCities.some(ac => ac.city === c.city))]
+                          .filter(cityOption => 
+                            !citySearch || 
+                            cityOption.city.toLowerCase().includes(citySearch.toLowerCase()) ||
+                            (cityOption.county && cityOption.county.toLowerCase().includes(citySearch.toLowerCase()))
+                          )
+                          .map(cityOption => (
+                            <div
+                              key={cityOption.city}
+                              onMouseDown={(e) => {
+                                e.preventDefault()
+                                setCity(cityOption.city)
+                                setCounty(cityOption.county || '')
+                                setCitySearch('')
+                                setShowCityDropdown(false)
+                              }}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #f1f5f9',
+                                color: '#0f172a',
+                                fontSize: '0.9375rem',
+                                transition: 'background 0.15s'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f0fdf4'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#ffffff'
+                              }}
+                            >
+                              <div style={{ fontWeight: '600' }}>{cityOption.city}</div>
+                              {cityOption.county && (
+                                <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
+                                  {cityOption.county}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        <div
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            setShowAddCityInput(true)
+                            setShowCityDropdown(false)
+                            setCitySearch('')
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            cursor: 'pointer',
+                            color: '#0f172a',
+                            fontSize: '0.9375rem',
+                            fontWeight: '600',
+                            borderTop: '1.5px solid #f1f5f9',
+                            background: '#f8fafc',
+                            transition: 'background 0.15s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#f1f5f9'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#f8fafc'
+                          }}
+                        >
+                          + Adaugă oraș nou
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        value={newCity}
+                        onChange={(e) => setNewCity(e.target.value)}
+                        placeholder="Introdu numele orașului"
+                        required
+                        style={{
+                          flex: 1,
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                      <select
+                        value={newCityCounty}
+                        onChange={(e) => setNewCityCounty(e.target.value)}
+                        required
+                        style={{
+                          flex: 1,
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation',
+                          cursor: 'pointer'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      >
+                        <option value="">Selectează județul</option>
+                        {ROMANIAN_COUNTIES.map(countyOption => (
+                          <option key={countyOption} value={countyOption}>{countyOption}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: isMobile ? 'column' : 'row',
+                      gap: isMobile ? '0.75rem' : '1rem', 
+                      marginTop: '0.5rem' 
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newCity.trim() && newCityCounty) {
+                            const cityName = newCity.trim()
+                            const cityCounty = newCityCounty
+                            if (!customCities.some(c => c.city === cityName) && !availableCities.some(c => c.city === cityName)) {
+                              setCustomCities([...customCities, { city: cityName, county: cityCounty }])
+                            }
+                            setCity(cityName)
+                            setCounty(cityCounty)
+                            setNewCity('')
+                            setNewCityCounty('')
+                            setShowAddCityInput(false)
+                          }
+                        }}
+                        style={{
+                          padding: isMobile ? '0.875rem 1.5rem' : '0.875rem 2rem',
+                          background: '#0f172a',
+                          color: 'white',
+                          border: '1px solid #0f172a',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          width: isMobile ? '100%' : 'auto',
+                          touchAction: 'manipulation',
+                          minHeight: isMobile ? '48px' : 'auto'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.background = '#1e293b'
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.background = '#0f172a'
+                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                          }
+                        }}
+                      >
+                        Adaugă
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddCityInput(false)
+                          setNewCity('')
+                          setNewCityCounty('')
+                          setCity('')
+                          setCounty('')
+                        }}
+                        style={{
+                          padding: isMobile ? '0.875rem 1.5rem' : '0.875rem 2rem',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          width: isMobile ? '100%' : 'auto',
+                          touchAction: 'manipulation',
+                          minHeight: isMobile ? '48px' : 'auto'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.borderColor = '#0f172a'
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.borderColor = '#e2e8f0'
+                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                          }
+                        }}
+                      >
+                        Anulează
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Location with Map - Identical to RegisterRepairShop */}
+              <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: isMobile ? 'column' : 'row',
+                  alignItems: isMobile ? 'flex-start' : 'center', 
+                  gap: isMobile ? '0.75rem' : '0.5rem', 
+                  marginBottom: '0.75rem' 
+                }}>
+                  <label style={{
+                    display: 'block',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em',
+                    margin: 0
+                  }}>Adresă completă {!locationNotSpecified && '*'}</label>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem',
+                    marginLeft: isMobile ? '0' : 'auto'
+                  }}>
+                    <span style={{
+                      fontSize: '0.875rem',
+                      color: '#64748b',
+                      fontWeight: '500'
+                    }}>Nespecificat</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newValue = !locationNotSpecified
+                        setLocationNotSpecified(newValue)
+                        if (newValue) {
+                          setLocation('')
+                          setMapCoordinates(null)
+                        }
+                      }}
+                      style={{
+                        position: 'relative',
+                        width: isMobile ? '48px' : '44px',
+                        height: isMobile ? '28px' : '24px',
+                        borderRadius: '14px',
+                        border: 'none',
+                        background: locationNotSpecified ? '#10b981' : '#cbd5e1',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s ease',
+                        outline: 'none',
+                        padding: 0,
+                        touchAction: 'manipulation',
+                        minWidth: isMobile ? '48px' : '44px'
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)'
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.boxShadow = 'none'
+                      }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: '2px',
+                        left: locationNotSpecified ? (isMobile ? '22px' : '22px') : '2px',
+                        width: isMobile ? '24px' : '20px',
+                        height: isMobile ? '24px' : '20px',
+                        borderRadius: '50%',
+                        background: '#ffffff',
+                        transition: 'left 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                      }} />
+                    </button>
+                  </div>
+                </div>
+                {!locationNotSpecified && (
+                  <>
+                    <textarea
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Ex: Strada Mihai Eminescu, Nr. 10, Bl. A1, Sc. 2, Ap. 15"
+                      required={!locationNotSpecified}
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        outline: 'none',
+                        fontFamily: 'inherit',
+                        resize: 'vertical',
+                        marginBottom: isMobile ? '1rem' : '1.5rem',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#0f172a'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e2e8f0'
+                        e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      }}
+                    />
+                    <div style={{ marginBottom: isMobile ? '1rem' : '1.5rem' }}>
+                      <MapSelector
+                        location={location}
+                        coordinates={mapCoordinates}
+                        onLocationChange={setLocation}
+                        onCoordinatesChange={setMapCoordinates}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
+          {/* Step 2: Branding - Identical to RegisterRepairShop */}
           {currentStep === 2 && (
             <div>
               <h2 style={{ 
@@ -432,13 +986,386 @@ function RegisterCoach() {
               }}>
                 Branding și prezentare
               </h2>
-              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
-                Câmpurile de branding sunt identice cu cele din RegisterRepairShop.
-                Implementarea completă va include toate câmpurile (denumire, descriere, logo, website, rețele sociale).
-              </p>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Denumire facilitate *</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0f172a'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Descriere</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Descrie serviciile tale de antrenament..."
+                  rows={5}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0f172a'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Logo (max 2MB)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0f172a'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+                {logoPreview && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      style={{
+                        marginTop: '0.5rem',
+                        maxWidth: '200px',
+                        maxHeight: '200px',
+                        borderRadius: '8px',
+                        border: '1px solid #e0e0e0'
+                      }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Website</label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://example.com"
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0f172a'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Rețele sociale</label>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                  gap: isMobile ? '1.5rem' : '2rem'
+                }}>
+                  <input
+                    type="url"
+                    value={socialMedia.facebook}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, facebook: e.target.value })}
+                    placeholder="Facebook URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.instagram}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, instagram: e.target.value })}
+                    placeholder="Instagram URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.x}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, x: e.target.value })}
+                    placeholder="X.com URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.tiktok}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, tiktok: e.target.value })}
+                    placeholder="TikTok URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.youtube}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, youtube: e.target.value })}
+                    placeholder="YouTube URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                  <input
+                    type="url"
+                    value={socialMedia.linkedin}
+                    onChange={(e) => setSocialMedia({ ...socialMedia, linkedin: e.target.value })}
+                    placeholder="LinkedIn URL"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
+          {/* Step 3: Gallery - Identical to RegisterRepairShop */}
           {currentStep === 3 && (
             <div>
               <h2 style={{ 
@@ -451,14 +1378,128 @@ function RegisterCoach() {
               }}>
                 Galerie imagini
               </h2>
-              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
-                Câmpurile de galerie sunt identice cu cele din RegisterRepairShop.
-                Implementarea completă va include upload-ul de imagini (max 10, 5MB/fișier).
-              </p>
+              <div style={{ marginBottom: '2.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>
+                  Încarcă imagini (max 10, 5MB/fișier)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleGalleryChange}
+                  disabled={galleryFiles.length >= 10}
+                  style={{
+                    width: '100%',
+                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '16px' : '1rem',
+                    outline: 'none',
+                    background: '#ffffff',
+                    color: '#0f172a',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '400',
+                    lineHeight: '1.5',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation',
+                    cursor: galleryFiles.length >= 10 ? 'not-allowed' : 'pointer',
+                    opacity: galleryFiles.length >= 10 ? 0.5 : 1
+                  }}
+                  onFocus={(e) => {
+                    if (galleryFiles.length < 10) {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0'
+                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}
+                />
+                {galleryFiles.length > 0 && (
+                  <p style={{ marginTop: '0.75rem', color: '#64748b', fontSize: '0.875rem', fontWeight: '400' }}>
+                    {galleryFiles.length} / 10 imagini selectate
+                  </p>
+                )}
+              </div>
+              {galleryPreviews.length > 0 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: isMobile ? '0.75rem' : '1.5rem',
+                  marginTop: isMobile ? '1.5rem' : '2rem'
+                }}>
+                  {galleryPreviews.map((preview, index) => (
+                    <div key={index} style={{ position: 'relative' }}>
+                      <img
+                        src={preview}
+                        alt={`Gallery ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: isMobile ? '150px' : '200px',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(index)}
+                        style={{
+                          position: 'absolute',
+                          top: '0.5rem',
+                          right: '0.5rem',
+                          background: '#dc2626',
+                          color: 'white',
+                          border: 'none',
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          cursor: 'pointer',
+                          fontSize: '1.25rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '600',
+                          transition: 'opacity 0.2s',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = '0.8'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '1'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {galleryPreviews.length === 0 && (
+                <p style={{ 
+                  color: '#64748b', 
+                  textAlign: 'center', 
+                  padding: '3rem 0',
+                  fontSize: '0.875rem',
+                  fontWeight: '400'
+                }}>
+                  Nu ai adăugat imagini încă. Poți sări peste acest pas.
+                </p>
+              )}
             </div>
           )}
 
-          {/* Step 4: Sport Selection - Similar to RegisterSportsBase */}
+          {/* Step 4: Sport Selection - Identical to RegisterSportsBase */}
           {currentStep === 4 && (
             <div>
               <h2 style={{ 
@@ -471,9 +1512,263 @@ function RegisterCoach() {
               }}>
                 Sport
               </h2>
-              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
-                Implementarea completă va include selecția sportului (similar cu RegisterSportsBase Step 4).
-              </p>
+              
+              {/* Sport Selection */}
+              <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem', position: 'relative' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.75rem',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  letterSpacing: '0.01em'
+                }}>Sport *</label>
+                {!showAddSportInput ? (
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={sport || sportSearch}
+                      onChange={(e) => {
+                        setSportSearch(e.target.value)
+                        setShowSportDropdown(true)
+                        if (!e.target.value) {
+                          setSport('')
+                        }
+                      }}
+                      onClick={() => setShowSportDropdown(true)}
+                      onFocus={() => setShowSportDropdown(true)}
+                      placeholder="Caută sau selectează sport"
+                      required={!sport}
+                      style={{
+                        width: '100%',
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        paddingRight: isMobile ? '2.25rem' : '2.5rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
+                      onBlur={(e) => {
+                        setTimeout(() => setShowSportDropdown(false), 250)
+                      }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none'
+                    }}>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                        <path d="M5 7.5l5 5 5-5"/>
+                      </svg>
+                    </div>
+                    {showSportDropdown && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: '0.25rem',
+                        background: '#ffffff',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        maxHeight: isMobile ? '250px' : '300px',
+                        overflowY: 'auto',
+                        zIndex: 1000,
+                        WebkitOverflowScrolling: 'touch'
+                      }}>
+                        {[...availableSports, ...customSports.filter(s => !availableSports.includes(s))]
+                          .filter(sportOption => 
+                            !sportSearch || 
+                            sportOption.toLowerCase().includes(sportSearch.toLowerCase())
+                          )
+                          .map(sportOption => (
+                            <div
+                              key={sportOption}
+                              onMouseDown={(e) => {
+                                e.preventDefault()
+                                setSport(sportOption)
+                                setSportSearch('')
+                                setShowSportDropdown(false)
+                              }}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #f1f5f9',
+                                color: '#0f172a',
+                                fontSize: '0.9375rem',
+                                fontWeight: '500',
+                                transition: 'background 0.15s'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f0fdf4'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#ffffff'
+                              }}
+                            >
+                              {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
+                            </div>
+                          ))}
+                        <div
+                          onMouseDown={(e) => {
+                            e.preventDefault()
+                            setShowAddSportInput(true)
+                            setShowSportDropdown(false)
+                            setSportSearch('')
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            cursor: 'pointer',
+                            color: '#0f172a',
+                            fontSize: '0.9375rem',
+                            fontWeight: '600',
+                            borderTop: '1.5px solid #f1f5f9',
+                            background: '#f8fafc',
+                            transition: 'background 0.15s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#f1f5f9'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#f8fafc'
+                          }}
+                        >
+                          + Adaugă sport nou
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: isMobile ? 'column' : 'row',
+                    gap: isMobile ? '0.75rem' : '1rem' 
+                  }}>
+                    <input
+                      type="text"
+                      value={newSport}
+                      onChange={(e) => setNewSport(e.target.value)}
+                      placeholder="Introdu numele sportului"
+                      required
+                      style={{
+                        flex: 1,
+                        padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '16px' : '1rem',
+                        outline: 'none',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        transition: 'all 0.2s ease',
+                        fontWeight: '400',
+                        lineHeight: '1.5',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        WebkitAppearance: 'none',
+                        touchAction: 'manipulation'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#0f172a'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e2e8f0'
+                        e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newSport.trim()) {
+                          const sportName = newSport.trim().toLowerCase()
+                          if (!customSports.includes(sportName) && !KNOWN_SPORTS.includes(sportName)) {
+                            setCustomSports([...customSports, sportName])
+                          }
+                          setSport(sportName)
+                          setNewSport('')
+                          setShowAddSportInput(false)
+                        }
+                      }}
+                      style={{
+                        padding: isMobile ? '0.875rem 1.5rem' : '0.875rem 2rem',
+                        background: '#0f172a',
+                        color: 'white',
+                        border: '1.5px solid #0f172a',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        width: isMobile ? '100%' : 'auto',
+                        touchAction: 'manipulation',
+                        minHeight: isMobile ? '48px' : 'auto'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isMobile) {
+                          e.currentTarget.style.background = '#1e293b'
+                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isMobile) {
+                          e.currentTarget.style.background = '#0f172a'
+                          e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }
+                      }}
+                    >
+                      Adaugă
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddSportInput(false)
+                        setNewSport('')
+                        setSport('')
+                      }}
+                      style={{
+                        padding: isMobile ? '0.875rem 1.5rem' : '0.875rem 2rem',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                        width: isMobile ? '100%' : 'auto',
+                        touchAction: 'manipulation',
+                        minHeight: isMobile ? '48px' : 'auto'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isMobile) {
+                          e.currentTarget.style.borderColor = '#0f172a'
+                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isMobile) {
+                          e.currentTarget.style.borderColor = '#e2e8f0'
+                          e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }
+                      }}
+                    >
+                      Anulează
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
