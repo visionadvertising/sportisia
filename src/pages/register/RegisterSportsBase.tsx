@@ -130,12 +130,14 @@ function RegisterSportsBase() {
   
   // Pricing mode: simple (default) or advanced
   const [pricingMode, setPricingMode] = useState<Record<number, 'simple' | 'advanced'>>({})
-  // Simple pricing: one price and time range for all days
-  const [simplePricing, setSimplePricing] = useState<Record<number, {
-    price: number | null
+  // Simple pricing: multiple time intervals, each with status (price/not_specified/closed)
+  interface SimpleTimeInterval {
     startTime: string
     endTime: string
-  }>>({})
+    status: 'price' | 'not_specified' | 'closed'
+    price: number | null
+  }
+  const [simplePricing, setSimplePricing] = useState<Record<number, SimpleTimeInterval[]>>({})
   
   // Legacy fields for backward compatibility (will be removed)
   const [sport, setSport] = useState('')
@@ -481,18 +483,25 @@ function RegisterSportsBase() {
           )
           const isAdvanced = originalIndex !== -1 && pricingMode[originalIndex] === 'advanced'
           
-          // If simple pricing, convert to timeSlots for all days
+          // If simple pricing, convert intervals to timeSlots for all days
           let finalTimeSlots = field.timeSlots || []
-          if (!isAdvanced && originalIndex !== -1 && simplePricing[originalIndex]) {
-            const simple = simplePricing[originalIndex]
+          if (!isAdvanced && originalIndex !== -1 && simplePricing[originalIndex] && simplePricing[originalIndex].length > 0) {
+            const intervals = simplePricing[originalIndex]
             const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-            finalTimeSlots = days.map(day => ({
-              day,
-              startTime: simple.startTime || '08:00',
-              endTime: simple.endTime || '20:00',
-              status: simple.price !== null && simple.price !== undefined ? 'open' : 'not_specified',
-              price: simple.price
-            }))
+            finalTimeSlots = []
+            
+            // For each day, add all intervals
+            days.forEach(day => {
+              intervals.forEach(interval => {
+                finalTimeSlots.push({
+                  day,
+                  startTime: interval.startTime,
+                  endTime: interval.endTime,
+                  status: interval.status === 'price' ? 'open' : interval.status === 'closed' ? 'closed' : 'not_specified',
+                  price: interval.status === 'price' ? interval.price : null
+                })
+              })
+            })
           }
           
           return {
@@ -2618,11 +2627,7 @@ function RegisterSportsBase() {
                               if (newMode === 'simple' && !simplePricing[index]) {
                                 setSimplePricing({
                                   ...simplePricing,
-                                  [index]: {
-                                    price: null,
-                                    startTime: '08:00',
-                                    endTime: '20:00'
-                                  }
+                                  [index]: []
                                 })
                               }
                             }}
@@ -2658,7 +2663,7 @@ function RegisterSportsBase() {
                         </div>
                       </div>
                       
-                      {/* Simple Pricing Mode */}
+                      {/* Simple Pricing Mode - Multiple Intervals */}
                       {pricingMode[index] !== 'advanced' && (
                         <div style={{
                           padding: '1.5rem',
@@ -2668,148 +2673,354 @@ function RegisterSportsBase() {
                           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
                         }}>
                           <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
-                            gap: '1rem',
-                            alignItems: 'end'
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '1rem'
                           }}>
-                            <div>
-                              <label style={{
-                                display: 'block',
+                            <p style={{
+                              margin: 0,
+                              fontSize: '0.8125rem',
+                              color: '#64748b',
+                              lineHeight: '1.5'
+                            }}>
+                              Intervalele se aplică pentru toate zilele săptămânii
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const current = simplePricing[index] || []
+                                setSimplePricing({
+                                  ...simplePricing,
+                                  [index]: [
+                                    ...current,
+                                    {
+                                      startTime: '08:00',
+                                      endTime: '20:00',
+                                      status: 'not_specified',
+                                      price: null
+                                    }
+                                  ]
+                                })
+                              }}
+                              style={{
+                                padding: '0.625rem 1.25rem',
+                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
                                 fontSize: '0.8125rem',
                                 fontWeight: '600',
-                                color: '#0f172a',
-                                marginBottom: '0.5rem'
-                              }}>
-                                Preț (RON)
-                              </label>
-                              <input
-                                type="number"
-                                placeholder="0.00"
-                                value={simplePricing[index]?.price || ''}
-                                onChange={(e) => {
-                                  setSimplePricing({
-                                    ...simplePricing,
-                                    [index]: {
-                                      ...(simplePricing[index] || { startTime: '08:00', endTime: '20:00' }),
-                                      price: parseFloat(e.target.value) || null
-                                    }
-                                  })
-                                }}
-                                min="0"
-                                step="0.01"
-                                style={{
-                                  width: '100%',
-                                  padding: '0.75rem',
-                                  border: '1.5px solid #e2e8f0',
-                                  borderRadius: '8px',
-                                  fontSize: '0.9375rem',
-                                  background: '#ffffff',
-                                  transition: 'all 0.2s ease'
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = '#10b981'
-                                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = '#e2e8f0'
-                                  e.target.style.boxShadow = 'none'
-                                }}
-                              />
-                            </div>
-                            
-                            <div>
-                              <label style={{
-                                display: 'block',
-                                fontSize: '0.8125rem',
-                                fontWeight: '600',
-                                color: '#0f172a',
-                                marginBottom: '0.5rem'
-                              }}>
-                                De la
-                              </label>
-                              <input
-                                type="time"
-                                value={simplePricing[index]?.startTime || '08:00'}
-                                onChange={(e) => {
-                                  setSimplePricing({
-                                    ...simplePricing,
-                                    [index]: {
-                                      ...(simplePricing[index] || { price: null, endTime: '20:00' }),
-                                      startTime: e.target.value
-                                    }
-                                  })
-                                }}
-                                style={{
-                                  width: '100%',
-                                  padding: '0.75rem',
-                                  border: '1.5px solid #e2e8f0',
-                                  borderRadius: '8px',
-                                  fontSize: '0.9375rem',
-                                  background: '#ffffff',
-                                  transition: 'all 0.2s ease'
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = '#10b981'
-                                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = '#e2e8f0'
-                                  e.target.style.boxShadow = 'none'
-                                }}
-                              />
-                            </div>
-                            
-                            <div>
-                              <label style={{
-                                display: 'block',
-                                fontSize: '0.8125rem',
-                                fontWeight: '600',
-                                color: '#0f172a',
-                                marginBottom: '0.5rem'
-                              }}>
-                                Până la
-                              </label>
-                              <input
-                                type="time"
-                                value={simplePricing[index]?.endTime || '20:00'}
-                                onChange={(e) => {
-                                  setSimplePricing({
-                                    ...simplePricing,
-                                    [index]: {
-                                      ...(simplePricing[index] || { price: null, startTime: '08:00' }),
-                                      endTime: e.target.value
-                                    }
-                                  })
-                                }}
-                                style={{
-                                  width: '100%',
-                                  padding: '0.75rem',
-                                  border: '1.5px solid #e2e8f0',
-                                  borderRadius: '8px',
-                                  fontSize: '0.9375rem',
-                                  background: '#ffffff',
-                                  transition: 'all 0.2s ease'
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = '#10b981'
-                                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = '#e2e8f0'
-                                  e.target.style.boxShadow = 'none'
-                                }}
-                              />
-                            </div>
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isMobile) {
+                                  e.currentTarget.style.transform = 'translateY(-1px)'
+                                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)'
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isMobile) {
+                                  e.currentTarget.style.transform = 'translateY(0)'
+                                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
+                                }
+                              }}
+                            >
+                              <span>+</span> Adaugă interval
+                            </button>
                           </div>
-                          <p style={{
-                            marginTop: '0.75rem',
-                            fontSize: '0.75rem',
-                            color: '#64748b',
-                            lineHeight: '1.5'
-                          }}>
-                            Acest preț va fi aplicat pentru toate zilele săptămânii în intervalul specificat
-                          </p>
+                          
+                          {(simplePricing[index] || []).length === 0 ? (
+                            <p style={{
+                              color: '#94a3b8',
+                              fontSize: '0.8125rem',
+                              fontStyle: 'italic',
+                              margin: 0,
+                              padding: '1rem',
+                              textAlign: 'center',
+                              background: '#f9fafb',
+                              borderRadius: '8px'
+                            }}>
+                              Nu există intervale configurate. Adaugă un interval pentru a începe.
+                            </p>
+                          ) : (
+                            <div style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '1rem'
+                            }}>
+                              {(simplePricing[index] || []).map((interval, intervalIndex) => (
+                                <div key={intervalIndex} style={{
+                                  padding: '1.25rem',
+                                  background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                                  borderRadius: '10px',
+                                  border: '1.5px solid #e2e8f0',
+                                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isMobile) {
+                                    e.currentTarget.style.borderColor = '#10b981'
+                                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.1)'
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isMobile) {
+                                    e.currentTarget.style.borderColor = '#e2e8f0'
+                                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)'
+                                  }
+                                }}>
+                                  {/* Time inputs */}
+                                  <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr auto',
+                                    gap: '1rem',
+                                    alignItems: 'end',
+                                    marginBottom: '1rem'
+                                  }}>
+                                    <div>
+                                      <label style={{
+                                        display: 'block',
+                                        fontSize: '0.8125rem',
+                                        fontWeight: '600',
+                                        color: '#0f172a',
+                                        marginBottom: '0.5rem'
+                                      }}>
+                                        De la
+                                      </label>
+                                      <input
+                                        type="time"
+                                        value={interval.startTime}
+                                        onChange={(e) => {
+                                          const updated = [...(simplePricing[index] || [])]
+                                          updated[intervalIndex] = {
+                                            ...updated[intervalIndex],
+                                            startTime: e.target.value
+                                          }
+                                          setSimplePricing({
+                                            ...simplePricing,
+                                            [index]: updated
+                                          })
+                                        }}
+                                        style={{
+                                          width: '100%',
+                                          padding: '0.75rem',
+                                          border: '1.5px solid #e2e8f0',
+                                          borderRadius: '8px',
+                                          fontSize: '0.9375rem',
+                                          background: '#ffffff',
+                                          transition: 'all 0.2s ease'
+                                        }}
+                                        onFocus={(e) => {
+                                          e.target.style.borderColor = '#10b981'
+                                          e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                        }}
+                                        onBlur={(e) => {
+                                          e.target.style.borderColor = '#e2e8f0'
+                                          e.target.style.boxShadow = 'none'
+                                        }}
+                                      />
+                                    </div>
+                                    
+                                    <div>
+                                      <label style={{
+                                        display: 'block',
+                                        fontSize: '0.8125rem',
+                                        fontWeight: '600',
+                                        color: '#0f172a',
+                                        marginBottom: '0.5rem'
+                                      }}>
+                                        Până la
+                                      </label>
+                                      <input
+                                        type="time"
+                                        value={interval.endTime}
+                                        onChange={(e) => {
+                                          const updated = [...(simplePricing[index] || [])]
+                                          updated[intervalIndex] = {
+                                            ...updated[intervalIndex],
+                                            endTime: e.target.value
+                                          }
+                                          setSimplePricing({
+                                            ...simplePricing,
+                                            [index]: updated
+                                          })
+                                        }}
+                                        style={{
+                                          width: '100%',
+                                          padding: '0.75rem',
+                                          border: '1.5px solid #e2e8f0',
+                                          borderRadius: '8px',
+                                          fontSize: '0.9375rem',
+                                          background: '#ffffff',
+                                          transition: 'all 0.2s ease'
+                                        }}
+                                        onFocus={(e) => {
+                                          e.target.style.borderColor = '#10b981'
+                                          e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                        }}
+                                        onBlur={(e) => {
+                                          e.target.style.borderColor = '#e2e8f0'
+                                          e.target.style.boxShadow = 'none'
+                                        }}
+                                      />
+                                    </div>
+                                    
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updated = [...(simplePricing[index] || [])]
+                                        updated.splice(intervalIndex, 1)
+                                        setSimplePricing({
+                                          ...simplePricing,
+                                          [index]: updated
+                                        })
+                                      }}
+                                      style={{
+                                        padding: '0.75rem 1.25rem',
+                                        background: '#ef4444',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontSize: '0.8125rem',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        whiteSpace: 'nowrap',
+                                        boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        if (!isMobile) {
+                                          e.currentTarget.style.background = '#dc2626'
+                                          e.currentTarget.style.transform = 'translateY(-1px)'
+                                          e.currentTarget.style.boxShadow = '0 4px 6px rgba(239, 68, 68, 0.3)'
+                                        }
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        if (!isMobile) {
+                                          e.currentTarget.style.background = '#ef4444'
+                                          e.currentTarget.style.transform = 'translateY(0)'
+                                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.2)'
+                                        }
+                                      }}
+                                    >
+                                      Șterge
+                                    </button>
+                                  </div>
+                                  
+                                  {/* Status and Price */}
+                                  <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                                    gap: '1rem'
+                                  }}>
+                                    <div>
+                                      <label style={{
+                                        display: 'block',
+                                        fontSize: '0.8125rem',
+                                        fontWeight: '600',
+                                        color: '#0f172a',
+                                        marginBottom: '0.5rem'
+                                      }}>
+                                        Status
+                                      </label>
+                                      <select
+                                        value={interval.status}
+                                        onChange={(e) => {
+                                          const updated = [...(simplePricing[index] || [])]
+                                          updated[intervalIndex] = {
+                                            ...updated[intervalIndex],
+                                            status: e.target.value as 'price' | 'not_specified' | 'closed',
+                                            price: e.target.value === 'price' ? updated[intervalIndex].price : null
+                                          }
+                                          setSimplePricing({
+                                            ...simplePricing,
+                                            [index]: updated
+                                          })
+                                        }}
+                                        style={{
+                                          width: '100%',
+                                          padding: '0.75rem',
+                                          border: '1.5px solid #e2e8f0',
+                                          borderRadius: '8px',
+                                          fontSize: '0.9375rem',
+                                          cursor: 'pointer',
+                                          background: '#ffffff',
+                                          transition: 'all 0.2s ease'
+                                        }}
+                                        onFocus={(e) => {
+                                          e.currentTarget.style.borderColor = '#10b981'
+                                          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                        }}
+                                        onBlur={(e) => {
+                                          e.currentTarget.style.borderColor = '#e2e8f0'
+                                          e.currentTarget.style.boxShadow = 'none'
+                                        }}
+                                      >
+                                        <option value="price">Preț de la</option>
+                                        <option value="not_specified">Preț nespecificat</option>
+                                        <option value="closed">Închis</option>
+                                      </select>
+                                    </div>
+                                    
+                                    {interval.status === 'price' && (
+                                      <div>
+                                        <label style={{
+                                          display: 'block',
+                                          fontSize: '0.8125rem',
+                                          fontWeight: '600',
+                                          color: '#0f172a',
+                                          marginBottom: '0.5rem'
+                                        }}>
+                                          Preț (RON)
+                                        </label>
+                                        <input
+                                          type="number"
+                                          placeholder="0.00"
+                                          value={interval.price || ''}
+                                          onChange={(e) => {
+                                            const updated = [...(simplePricing[index] || [])]
+                                            updated[intervalIndex] = {
+                                              ...updated[intervalIndex],
+                                              price: parseFloat(e.target.value) || null
+                                            }
+                                            setSimplePricing({
+                                              ...simplePricing,
+                                              [index]: updated
+                                            })
+                                          }}
+                                          min="0"
+                                          step="0.01"
+                                          style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            border: '1.5px solid #e2e8f0',
+                                            borderRadius: '8px',
+                                            fontSize: '0.9375rem',
+                                            background: '#ffffff',
+                                            transition: 'all 0.2s ease'
+                                          }}
+                                          onFocus={(e) => {
+                                            e.target.style.borderColor = '#10b981'
+                                            e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                          }}
+                                          onBlur={(e) => {
+                                            e.target.style.borderColor = '#e2e8f0'
+                                            e.target.style.boxShadow = 'none'
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                       
