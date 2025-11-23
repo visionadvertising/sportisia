@@ -282,9 +282,20 @@ function RegisterEquipmentShop() {
       })
 
       const data = await response.json()
+      console.log('Registration response:', data)
+      
       if (data.success) {
-        setCredentials({ username: data.username, password: data.password })
-        setCurrentStep(5)
+        // Backend returns credentials in data.credentials object
+        const username = data.credentials?.username || data.username
+        const password = data.credentials?.password || data.password
+        
+        if (username && password) {
+          setCredentials({ username, password })
+          setCurrentStep(5)
+        } else {
+          console.error('Missing credentials in response:', data)
+          setError('Înregistrarea a reușit, dar credențialele nu au fost returnate. Te rugăm să contactezi administratorul.')
+        }
       } else {
         setError(data.error || 'Eroare la înregistrare')
       }
