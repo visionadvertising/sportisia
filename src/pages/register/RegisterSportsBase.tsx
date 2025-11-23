@@ -452,10 +452,10 @@ function RegisterSportsBase() {
         socialMedia: JSON.stringify(socialMedia),
         gallery: JSON.stringify(galleryBase64),
         openingHours: null, // No longer used at facility level, each field has its own schedule
-        // Legacy fields for backward compatibility (use first field's sport and first price interval)
+        // Legacy fields for backward compatibility (use first field's sport and first time slot price)
         sport: validFields.length > 0 ? validFields[0].sportType : '',
-        pricePerHour: validFields.length > 0 && validFields[0].priceIntervals && validFields[0].priceIntervals.length > 0 
-          ? validFields[0].priceIntervals[0].price : null,
+        pricePerHour: validFields.length > 0 && validFields[0].timeSlots && validFields[0].timeSlots.length > 0 
+          ? validFields[0].timeSlots.find(s => s.status === 'open' && s.price)?.price || null : null,
         pricingDetails: JSON.stringify(pricingDetails),
         hasParking: validFields.some(f => f.features.hasParking),
         hasShower: validFields.some(f => f.features.hasShower),
@@ -469,8 +469,7 @@ function RegisterSportsBase() {
           description: field.description || null,
           features: field.features,
           slotSize: field.slotSize || 60, // Default 60 minutes
-          priceIntervals: field.priceIntervals || [],
-          openingHours: field.openingHours || {}
+          timeSlots: field.timeSlots || []
         })))
       }
 
