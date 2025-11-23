@@ -4,7 +4,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import crypto from 'crypto'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -13,8 +13,30 @@ const __dirname = path.dirname(__filename)
 // Load .env file from server directory
 const envPath = path.join(__dirname, '.env')
 if (existsSync(envPath)) {
+  // First try dotenv
   dotenv.config({ path: envPath })
-  console.log('✅ Loaded .env from:', envPath)
+  
+  // If DATABASE_URL is still not set, read .env manually
+  if (!process.env.DATABASE_URL) {
+    console.log('📖 Reading .env file manually...')
+    const envContent = readFileSync(envPath, 'utf-8')
+    const envLines = envContent.split('\n')
+    envLines.forEach(line => {
+      const trimmedLine = line.trim()
+      if (trimmedLine && !trimmedLine.startsWith('#')) {
+        const [key, ...valueParts] = trimmedLine.split('=')
+        if (key && valueParts.length > 0) {
+          const value = valueParts.join('=').trim()
+          // Remove quotes if present
+          const cleanValue = value.replace(/^["']|["']$/g, '')
+          process.env[key.trim()] = cleanValue
+        }
+      }
+    })
+    console.log('✅ Loaded environment variables manually from:', envPath)
+  } else {
+    console.log('✅ Loaded .env using dotenv from:', envPath)
+  }
 } else {
   console.warn('⚠️  .env file not found at:', envPath)
   // Try to load from default location
