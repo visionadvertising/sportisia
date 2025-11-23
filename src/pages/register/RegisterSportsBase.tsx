@@ -474,14 +474,36 @@ function RegisterSportsBase() {
         hasAirConditioning: validFields.some(f => f.features.hasAirConditioning),
         hasLighting: validFields.some(f => f.features.hasLighting),
         // New field: sports fields array with extensible pricing system
-        sportsFields: JSON.stringify(validFields.map(field => ({
-          fieldName: field.fieldName,
-          sportType: field.sportType,
-          description: field.description || null,
-          features: field.features,
-          slotSize: field.slotSize || 60, // Default 60 minutes
-          timeSlots: field.timeSlots || []
-        })))
+        sportsFields: JSON.stringify(validFields.map((field, idx) => {
+          // Find the original index in sportsFields array
+          const originalIndex = sportsFields.findIndex(f => 
+            f.fieldName === field.fieldName && f.sportType === field.sportType
+          )
+          const isAdvanced = originalIndex !== -1 && pricingMode[originalIndex] === 'advanced'
+          
+          // If simple pricing, convert to timeSlots for all days
+          let finalTimeSlots = field.timeSlots || []
+          if (!isAdvanced && originalIndex !== -1 && simplePricing[originalIndex]) {
+            const simple = simplePricing[originalIndex]
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+            finalTimeSlots = days.map(day => ({
+              day,
+              startTime: simple.startTime || '08:00',
+              endTime: simple.endTime || '20:00',
+              status: simple.price !== null && simple.price !== undefined ? 'open' : 'not_specified',
+              price: simple.price
+            }))
+          }
+          
+          return {
+            fieldName: field.fieldName,
+            sportType: field.sportType,
+            description: field.description || null,
+            features: field.features,
+            slotSize: field.slotSize || 60, // Default 60 minutes
+            timeSlots: finalTimeSlots
+          }
+        }))
       }
 
       console.log('Submitting form data:', { ...formData, logoUrl: logoBase64 ? '[BASE64]' : null, gallery: galleryBase64.length > 0 ? `[${galleryBase64.length} images]` : null })
