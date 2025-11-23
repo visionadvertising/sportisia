@@ -290,6 +290,15 @@ function FacilityFilters({
     return typeSearch
   }
 
+  // Get display value for repair category
+  const getRepairCategoryDisplayValue = () => {
+    if (repairCategory || selectedRepairCategory) {
+      const categoryObj = REPAIR_CATEGORIES.find(c => c.value === (repairCategory || selectedRepairCategory))
+      return categoryObj ? categoryObj.label : ''
+    }
+    return repairCategorySearch
+  }
+
   return (
     <div style={{
       background: 'white',
