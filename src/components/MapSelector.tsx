@@ -87,7 +87,7 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
         
         // Reverse geocode to get address
         setIsGeocoding(true)
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        fetch(`/api/reverse-geocode?lat=${lat}&lon=${lng}`)
           .then(res => res.json())
           .then(data => {
             if (data.display_name) {
@@ -126,7 +126,7 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
           
           // Reverse geocode to get address
           setIsGeocoding(true)
-          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          fetch(`/api/reverse-geocode?lat=${lat}&lon=${lng}`)
             .then(res => res.json())
             .then(data => {
               if (data.display_name) {
