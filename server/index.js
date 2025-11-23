@@ -10,7 +10,16 @@ import crypto from 'crypto'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-dotenv.config()
+// Load .env file from server directory
+const envPath = path.join(__dirname, '.env')
+if (existsSync(envPath)) {
+  dotenv.config({ path: envPath })
+  console.log('✅ Loaded .env from:', envPath)
+} else {
+  console.warn('⚠️  .env file not found at:', envPath)
+  // Try to load from default location
+  dotenv.config()
+}
 
 const app = express()
 // Folosește PORT din environment sau 3001
