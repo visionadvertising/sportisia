@@ -324,48 +324,88 @@ function RegisterEquipmentShop() {
       }}>
         {/* Progress Steps */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '3rem',
-          position: 'relative'
+          marginBottom: isMobile ? '2.5rem' : '3.5rem',
+          padding: isMobile ? '1.5rem 0' : '2rem 0'
         }}>
-          {steps.map((step, index) => {
-            const stepNum = index + 1
-            const isCompleted = currentStep > stepNum
-            const isActive = currentStep === stepNum
-            
-            return (
-              <div key={index} style={{ display: 'flex', alignItems: 'center', flex: 1, position: 'relative' }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  background: isCompleted ? '#10b981' : isActive ? '#0f172a' : '#e2e8f0',
-                  color: isCompleted || isActive ? 'white' : '#64748b',
-                  display: 'flex',
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            position: 'relative',
+            marginBottom: isMobile ? '1rem' : '1.5rem'
+          }}>
+            {steps.map((step, index) => {
+              const stepNum = index + 1
+              const isCompleted = currentStep > stepNum
+              const isActive = currentStep === stepNum
+              
+              return (
+                <div key={index} style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: '600',
-                  fontSize: '0.9375rem',
-                  zIndex: 2,
-                  boxShadow: isActive ? '0 4px 8px rgba(15, 23, 42, 0.2)' : 'none'
+                  flex: 1,
+                  position: 'relative',
+                  zIndex: 2
                 }}>
-                  {stepNum}
-                </div>
-                {index < steps.length - 1 && (
                   <div style={{
-                    position: 'absolute',
-                    left: '40px',
-                    right: '40px',
-                    height: '2px',
-                    background: isCompleted ? '#10b981' : '#e2e8f0',
-                    zIndex: 1
-                  }} />
-                )}
-              </div>
-            )
-          })}
+                    width: isMobile ? '36px' : '44px',
+                    height: isMobile ? '36px' : '44px',
+                    borderRadius: '50%',
+                    background: isCompleted ? '#10b981' : isActive ? '#0f172a' : '#e2e8f0',
+                    color: isCompleted || isActive ? 'white' : '#64748b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: '700',
+                    fontSize: isMobile ? '0.875rem' : '1rem',
+                    boxShadow: isActive ? '0 4px 12px rgba(15, 23, 42, 0.25)' : isCompleted ? '0 2px 6px rgba(16, 185, 129, 0.2)' : 'none',
+                    transition: 'all 0.3s ease',
+                    border: isActive ? '3px solid #0f172a' : isCompleted ? '3px solid #10b981' : '3px solid transparent',
+                    marginBottom: '0.75rem'
+                  }}>
+                    {stepNum}
+                  </div>
+                  {!isMobile && (
+                    <div style={{
+                      fontSize: '0.75rem',
+                      fontWeight: isActive ? '600' : '500',
+                      color: isActive ? '#0f172a' : isCompleted ? '#10b981' : '#94a3b8',
+                      textAlign: 'center',
+                      maxWidth: '80px',
+                      lineHeight: '1.3',
+                      transition: 'all 0.3s ease'
+                    }}>
+                      {step}
+                    </div>
+                  )}
+                  {index < steps.length - 1 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: isMobile ? '18px' : '22px',
+                      left: isMobile ? 'calc(50% + 18px)' : 'calc(50% + 22px)',
+                      right: isMobile ? 'calc(-50% + 18px)' : 'calc(-50% + 22px)',
+                      height: '3px',
+                      background: isCompleted ? '#10b981' : '#e2e8f0',
+                      zIndex: 1,
+                      transition: 'background 0.3s ease'
+                    }} />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          {isMobile && (
+            <div style={{
+              textAlign: 'center',
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              color: '#0f172a',
+              marginTop: '0.5rem'
+            }}>
+              {steps[currentStep - 1]}
+            </div>
+          )}
         </div>
 
         <h1 style={{
