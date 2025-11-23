@@ -31,6 +31,7 @@ function ApprovedSportsBases() {
   const [availableSports, setAvailableSports] = useState<string[]>([])
 
   useEffect(() => {
+    console.log('ApprovedSportsBases: useEffect called, loading facilities...')
     loadFacilities()
     loadCities()
     loadSports()
@@ -42,20 +43,36 @@ function ApprovedSportsBases() {
   }, [filterCity, filterSport])
 
   const loadFacilities = async () => {
+    console.log('ApprovedSportsBases: loadFacilities called')
     setLoading(true)
     try {
       const queryParams = new URLSearchParams({ status: 'active', type: 'field' })
       if (filterCity) queryParams.append('city', filterCity)
       if (filterSport) queryParams.append('sport', filterSport)
 
-      const response = await fetch(`${API_BASE_URL}/facilities?${queryParams}`)
-      const data = await response.json()
-      if (data.success) {
-        setFacilities(data.data || [])
+      const url = `${API_BASE_URL}/facilities?${queryParams}`
+      console.log('ApprovedSportsBases: Fetching from:', url)
+      
+      const response = await fetch(url)
+      console.log('ApprovedSportsBases: Response status:', response.status)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
-    } catch (err) {
-      console.error('Error loading facilities:', err)
+      
+      const data = await response.json()
+      console.log('ApprovedSportsBases: Response data:', data)
+      
+      if (data.success) {
+        console.log('ApprovedSportsBases: Setting facilities:', data.data?.length || 0)
+        setFacilities(data.data || [])
+      } else {
+        console.error('ApprovedSportsBases: API returned error:', data.error)
+      }
+    } catch (err: any) {
+      console.error('ApprovedSportsBases: Error loading facilities:', err)
     } finally {
+      console.log('ApprovedSportsBases: Setting loading to false')
       setLoading(false)
     }
   }
