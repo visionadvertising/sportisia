@@ -597,7 +597,7 @@ app.post('/api/register', async (req, res) => {
         locationNotSpecified ? null : (location || null), 
         locationNotSpecified || false,
         mapCoordinates ? JSON.stringify(mapCoordinates) : null,
-        phone, email || null, contactPerson || null, 
+        phone, whatsapp || null, email || null, contactPerson || null, 
         description || null, imageUrl || null,
         logoUrlFinal || null, 
         socialMedia ? JSON.stringify(socialMedia) : null,
@@ -642,7 +642,7 @@ app.post('/api/register', async (req, res) => {
           services_offered, brands_serviced, average_repair_time, repair_categories,
           products_categories, brands_available, delivery_available,
           website, opening_hours, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         values
       )
 
@@ -710,11 +710,13 @@ app.post('/api/register', async (req, res) => {
       throw error
     }
   } catch (error) {
-    console.error('Error registering facility:', error)
-    console.error('Error stack:', error.stack)
+    console.error('❌ Error registering facility:', error)
+    console.error('❌ Error message:', error.message)
+    console.error('❌ Error stack:', error.stack)
+    console.error('❌ Request body:', JSON.stringify(req.body, null, 2))
     res.status(500).json({ 
       success: false, 
-      error: error.message,
+      error: error.message || 'Eroare la înregistrare',
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     })
   }

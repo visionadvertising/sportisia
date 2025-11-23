@@ -331,11 +331,12 @@ function RegisterSportsBase() {
         setCredentials({ username: data.username, password: data.password })
         setCurrentStep(6)
       } else {
+        console.error('Registration failed:', data)
         setError(data.error || 'Eroare la înregistrare')
       }
     } catch (err) {
       console.error('Registration error:', err)
-      setError('Eroare la conectarea la server')
+      setError('Eroare la conectarea la server. Te rugăm să verifici consola pentru detalii.')
     } finally {
       setLoading(false)
     }
