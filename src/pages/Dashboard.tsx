@@ -215,7 +215,8 @@ function Dashboard() {
         emails: JSON.stringify(formData.emails || []),
         socialMedia: formData.social_media || formData.socialMedia,
         gallery: formData.gallery || [],
-        mapCoordinates: formData.map_coordinates || formData.mapCoordinates
+        mapCoordinates: formData.map_coordinates || formData.mapCoordinates,
+        sportsFields: activeTab === 'fields' ? sportsFields : undefined
       }
 
       const response = await fetch(`${API_BASE_URL}/facilities/${facility?.id}`, {
@@ -343,6 +344,7 @@ function Dashboard() {
     { id: 'general', label: 'Informații generale' },
     { id: 'contact', label: 'Contact' },
     { id: 'branding', label: 'Branding' },
+    { id: 'gallery', label: 'Galerie' },
     ...(facility.facility_type === 'field' ? [{ id: 'fields', label: 'Terenuri' }] : []),
     { id: 'password', label: 'Securitate' }
   ]
@@ -386,6 +388,38 @@ function Dashboard() {
             }}>{facility.name}</p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            {facility.status === 'active' && (
+              <Link
+                to={`/baza-sportiva/${facility.id}`}
+                target="_blank"
+                style={{
+                  padding: '0.625rem 1.25rem',
+                  background: '#10b981',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '500',
+                  fontSize: '0.875rem',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#059669'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#10b981'
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                Vezi pagina publică
+              </Link>
+            )}
             <Link
               to="/"
               style={{
@@ -1168,7 +1202,281 @@ function Dashboard() {
                       }}
                     />
                   </div>
+
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>X (Twitter)</label>
+                    <input
+                      type="url"
+                      value={formData.social_media?.x || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        social_media: { ...formData.social_media, x: e.target.value }
+                      })}
+                      placeholder="https://x.com/..."
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>TikTok</label>
+                    <input
+                      type="url"
+                      value={formData.social_media?.tiktok || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        social_media: { ...formData.social_media, tiktok: e.target.value }
+                      })}
+                      placeholder="https://tiktok.com/..."
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>YouTube</label>
+                    <input
+                      type="url"
+                      value={formData.social_media?.youtube || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        social_media: { ...formData.social_media, youtube: e.target.value }
+                      })}
+                      placeholder="https://youtube.com/..."
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>LinkedIn</label>
+                    <input
+                      type="url"
+                      value={formData.social_media?.linkedin || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        social_media: { ...formData.social_media, linkedin: e.target.value }
+                      })}
+                      placeholder="https://linkedin.com/..."
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
+                      }}
+                    />
+                  </div>
                 </div>
+              </div>
+            )}
+
+            {/* Gallery Tab */}
+            {activeTab === 'gallery' && (
+              <div>
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  color: '#0f172a',
+                  marginBottom: '1.5rem',
+                  fontWeight: '600'
+                }}>Galerie imagini</h2>
+                <p style={{
+                  color: '#64748b',
+                  marginBottom: '1.5rem',
+                  fontSize: '0.875rem'
+                }}>
+                  Adaugă imagini pentru a prezenta baza ta sportivă. Poți adăuga până la 10 imagini.
+                </p>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || [])
+                      const newGallery = [...(formData.gallery || [])]
+                      
+                      files.forEach(file => {
+                        const reader = new FileReader()
+                        reader.onloadend = () => {
+                          newGallery.push(reader.result as string)
+                          if (newGallery.length <= 10) {
+                            setFormData({ ...formData, gallery: newGallery })
+                          }
+                        }
+                        reader.readAsDataURL(file)
+                      })
+                    }}
+                    style={{ display: 'none' }}
+                    id="gallery-upload"
+                  />
+                  <label
+                    htmlFor="gallery-upload"
+                    style={{
+                      display: 'inline-block',
+                      padding: '0.75rem 1.5rem',
+                      background: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#059669'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#10b981'
+                    }}
+                  >
+                    + Adaugă imagini
+                  </label>
+                </div>
+
+                {(formData.gallery || []).length > 0 && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+                    gap: '1rem'
+                  }}>
+                    {(formData.gallery || []).map((image: string, index: number) => (
+                      <div key={index} style={{ position: 'relative' }}>
+                        <img
+                          src={image}
+                          alt={`Galerie ${index + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '200px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                            border: '1px solid #e5e7eb'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newGallery = [...(formData.gallery || [])]
+                            newGallery.splice(index, 1)
+                            setFormData({ ...formData, gallery: newGallery })
+                          }}
+                          style={{
+                            position: 'absolute',
+                            top: '0.5rem',
+                            right: '0.5rem',
+                            padding: '0.5rem',
+                            background: 'rgba(239, 68, 68, 0.9)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            cursor: 'pointer',
+                            fontSize: '1rem',
+                            width: '32px',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(formData.gallery || []).length === 0 && (
+                  <div style={{
+                    background: '#f9fafb',
+                    padding: '3rem',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    color: '#64748b'
+                  }}>
+                    <p style={{ margin: 0 }}>Nu ai adăugat imagini încă.</p>
+                  </div>
+                )}
               </div>
             )}
 
