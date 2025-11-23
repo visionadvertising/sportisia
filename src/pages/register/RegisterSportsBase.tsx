@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useEffect } from 'react'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES } from '../../data/romanian-cities'
 import { ROMANIAN_COUNTIES } from '../../data/romanian-counties'
