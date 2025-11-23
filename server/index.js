@@ -1177,6 +1177,47 @@ app.get('/api/my-facility', async (req, res) => {
   }
 })
 
+// POST reset password for user (self-service)
+app.post('/api/users/reset-password', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const { username } = req.body
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        error: 'Username este obligatoriu'
+      })
+    }
+
+    const newPassword = crypto.randomBytes(8).toString('hex')
+    const hashedPassword = hashPassword(newPassword)
+
+    const [result] = await pool.query(
+      'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE username = ?',
+      [hashedPassword, username]
+    )
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Utilizatorul nu a fost găsit'
+      })
+    }
+
+    res.json({
+      success: true,
+      message: 'Parola a fost resetată cu succes',
+      newPassword: newPassword
+    })
+  } catch (error) {
+    console.error('Error resetting password:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
 // PUT update facility
 app.put('/api/facilities/:id', async (req, res) => {
   try {
@@ -1186,7 +1227,8 @@ app.put('/api/facilities/:id', async (req, res) => {
 
     const facilityId = req.params.id
     const {
-      name, city, county, location, phone, email, description, imageUrl,
+      name, city, county, location, locationNotSpecified, mapCoordinates, contactPerson,
+      phone, phones, whatsapp, whatsapps, email, emails, description, imageUrl,
       logoUrl, socialMedia, gallery,
       sport, pricePerHour, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
       specialization, experienceYears, pricePerLesson, certifications, languages,
@@ -1202,14 +1244,21 @@ app.put('/api/facilities/:id', async (req, res) => {
     if (name) { updates.push('name = ?'); values.push(name) }
     if (city) { updates.push('city = ?'); values.push(city) }
     if (county !== undefined) { updates.push('county = ?'); values.push(county) }
-    if (location) { updates.push('location = ?'); values.push(location) }
+    if (location !== undefined) { updates.push('location = ?'); values.push(location) }
+    if (locationNotSpecified !== undefined) { updates.push('location_not_specified = ?'); values.push(locationNotSpecified) }
+    if (mapCoordinates !== undefined) { updates.push('map_coordinates = ?'); values.push(JSON.stringify(mapCoordinates)) }
+    if (contactPerson !== undefined) { updates.push('contact_person = ?'); values.push(contactPerson) }
     if (phone) { updates.push('phone = ?'); values.push(phone) }
+    if (phones !== undefined) { updates.push('phones = ?'); values.push(typeof phones === 'string' ? phones : JSON.stringify(phones)) }
+    if (whatsapp !== undefined) { updates.push('whatsapp = ?'); values.push(whatsapp) }
+    if (whatsapps !== undefined) { updates.push('whatsapps = ?'); values.push(typeof whatsapps === 'string' ? whatsapps : JSON.stringify(whatsapps)) }
     if (email !== undefined) { updates.push('email = ?'); values.push(email) }
+    if (emails !== undefined) { updates.push('emails = ?'); values.push(typeof emails === 'string' ? emails : JSON.stringify(emails)) }
     if (description !== undefined) { updates.push('description = ?'); values.push(description) }
     if (imageUrl !== undefined) { updates.push('image_url = ?'); values.push(imageUrl) }
     if (logoUrl !== undefined) { updates.push('logo_url = ?'); values.push(logoUrl) }
-    if (socialMedia !== undefined) { updates.push('social_media = ?'); values.push(JSON.stringify(socialMedia)) }
-    if (gallery !== undefined) { updates.push('gallery = ?'); values.push(JSON.stringify(gallery)) }
+    if (socialMedia !== undefined) { updates.push('social_media = ?'); values.push(typeof socialMedia === 'string' ? socialMedia : JSON.stringify(socialMedia)) }
+    if (gallery !== undefined) { updates.push('gallery = ?'); values.push(typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) }
     if (website !== undefined) { updates.push('website = ?'); values.push(website) }
     if (openingHours !== undefined) { updates.push('opening_hours = ?'); values.push(openingHours) }
     if (status) { updates.push('status = ?'); values.push(status) }

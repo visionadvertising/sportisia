@@ -1,19 +1,56 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
+import { ROMANIAN_CITIES } from '../data/romanian-cities'
+import MapSelector from '../components/MapSelector'
+
+interface TimeSlot {
+  day: string
+  startTime: string
+  endTime: string
+  status: 'open' | 'closed' | 'not_specified'
+  price: number | null
+}
+
+interface SportsField {
+  id?: number
+  fieldName: string
+  sportType: string
+  description: string
+  features: {
+    hasParking: boolean
+    hasShower: boolean
+    hasChangingRoom: boolean
+    hasAirConditioning: boolean
+    hasLighting: boolean
+  }
+  slotSize: number
+  timeSlots: TimeSlot[]
+}
 
 interface Facility {
   id: number
   facility_type: string
   name: string
   city: string
-  location: string
+  county?: string
+  location?: string
+  location_not_specified?: boolean
+  map_coordinates?: string
+  contact_person?: string
   phone: string
+  phones?: string
+  whatsapp?: string
+  whatsapps?: string
   email: string
+  emails?: string
   description?: string
-  image_url?: string
+  logo_url?: string
+  social_media?: string
+  gallery?: string
+  website?: string
+  opening_hours?: string
   status: string
-  // Field specific
   sport?: string
   price_per_hour?: number
   has_parking?: boolean
@@ -21,24 +58,18 @@ interface Facility {
   has_changing_room?: boolean
   has_air_conditioning?: boolean
   has_lighting?: boolean
-  // Coach specific
-  specialization?: string
-  experience_years?: number
-  price_per_lesson?: number
-  certifications?: string
-  languages?: string
-  // Repair shop specific
-  services_offered?: string
-  brands_serviced?: string
-  average_repair_time?: string
-  // Equipment shop specific
-  products_categories?: string
-  brands_available?: string
-  delivery_available?: boolean
-  // Common
-  website?: string
-  opening_hours?: string
+  sportsFields?: SportsField[]
 }
+
+const DAYS_OF_WEEK = [
+  { value: 'monday', label: 'Luni' },
+  { value: 'tuesday', label: 'Marți' },
+  { value: 'wednesday', label: 'Miercuri' },
+  { value: 'thursday', label: 'Joi' },
+  { value: 'friday', label: 'Vineri' },
+  { value: 'saturday', label: 'Sâmbătă' },
+  { value: 'sunday', label: 'Duminică' }
+]
 
 function Dashboard() {
   const navigate = useNavigate()
@@ -48,12 +79,25 @@ function Dashboard() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [activeTab, setActiveTab] = useState('general')
+  const [showPasswordReset, setShowPasswordReset] = useState(false)
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false)
+  const [newPassword, setNewPassword] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
-  // Form state - initialize with facility data
+  // Form state
   const [formData, setFormData] = useState<any>({})
+  const [sportsFields, setSportsFields] = useState<SportsField[]>([])
 
   useEffect(() => {
-    // Check if user is logged in
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
     const storedUser = localStorage.getItem('user')
     if (!storedUser) {
       navigate('/login')
@@ -62,8 +106,6 @@ function Dashboard() {
 
     const userData = JSON.parse(storedUser)
     setUser(userData)
-
-    // Fetch facility data
     fetchFacility(userData.username)
   }, [navigate])
 
@@ -73,8 +115,62 @@ function Dashboard() {
       const data = await response.json()
 
       if (data.success) {
-        setFacility(data.data)
-        setFormData(data.data)
+        const facilityData = data.data
+        
+        // Parse JSON fields
+        if (facilityData.phones) {
+          try {
+            facilityData.phones = typeof facilityData.phones === 'string' ? JSON.parse(facilityData.phones) : facilityData.phones
+          } catch { facilityData.phones = [facilityData.phone] }
+        } else {
+          facilityData.phones = [facilityData.phone]
+        }
+        
+        if (facilityData.whatsapps) {
+          try {
+            facilityData.whatsapps = typeof facilityData.whatsapps === 'string' ? JSON.parse(facilityData.whatsapps) : facilityData.whatsapps
+          } catch { facilityData.whatsapps = facilityData.whatsapp ? [facilityData.whatsapp] : [] }
+        } else {
+          facilityData.whatsapps = facilityData.whatsapp ? [facilityData.whatsapp] : []
+        }
+        
+        if (facilityData.emails) {
+          try {
+            facilityData.emails = typeof facilityData.emails === 'string' ? JSON.parse(facilityData.emails) : facilityData.emails
+          } catch { facilityData.emails = [facilityData.email] }
+        } else {
+          facilityData.emails = [facilityData.email]
+        }
+        
+        if (facilityData.social_media) {
+          try {
+            facilityData.social_media = typeof facilityData.social_media === 'string' ? JSON.parse(facilityData.social_media) : facilityData.social_media
+          } catch { facilityData.social_media = { facebook: '', instagram: '', x: '', tiktok: '', youtube: '', linkedin: '' } }
+        } else {
+          facilityData.social_media = { facebook: '', instagram: '', x: '', tiktok: '', youtube: '', linkedin: '' }
+        }
+        
+        if (facilityData.gallery) {
+          try {
+            facilityData.gallery = typeof facilityData.gallery === 'string' ? JSON.parse(facilityData.gallery) : facilityData.gallery
+          } catch { facilityData.gallery = [] }
+        } else {
+          facilityData.gallery = []
+        }
+
+        if (facilityData.map_coordinates) {
+          try {
+            facilityData.map_coordinates = typeof facilityData.map_coordinates === 'string' ? JSON.parse(facilityData.map_coordinates) : facilityData.map_coordinates
+          } catch { facilityData.map_coordinates = null }
+        }
+
+        setFacility(facilityData)
+        setFormData(facilityData)
+
+        // Fetch sports fields if it's a sports base
+        if (facilityData.facility_type === 'field') {
+          fetchSportsFields(facilityData.id)
+        }
       } else {
         setError(data.error || 'Eroare la încărcarea facilității')
       }
@@ -86,6 +182,25 @@ function Dashboard() {
     }
   }
 
+  const fetchSportsFields = async (facilityId: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/facilities/${facilityId}`)
+      const data = await response.json()
+      
+      if (data.success && data.data.sportsFields) {
+        // Parse timeSlots from JSON if needed
+        const fields = data.data.sportsFields.map((field: any) => ({
+          ...field,
+          timeSlots: typeof field.time_slots === 'string' ? JSON.parse(field.time_slots) : (field.time_slots || []),
+          features: typeof field.features === 'string' ? JSON.parse(field.features) : (field.features || {})
+        }))
+        setSportsFields(fields)
+      }
+    } catch (err) {
+      console.error('Error fetching sports fields:', err)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -93,19 +208,29 @@ function Dashboard() {
     setSuccess('')
 
     try {
+      const updateData = {
+        ...formData,
+        phones: JSON.stringify(formData.phones || []),
+        whatsapps: JSON.stringify(formData.whatsapps || []),
+        emails: JSON.stringify(formData.emails || []),
+        socialMedia: formData.social_media || formData.socialMedia,
+        gallery: formData.gallery || [],
+        mapCoordinates: formData.map_coordinates || formData.mapCoordinates
+      }
+
       const response = await fetch(`${API_BASE_URL}/facilities/${facility?.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(updateData)
       })
 
       const data = await response.json()
 
       if (data.success) {
-        setSuccess('Facilitatea a fost actualizată cu succes!')
-        // Refresh facility data
+        setSuccess('Modificările au fost salvate cu succes!')
+        setTimeout(() => setSuccess(''), 5000)
         if (user) {
           fetchFacility(user.username)
         }
@@ -117,6 +242,39 @@ function Dashboard() {
       console.error('Update error:', err)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!user) return
+    
+    setPasswordResetLoading(true)
+    setError('')
+    setSuccess('')
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: user.username })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setNewPassword(data.newPassword)
+        setSuccess('Parola a fost resetată cu succes! Noua parolă este: ' + data.newPassword)
+        setShowPasswordReset(false)
+      } else {
+        setError(data.error || 'Eroare la resetarea parolei')
+      }
+    } catch (err) {
+      setError('Eroare la conectarea la server')
+      console.error('Password reset error:', err)
+    } finally {
+      setPasswordResetLoading(false)
     }
   }
 
@@ -132,10 +290,19 @@ function Dashboard() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'white'
+        background: '#f9fafb'
       }}>
-        <div style={{ textAlign: 'center', color: '#666' }}>
-          <p>Se încarcă...</p>
+        <div style={{ textAlign: 'center', color: '#64748b' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid #e5e7eb',
+            borderTopColor: '#10b981',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ margin: 0, fontSize: '0.9375rem' }}>Se încarcă...</p>
         </div>
       </div>
     )
@@ -148,11 +315,11 @@ function Dashboard() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'white',
+        background: '#f9fafb',
         padding: '2rem'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: '#666', marginBottom: '1rem' }}>Facilitatea nu a fost găsită.</p>
+          <p style={{ color: '#64748b', marginBottom: '1rem' }}>Facilitatea nu a fost găsită.</p>
           <Link
             to="/"
             style={{
@@ -161,7 +328,8 @@ function Dashboard() {
               color: 'white',
               textDecoration: 'none',
               borderRadius: '8px',
-              display: 'inline-block'
+              display: 'inline-block',
+              fontWeight: '500'
             }}
           >
             Mergi la Home
@@ -171,56 +339,70 @@ function Dashboard() {
     )
   }
 
-  const facilityTypeLabels: Record<string, string> = {
-    field: 'Teren Sportiv',
-    coach: 'Antrenor',
-    repair_shop: 'Magazin Reparații',
-    equipment_shop: 'Magazin Articole Sportive'
-  }
+  const tabs = [
+    { id: 'general', label: 'Informații generale' },
+    { id: 'contact', label: 'Contact' },
+    { id: 'branding', label: 'Branding' },
+    ...(facility.facility_type === 'field' ? [{ id: 'fields', label: 'Terenuri' }] : []),
+    { id: 'password', label: 'Securitate' }
+  ]
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#f9fafb',
-      padding: '2rem'
+      background: '#f9fafb'
     }}>
+      {/* Header */}
       <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto'
+        background: 'white',
+        borderBottom: '1px solid #e5e7eb',
+        padding: isMobile ? '1rem' : '1.5rem 2rem',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
       }}>
-        {/* Header */}
         <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '2rem',
-          background: 'white',
-          padding: '1.5rem',
-          borderRadius: '12px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          flexWrap: 'wrap',
+          gap: '1rem'
         }}>
           <div>
             <h1 style={{
-              fontSize: '2rem',
-              color: '#1e3c72',
+              fontSize: isMobile ? '1.5rem' : '1.875rem',
+              color: '#0f172a',
               margin: 0,
-              marginBottom: '0.5rem'
+              marginBottom: '0.25rem',
+              fontWeight: '600'
             }}>Dashboard</h1>
             <p style={{
-              color: '#666',
-              margin: 0
-            }}>{facilityTypeLabels[facility.facility_type]} - {facility.name}</p>
+              color: '#64748b',
+              margin: 0,
+              fontSize: '0.875rem'
+            }}>{facility.name}</p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <Link
               to="/"
               style={{
-                padding: '0.75rem 1.5rem',
-                background: '#e5e7eb',
-                color: '#333',
+                padding: '0.625rem 1.25rem',
+                background: '#f1f5f9',
+                color: '#475569',
                 textDecoration: 'none',
                 borderRadius: '8px',
-                fontWeight: '500'
+                fontWeight: '500',
+                fontSize: '0.875rem',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#e2e8f0'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#f1f5f9'
               }}
             >
               Home
@@ -228,55 +410,74 @@ function Dashboard() {
             <button
               onClick={handleLogout}
               style={{
-                padding: '0.75rem 1.5rem',
+                padding: '0.625rem 1.25rem',
                 background: '#ef4444',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: '500',
-                cursor: 'pointer'
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#dc2626'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#ef4444'
               }}
             >
-              Logout
+              Deconectare
             </button>
           </div>
         </div>
+      </div>
 
+      <div style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: isMobile ? '1.5rem 1rem' : '2rem'
+      }}>
         {/* Status Badge */}
         <div style={{
           background: 'white',
           padding: '1rem 1.5rem',
           borderRadius: '12px',
-          marginBottom: '2rem',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          marginBottom: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          flexWrap: 'wrap'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{
-              padding: '0.5rem 1rem',
-              background: facility.status === 'active' ? '#d1fae5' : '#fef3c7',
-              color: facility.status === 'active' ? '#065f46' : '#92400e',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              fontSize: '0.85rem'
-            }}>
-              {facility.status === 'active' ? '✓ Activ' : '⏳ În așteptare'}
-            </span>
-            <span style={{ color: '#666' }}>
-              {facility.status === 'pending' && 'Facilitatea ta este în așteptarea aprobării.'}
-              {facility.status === 'active' && 'Facilitatea ta este activă și vizibilă pe site.'}
-            </span>
+          <div style={{
+            padding: '0.5rem 1rem',
+            background: facility.status === 'active' ? '#d1fae5' : '#fef3c7',
+            color: facility.status === 'active' ? '#065f46' : '#92400e',
+            borderRadius: '6px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            fontSize: '0.75rem',
+            letterSpacing: '0.05em'
+          }}>
+            {facility.status === 'active' ? 'Activ' : 'În așteptare'}
           </div>
+          <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
+            {facility.status === 'pending' && 'Facilitatea ta este în așteptarea aprobării de către administrator.'}
+            {facility.status === 'active' && 'Facilitatea ta este activă și vizibilă pe site.'}
+          </span>
         </div>
 
+        {/* Messages */}
         {error && (
           <div style={{
             background: '#fee2e2',
-            border: '1px solid #ef4444',
+            border: '1px solid #fca5a5',
             color: '#991b1b',
-            padding: '1rem',
+            padding: '1rem 1.5rem',
             borderRadius: '8px',
-            marginBottom: '2rem'
+            marginBottom: '1.5rem',
+            fontSize: '0.875rem'
           }}>
             {error}
           </div>
@@ -285,351 +486,243 @@ function Dashboard() {
         {success && (
           <div style={{
             background: '#d1fae5',
-            border: '1px solid #10b981',
+            border: '1px solid #86efac',
             color: '#065f46',
-            padding: '1rem',
+            padding: '1rem 1.5rem',
             borderRadius: '8px',
-            marginBottom: '2rem'
+            marginBottom: '1.5rem',
+            fontSize: '0.875rem'
           }}>
             {success}
           </div>
         )}
 
-        {/* Edit Form */}
+        {/* Tabs */}
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '0.5rem',
+          marginBottom: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          display: 'flex',
+          gap: '0.5rem',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch'
+        }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: activeTab === tab.id ? '#10b981' : 'transparent',
+                color: activeTab === tab.id ? 'white' : '#64748b',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: activeTab === tab.id ? '600' : '500',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Form Content */}
         <form onSubmit={handleSubmit}>
           <div style={{
             background: 'white',
             borderRadius: '12px',
-            padding: '2rem',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            marginBottom: '2rem'
+            padding: isMobile ? '1.5rem' : '2rem',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
           }}>
-            <h2 style={{
-              fontSize: '1.5rem',
-              color: '#1e3c72',
-              marginBottom: '1.5rem'
-            }}>Editează detaliile facilității</h2>
-
-            {/* Common Fields */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '1rem',
-              marginBottom: '1rem'
-            }}>
+            {/* General Tab */}
+            {activeTab === 'general' && (
               <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>Nume facilitate *</label>
-                <input
-                  type="text"
-                  value={formData.name || ''}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>Oraș *</label>
-                <input
-                  type="text"
-                  value={formData.city || ''}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-            </div>
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  color: '#0f172a',
+                  marginBottom: '1.5rem',
+                  fontWeight: '600'
+                }}>Informații generale</h2>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>Adresă completă *</label>
-              <input
-                type="text"
-                value={formData.location || ''}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '1rem',
-              marginBottom: '1rem'
-            }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>Telefon *</label>
-                <input
-                  type="tel"
-                  value={formData.phone || ''}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>Email *</label>
-                <input
-                  type="email"
-                  value={formData.email || ''}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>Descriere</label>
-              <textarea
-                value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={4}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  fontFamily: 'inherit'
-                }}
-              />
-            </div>
-
-            {/* Field Specific Fields */}
-            {facility.facility_type === 'field' && (
-              <div style={{
-                background: '#f9fafb',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                marginBottom: '1rem'
-              }}>
-                <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Teren</h3>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '1rem',
-                  marginBottom: '1rem'
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                  gap: '1.5rem',
+                  marginBottom: '1.5rem'
                 }}>
                   <div>
                     <label style={{
                       display: 'block',
                       marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
-                    }}>Sport</label>
-                    <select
-                      value={formData.sport || ''}
-                      onChange={(e) => setFormData({ ...formData, sport: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        outline: 'none'
-                      }}
-                    >
-                      <option value="">Selectează sport</option>
-                      <option value="tenis">Tenis</option>
-                      <option value="fotbal">Fotbal</option>
-                      <option value="baschet">Baschet</option>
-                      <option value="volei">Volei</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
-                    }}>Preț pe oră (RON)</label>
-                    <input
-                      type="number"
-                      value={formData.price_per_hour || ''}
-                      onChange={(e) => setFormData({ ...formData, price_per_hour: e.target.value })}
-                      min="0"
-                      step="0.01"
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        outline: 'none'
-                      }}
-                    />
-                  </div>
-                </div>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '1rem'
-                }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.has_parking || false}
-                      onChange={(e) => setFormData({ ...formData, has_parking: e.target.checked })}
-                    />
-                    <span>Parcare</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.has_shower || false}
-                      onChange={(e) => setFormData({ ...formData, has_shower: e.target.checked })}
-                    />
-                    <span>Dusuri</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.has_changing_room || false}
-                      onChange={(e) => setFormData({ ...formData, has_changing_room: e.target.checked })}
-                    />
-                    <span>Vestiar</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.has_air_conditioning || false}
-                      onChange={(e) => setFormData({ ...formData, has_air_conditioning: e.target.checked })}
-                    />
-                    <span>Aer condiționat</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.has_lighting || false}
-                      onChange={(e) => setFormData({ ...formData, has_lighting: e.target.checked })}
-                    />
-                    <span>Iluminat</span>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* Coach Specific Fields */}
-            {facility.facility_type === 'coach' && (
-              <div style={{
-                background: '#f9fafb',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                marginBottom: '1rem'
-              }}>
-                <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Antrenor</h3>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '1rem'
-                }}>
-                  <div>
-                    <label style={{
-                      display: 'block',
-                      marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
-                    }}>Specializare</label>
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>Nume baza sportivă *</label>
                     <input
                       type="text"
-                      value={formData.specialization || ''}
-                      onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
+                        border: '1.5px solid #e5e7eb',
                         borderRadius: '8px',
-                        fontSize: '1rem',
-                        outline: 'none'
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
                       }}
                     />
                   </div>
+
                   <div>
                     <label style={{
                       display: 'block',
                       marginBottom: '0.5rem',
-                      color: '#333',
-                      fontWeight: '500'
-                    }}>Preț pe lecție (RON)</label>
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>Oraș *</label>
                     <input
-                      type="number"
-                      value={formData.price_per_lesson || ''}
-                      onChange={(e) => setFormData({ ...formData, price_per_lesson: e.target.value })}
-                      min="0"
-                      step="0.01"
+                      type="text"
+                      value={formData.city || ''}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      required
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        border: '2px solid #e0e0e0',
+                        border: '1.5px solid #e5e7eb',
                         borderRadius: '8px',
-                        fontSize: '1rem',
-                        outline: 'none'
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    color: '#374151',
+                    fontWeight: '500',
+                    fontSize: '0.875rem'
+                  }}>Descriere</label>
+                  <textarea
+                    value={formData.description || ''}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={5}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1.5px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '0.9375rem',
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                      resize: 'vertical',
+                      transition: 'all 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#10b981'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb'
+                      e.target.style.boxShadow = 'none'
+                    }}
+                  />
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                  gap: '1.5rem'
+                }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>Website</label>
+                    <input
+                      type="url"
+                      value={formData.website || ''}
+                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                      placeholder="https://example.com"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>Program</label>
+                    <input
+                      type="text"
+                      value={formData.opening_hours || ''}
+                      onChange={(e) => setFormData({ ...formData, opening_hours: e.target.value })}
+                      placeholder="ex: Luni-Vineri 9:00-18:00"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
                       }}
                     />
                   </div>
@@ -637,170 +730,597 @@ function Dashboard() {
               </div>
             )}
 
-            {/* Repair Shop Specific Fields */}
-            {facility.facility_type === 'repair_shop' && (
-              <div style={{
-                background: '#f9fafb',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                marginBottom: '1rem'
-              }}>
-                <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Magazin Reparații</h3>
-                <div style={{ marginBottom: '1rem' }}>
+            {/* Contact Tab */}
+            {activeTab === 'contact' && (
+              <div>
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  color: '#0f172a',
+                  marginBottom: '1.5rem',
+                  fontWeight: '600'
+                }}>Date de contact</h2>
+
+                <div style={{ marginBottom: '1.5rem' }}>
                   <label style={{
                     display: 'block',
                     marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
-                  }}>Servicii oferite</label>
-                  <textarea
-                    value={formData.services_offered || ''}
-                    onChange={(e) => setFormData({ ...formData, services_offered: e.target.value })}
-                    rows={4}
+                    color: '#374151',
+                    fontWeight: '500',
+                    fontSize: '0.875rem'
+                  }}>Persoană de contact</label>
+                  <input
+                    type="text"
+                    value={formData.contact_person || ''}
+                    onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
+                      border: '1.5px solid #e5e7eb',
                       borderRadius: '8px',
-                      fontSize: '1rem',
+                      fontSize: '0.9375rem',
                       outline: 'none',
-                      fontFamily: 'inherit'
+                      transition: 'all 0.2s'
                     }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#10b981'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb'
+                      e.target.style.boxShadow = 'none'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#374151',
+                    fontWeight: '500',
+                    fontSize: '0.875rem'
+                  }}>Telefoane *</label>
+                  {(formData.phones || []).map((phone: string, index: number) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => {
+                          const newPhones = [...(formData.phones || [])]
+                          newPhones[index] = e.target.value
+                          setFormData({ ...formData, phones: newPhones })
+                        }}
+                        required={index === 0}
+                        style={{
+                          flex: 1,
+                          padding: '0.75rem',
+                          border: '1.5px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '0.9375rem',
+                          outline: 'none',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#10b981'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e5e7eb'
+                          e.target.style.boxShadow = 'none'
+                        }}
+                      />
+                      {(formData.phones || []).length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newPhones = [...(formData.phones || [])]
+                            newPhones.splice(index, 1)
+                            setFormData({ ...formData, phones: newPhones })
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            background: '#fee2e2',
+                            color: '#991b1b',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: '500',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          Șterge
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({ ...formData, phones: [...(formData.phones || []), ''] })
+                    }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#f1f5f9',
+                      color: '#475569',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    + Adaugă telefon
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#374151',
+                    fontWeight: '500',
+                    fontSize: '0.875rem'
+                  }}>WhatsApp</label>
+                  {(formData.whatsapps || []).map((whatsapp: string, index: number) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <input
+                        type="tel"
+                        value={whatsapp}
+                        onChange={(e) => {
+                          const newWhatsapps = [...(formData.whatsapps || [])]
+                          newWhatsapps[index] = e.target.value
+                          setFormData({ ...formData, whatsapps: newWhatsapps })
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '0.75rem',
+                          border: '1.5px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '0.9375rem',
+                          outline: 'none',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#10b981'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e5e7eb'
+                          e.target.style.boxShadow = 'none'
+                        }}
+                      />
+                      {(formData.whatsapps || []).length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newWhatsapps = [...(formData.whatsapps || [])]
+                            newWhatsapps.splice(index, 1)
+                            setFormData({ ...formData, whatsapps: newWhatsapps })
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            background: '#fee2e2',
+                            color: '#991b1b',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: '500',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          Șterge
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({ ...formData, whatsapps: [...(formData.whatsapps || []), ''] })
+                    }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#f1f5f9',
+                      color: '#475569',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    + Adaugă WhatsApp
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#374151',
+                    fontWeight: '500',
+                    fontSize: '0.875rem'
+                  }}>Email-uri *</label>
+                  {(formData.emails || []).map((email: string, index: number) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => {
+                          const newEmails = [...(formData.emails || [])]
+                          newEmails[index] = e.target.value
+                          setFormData({ ...formData, emails: newEmails })
+                        }}
+                        required={index === 0}
+                        style={{
+                          flex: 1,
+                          padding: '0.75rem',
+                          border: '1.5px solid #e5e7eb',
+                          borderRadius: '8px',
+                          fontSize: '0.9375rem',
+                          outline: 'none',
+                          transition: 'all 0.2s'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#10b981'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e5e7eb'
+                          e.target.style.boxShadow = 'none'
+                        }}
+                      />
+                      {(formData.emails || []).length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newEmails = [...(formData.emails || [])]
+                            newEmails.splice(index, 1)
+                            setFormData({ ...formData, emails: newEmails })
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            background: '#fee2e2',
+                            color: '#991b1b',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: '500',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          Șterge
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({ ...formData, emails: [...(formData.emails || []), ''] })
+                    }}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#f1f5f9',
+                      color: '#475569',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    + Adaugă email
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    color: '#374151',
+                    fontWeight: '500',
+                    fontSize: '0.875rem'
+                  }}>Locație</label>
+                  <MapSelector
+                    location={formData.location || ''}
+                    coordinates={formData.map_coordinates || null}
+                    onLocationChange={(location) => setFormData({ ...formData, location })}
+                    onCoordinatesChange={(coords) => setFormData({ ...formData, map_coordinates: coords })}
                   />
                 </div>
               </div>
             )}
 
-            {/* Equipment Shop Specific Fields */}
-            {facility.facility_type === 'equipment_shop' && (
-              <div style={{
-                background: '#f9fafb',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                marginBottom: '1rem'
-              }}>
-                <h3 style={{ color: '#1e3c72', marginBottom: '1rem' }}>Detalii Magazin Articole Sportive</h3>
-                <div style={{ marginBottom: '1rem' }}>
+            {/* Branding Tab */}
+            {activeTab === 'branding' && (
+              <div>
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  color: '#0f172a',
+                  marginBottom: '1.5rem',
+                  fontWeight: '600'
+                }}>Branding și social media</h2>
+
+                <div style={{ marginBottom: '1.5rem' }}>
                   <label style={{
                     display: 'block',
                     marginBottom: '0.5rem',
-                    color: '#333',
-                    fontWeight: '500'
-                  }}>Categorii produse</label>
-                  <textarea
-                    value={formData.products_categories || ''}
-                    onChange={(e) => setFormData({ ...formData, products_categories: e.target.value })}
-                    rows={4}
+                    color: '#374151',
+                    fontWeight: '500',
+                    fontSize: '0.875rem'
+                  }}>Logo URL</label>
+                  <input
+                    type="url"
+                    value={formData.logo_url || ''}
+                    onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                    placeholder="https://example.com/logo.png"
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: '2px solid #e0e0e0',
+                      border: '1.5px solid #e5e7eb',
                       borderRadius: '8px',
-                      fontSize: '1rem',
+                      fontSize: '0.9375rem',
                       outline: 'none',
-                      fontFamily: 'inherit'
+                      transition: 'all 0.2s'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#10b981'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e5e7eb'
+                      e.target.style.boxShadow = 'none'
                     }}
                   />
+                  {formData.logo_url && (
+                    <img
+                      src={formData.logo_url}
+                      alt="Logo preview"
+                      style={{
+                        marginTop: '0.75rem',
+                        maxWidth: '200px',
+                        maxHeight: '200px',
+                        borderRadius: '8px',
+                        border: '1px solid #e5e7eb'
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                  gap: '1.5rem',
+                  marginBottom: '1.5rem'
+                }}>
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>Facebook</label>
+                    <input
+                      type="url"
+                      value={formData.social_media?.facebook || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        social_media: { ...formData.social_media, facebook: e.target.value }
+                      })}
+                      placeholder="https://facebook.com/..."
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#374151',
+                      fontWeight: '500',
+                      fontSize: '0.875rem'
+                    }}>Instagram</label>
+                    <input
+                      type="url"
+                      value={formData.social_media?.instagram || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        social_media: { ...formData.social_media, instagram: e.target.value }
+                      })}
+                      placeholder="https://instagram.com/..."
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1.5px solid #e5e7eb',
+                        borderRadius: '8px',
+                        fontSize: '0.9375rem',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#10b981'
+                        e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#e5e7eb'
+                        e.target.style.boxShadow = 'none'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '1rem',
-              marginBottom: '1rem'
-            }}>
+            {/* Fields Tab - Only for sports bases */}
+            {activeTab === 'fields' && facility.facility_type === 'field' && (
               <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>URL Imagine</label>
-                <input
-                  type="url"
-                  value={formData.image_url || ''}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.5rem',
-                  color: '#333',
-                  fontWeight: '500'
-                }}>Website</label>
-                <input
-                  type="url"
-                  value={formData.website || ''}
-                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                color: '#333',
-                fontWeight: '500'
-              }}>Program</label>
-              <input
-                type="text"
-                value={formData.opening_hours || ''}
-                onChange={(e) => setFormData({ ...formData, opening_hours: e.target.value })}
-                placeholder="ex: Luni-Vineri 9:00-18:00"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '2px solid #e0e0e0',
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  color: '#0f172a',
+                  marginBottom: '1.5rem',
+                  fontWeight: '600'
+                }}>Terenuri</h2>
+                <p style={{
+                  color: '#64748b',
+                  marginBottom: '1.5rem',
+                  fontSize: '0.875rem'
+                }}>
+                  Gestionează terenurile bazei tale sportive. Fiecare teren poate avea propriile prețuri și program.
+                </p>
+                {/* Sports fields management will be added here */}
+                <div style={{
+                  background: '#f9fafb',
+                  padding: '2rem',
                   borderRadius: '8px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
-            </div>
+                  textAlign: 'center',
+                  color: '#64748b'
+                }}>
+                  <p>Gestionarea terenurilor va fi disponibilă în curând.</p>
+                </div>
+              </div>
+            )}
 
-            <button
-              type="submit"
-              disabled={saving}
-              style={{
-                width: '100%',
-                padding: '1rem',
-                background: saving ? '#9ca3af' : '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                cursor: saving ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {saving ? 'Se salvează...' : 'Salvează modificările'}
-            </button>
+            {/* Password Tab */}
+            {activeTab === 'password' && (
+              <div>
+                <h2 style={{
+                  fontSize: '1.5rem',
+                  color: '#0f172a',
+                  marginBottom: '1.5rem',
+                  fontWeight: '600'
+                }}>Securitate</h2>
+
+                <div style={{
+                  background: '#f9fafb',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem'
+                }}>
+                  <h3 style={{
+                    fontSize: '1.125rem',
+                    color: '#0f172a',
+                    marginBottom: '0.75rem',
+                    fontWeight: '600'
+                  }}>Resetare parolă</h3>
+                  <p style={{
+                    color: '#64748b',
+                    marginBottom: '1rem',
+                    fontSize: '0.875rem',
+                    lineHeight: '1.6'
+                  }}>
+                    Dacă dorești să resetezi parola contului tău, apasă butonul de mai jos. Vei primi o parolă nouă generată automat.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleResetPassword}
+                    disabled={passwordResetLoading}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: passwordResetLoading ? '#9ca3af' : '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: passwordResetLoading ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {passwordResetLoading ? 'Se resetează...' : 'Resetează parola'}
+                  </button>
+                </div>
+
+                {newPassword && (
+                  <div style={{
+                    background: '#d1fae5',
+                    border: '1px solid #86efac',
+                    color: '#065f46',
+                    padding: '1rem 1.5rem',
+                    borderRadius: '8px',
+                    marginBottom: '1.5rem'
+                  }}>
+                    <p style={{ margin: 0, marginBottom: '0.5rem', fontWeight: '600' }}>Parolă nouă generată:</p>
+                    <div style={{
+                      background: 'white',
+                      padding: '0.75rem',
+                      borderRadius: '6px',
+                      fontFamily: 'monospace',
+                      fontSize: '1rem',
+                      color: '#0f172a',
+                      border: '1px solid #86efac'
+                    }}>
+                      {newPassword}
+                    </div>
+                    <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.875rem' }}>
+                      Salvează această parolă într-un loc sigur. Vei avea nevoie de ea pentru a te conecta.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Submit Button */}
+            {activeTab !== 'password' && (
+              <div style={{
+                marginTop: '2rem',
+                paddingTop: '2rem',
+                borderTop: '1px solid #e5e7eb',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '1rem'
+              }}>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  style={{
+                    padding: '0.875rem 2rem',
+                    background: saving ? '#9ca3af' : '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.9375rem',
+                    fontWeight: '600',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: saving ? 'none' : '0 2px 4px rgba(16, 185, 129, 0.2)'
+                  }}
+                >
+                  {saving ? 'Se salvează...' : 'Salvează modificările'}
+                </button>
+              </div>
+            )}
           </div>
         </form>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
 
 export default Dashboard
-
