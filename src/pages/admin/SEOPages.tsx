@@ -8,6 +8,7 @@ import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug } from '../../utils
 interface SEOPage {
   id?: number
   url: string
+  category?: string // 'field', 'coach', 'repair_shop', 'equipment_shop'
   meta_title?: string
   meta_description?: string
   h1_title?: string
@@ -115,7 +116,7 @@ function SEOPages() {
 
     // 4. /:type
     typesToGenerate.forEach(type => {
-      combinations.push({ url: `/${type.slug}` })
+      combinations.push({ url: `/${type.slug}`, category: type.value })
     })
 
     // 5. /:city/:sport - only for categories that use sport
@@ -133,7 +134,7 @@ function SEOPages() {
     availableCities.forEach(city => {
       typesToGenerate.forEach(type => {
         const citySlug = cityNameToSlug(city.city)
-        combinations.push({ url: `/${citySlug}/${type.slug}` })
+        combinations.push({ url: `/${citySlug}/${type.slug}`, category: type.value })
       })
     })
 
@@ -143,7 +144,7 @@ function SEOPages() {
         typesToGenerate.forEach(type => {
           if (sportCategories.includes(type.value)) {
             const sportSlug = sportNameToSlug(sport)
-            combinations.push({ url: `/${sportSlug}/${type.slug}` })
+            combinations.push({ url: `/${sportSlug}/${type.slug}`, category: type.value })
           }
         })
       })
@@ -157,7 +158,7 @@ function SEOPages() {
             if (sportCategories.includes(type.value)) {
               const citySlug = cityNameToSlug(city.city)
               const sportSlug = sportNameToSlug(sport)
-              combinations.push({ url: `/${citySlug}/${sportSlug}/${type.slug}` })
+              combinations.push({ url: `/${citySlug}/${sportSlug}/${type.slug}`, category: type.value })
             }
           })
         })
@@ -170,9 +171,11 @@ function SEOPages() {
   const fetchSEOPages = async () => {
     try {
       setLoading(true)
+      setError('')
       const adminToken = localStorage.getItem('admin')
       if (!adminToken) {
         setError('Nu sunteți autentificat')
+        setLoading(false)
         return
       }
 
@@ -196,6 +199,7 @@ function SEOPages() {
         setError(data.error || 'Eroare la încărcarea paginilor SEO')
       }
     } catch (err: any) {
+      console.error('Error fetching SEO pages:', err)
       setError(err.message || 'Eroare la încărcarea paginilor SEO')
     } finally {
       setLoading(false)
@@ -241,7 +245,8 @@ function SEOPages() {
   }
 
   const filteredPages = allPages.filter(page => 
-    !searchTerm || page.url.toLowerCase().includes(searchTerm.toLowerCase())
+    (!searchTerm || page.url.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (!selectedCategory || page.category === selectedCategory)
   )
 
   const totalPages = Math.ceil(filteredPages.length / ITEMS_PER_PAGE)
