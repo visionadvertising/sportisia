@@ -894,11 +894,6 @@ app.post('/api/register', async (req, res) => {
       if (facilityType === 'field' && parsedSportsFields && parsedSportsFields.length > 0) {
         console.log(`[REGISTER] Inserting ${parsedSportsFields.length} sports fields for facility ${facilityId}`)
         for (const field of parsedSportsFields) {
-          // Calculate legacy pricePerHour from first price interval for backward compatibility
-          const legacyPricePerHour = field.priceIntervals && field.priceIntervals.length > 0 
-            ? field.priceIntervals[0].price 
-            : null
-
           // Calculate legacy pricePerHour from first open slot with price for backward compatibility
           const legacyPricePerHour = field.timeSlots && field.timeSlots.length > 0
             ? (field.timeSlots.find(slot => slot.status === 'open' && slot.price !== null)?.price || null)
