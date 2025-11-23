@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
+import PublicMap from '../components/PublicMap'
 
 interface TimeSlot {
   day: string
@@ -514,22 +515,31 @@ function SportsBasePublic() {
               Locație și program
             </h2>
             {mapCoords && (
+              <PublicMap
+                coordinates={mapCoords}
+                location={facility.location || undefined}
+              />
+            )}
+            {!mapCoords && facility.location && (
               <div style={{
                 width: '100%',
                 height: '400px',
                 borderRadius: '12px',
-                overflow: 'hidden',
+                background: '#f8fafc',
                 border: '1px solid #e2e8f0',
-                marginBottom: '1rem'
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#64748b',
+                fontSize: '0.875rem'
               }}>
-                <iframe
-                  width="100%"
-                  height="100%"
-                  frameBorder="0"
-                  style={{ border: 0 }}
-                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6d-s6U4lR3wJ0&q=${mapCoords.lat},${mapCoords.lng}`}
-                  allowFullScreen
-                />
+                <div style={{ textAlign: 'center' }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ margin: '0 auto 1rem' }}>
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  <p style={{ margin: 0 }}>{facility.location}</p>
+                </div>
               </div>
             )}
             {facility.location && (
