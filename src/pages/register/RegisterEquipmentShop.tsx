@@ -25,9 +25,10 @@ function RegisterEquipmentShop() {
   }, [])
 
   // Step 1: Contact Details
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
   const [contactPerson, setContactPerson] = useState('')
+  const [phone, setPhone] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [email, setEmail] = useState('')
   const [city, setCity] = useState(searchParams.get('city') || '')
   const [county, setCounty] = useState('')
   const [location, setLocation] = useState('')
@@ -254,9 +255,10 @@ function RegisterEquipmentShop() {
       const formData = {
         facilityType: 'equipment_shop',
         name,
+        contactPerson: contactPerson || null,
         phone,
+        whatsapp: whatsapp || null,
         email,
-        contactPerson,
         city,
         county: county || newCityCounty || null,
         location: locationNotSpecified ? null : location,
@@ -401,11 +403,173 @@ function RegisterEquipmentShop() {
               }}>
                 Date de contact
               </h2>
-              {/* Contact fields - identical to RegisterRepairShop Step 1 */}
-              <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
-                Câmpurile de contact sunt identice cu cele din RegisterRepairShop.
-                Implementarea completă va include toate câmpurile (telefon, email, persoană contact, oraș, adresă, hartă).
-              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                gap: isMobile ? '1.5rem' : '2rem',
+                marginBottom: isMobile ? '1.5rem' : '2.5rem'
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Persoană de contact</label>
+                  <input
+                    type="text"
+                    value={contactPerson}
+                    onChange={(e) => setContactPerson(e.target.value)}
+                    placeholder="Ex: Ion Popescu"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Telefon *</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>WhatsApp</label>
+                  <input
+                    type="tel"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="Ex: +40712345678"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Email *</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           )}
 

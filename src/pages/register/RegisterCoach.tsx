@@ -25,9 +25,10 @@ function RegisterCoach() {
   }, [])
 
   // Step 1: Contact Details
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
   const [contactPerson, setContactPerson] = useState('')
+  const [phone, setPhone] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [email, setEmail] = useState('')
   const [city, setCity] = useState(searchParams.get('city') || '')
   const [county, setCounty] = useState('')
   const [location, setLocation] = useState('')
@@ -292,9 +293,10 @@ function RegisterCoach() {
       const formData = {
         facilityType: 'coach',
         name,
-        phone,
-        email,
         contactPerson: contactPerson || null,
+        phone,
+        whatsapp: whatsapp || null,
+        email,
         city,
         county: county || newCityCounty || null,
         location: locationNotSpecified ? null : location,
@@ -453,6 +455,46 @@ function RegisterCoach() {
                     fontWeight: '600',
                     fontSize: '0.875rem',
                     letterSpacing: '0.01em'
+                  }}>Persoană de contact</label>
+                  <input
+                    type="text"
+                    value={contactPerson}
+                    onChange={(e) => setContactPerson(e.target.value)}
+                    placeholder="Ex: Ion Popescu"
+                    style={{
+                      width: '100%',
+                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '16px' : '1rem',
+                      outline: 'none',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      transition: 'all 0.2s ease',
+                      fontWeight: '400',
+                      lineHeight: '1.5',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      WebkitAppearance: 'none',
+                      touchAction: 'manipulation'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0f172a'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
                   }}>Telefon *</label>
                   <input
                     type="tel"
@@ -493,12 +535,12 @@ function RegisterCoach() {
                     fontWeight: '600',
                     fontSize: '0.875rem',
                     letterSpacing: '0.01em'
-                  }}>Email *</label>
+                  }}>WhatsApp</label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    type="tel"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="Ex: +40712345678"
                     style={{
                       width: '100%',
                       padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
@@ -533,12 +575,12 @@ function RegisterCoach() {
                     fontWeight: '600',
                     fontSize: '0.875rem',
                     letterSpacing: '0.01em'
-                  }}>Persoană de contact</label>
+                  }}>Email *</label>
                   <input
-                    type="text"
-                    value={contactPerson}
-                    onChange={(e) => setContactPerson(e.target.value)}
-                    placeholder="Ex: Ion Popescu"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                     style={{
                       width: '100%',
                       padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
