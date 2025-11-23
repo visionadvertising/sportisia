@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../config'
-import { citySlugToName, sportSlugToName, slugToFacilityType } from '../utils/seo'
+import { citySlugToName, sportSlugToName, slugToFacilityType, repairCategorySlugToName } from '../utils/seo'
 import FacilityFilters from '../components/FacilityFilters'
 import { parseURLToFilters, getFacilityCount, generateSEOTitle, generateSEODescription, generateDescription } from '../utils/seoContentGenerator'
 
@@ -92,16 +92,22 @@ function AllFacilities() {
   let facilityType = ''
   let repairCategory = ''
   
-  // Parse query parameters for repair category (if any)
-  const searchParams = new URLSearchParams(window.location.search)
-  repairCategory = searchParams.get('categorie') || ''
+  // Known repair category slugs
+  const REPAIR_CATEGORY_SLUGS = ['rachete-tenis', 'biciclete', 'echipamente-ski', 'echipamente-snowboard', 
+    'echipamente-fitness', 'echipamente-fotbal', 'echipamente-baschet', 'echipamente-volei', 
+    'echipamente-handbal', 'altele']
   
   // Determine what each parameter represents
   // Priority: Check facility types first, then sports, then cities
   if (param1) {
     if (FACILITY_TYPE_SLUGS.includes(param1.toLowerCase())) {
-      // param1 is a type (e.g., /terenuri, /antrenori)
+      // param1 is a type (e.g., /terenuri, /antrenori, /magazine-reparatii)
       facilityType = slugToFacilityType(param1)
+      
+      // For repair shops, check if param2 is a repair category
+      if (facilityType === 'repair_shop' && param2 && REPAIR_CATEGORY_SLUGS.includes(param2.toLowerCase())) {
+        repairCategory = repairCategorySlugToName(param2)
+      }
     } else if (KNOWN_SPORTS.includes(param1.toLowerCase())) {
       // param1 is a sport (e.g., /tenis, /fotbal)
       sport = param1
@@ -117,8 +123,13 @@ function AllFacilities() {
       
       if (param2) {
         if (FACILITY_TYPE_SLUGS.includes(param2.toLowerCase())) {
-          // param2 is a type (e.g., /iasi/terenuri)
+          // param2 is a type (e.g., /iasi/terenuri, /iasi/magazine-reparatii)
           facilityType = slugToFacilityType(param2)
+          
+          // For repair shops, check if param3 is a repair category
+          if (facilityType === 'repair_shop' && param3 && REPAIR_CATEGORY_SLUGS.includes(param3.toLowerCase())) {
+            repairCategory = repairCategorySlugToName(param3)
+          }
         } else if (KNOWN_SPORTS.includes(param2.toLowerCase())) {
           // param2 is a sport (e.g., /iasi/tenis)
           sport = param2

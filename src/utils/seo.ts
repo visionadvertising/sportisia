@@ -204,6 +204,32 @@ export function slugToFacilityType(slug: string): string {
   return reverseMap[slug] || slug
 }
 
+// Repair category slug mapping
+const REPAIR_CATEGORY_SLUG_MAP: Record<string, string> = {
+  'Rachete tenis': 'rachete-tenis',
+  'Biciclete': 'biciclete',
+  'Echipamente ski': 'echipamente-ski',
+  'Echipamente snowboard': 'echipamente-snowboard',
+  'Echipamente fitness': 'echipamente-fitness',
+  'Echipamente fotbal': 'echipamente-fotbal',
+  'Echipamente baschet': 'echipamente-baschet',
+  'Echipamente volei': 'echipamente-volei',
+  'Echipamente handbal': 'echipamente-handbal',
+  'Altele': 'altele'
+}
+
+export function repairCategoryToSlug(category: string): string {
+  return REPAIR_CATEGORY_SLUG_MAP[category] || slugify(category)
+}
+
+export function repairCategorySlugToName(slug: string): string {
+  const reverseMap: Record<string, string> = {}
+  Object.entries(REPAIR_CATEGORY_SLUG_MAP).forEach(([name, slugValue]) => {
+    reverseMap[slugValue] = name
+  })
+  return reverseMap[slug.toLowerCase()] || deslugify(slug)
+}
+
 // Generate SEO-friendly URL
 export function generateFacilityURL(
   city: string,

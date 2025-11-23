@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
-import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug } from '../utils/seo'
+import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug, repairCategoryToSlug } from '../utils/seo'
 import API_BASE_URL from '../config'
 import './FacilityFilters.css'
 
@@ -193,12 +193,29 @@ function FacilityFilters({
   // - Sport only → /sport
   // - Type only → /type (base URL)
   // - Nothing → /toate
-  const generateURLFromFilters = (city: string, sport: string, type: string): string => {
+  const generateURLFromFilters = (city: string, sport: string, type: string, repairCategory: string = ''): string => {
     // Clean empty strings
     const hasCity = city && city.trim() !== ''
     const hasSport = sport && sport.trim() !== ''
     const hasType = type && type.trim() !== ''
+    const hasRepairCategory = repairCategory && repairCategory.trim() !== ''
     
+    // For repair shops, include category in URL
+    if (type === 'repair_shop' && hasRepairCategory) {
+      const repairCategorySlug = repairCategoryToSlug(repairCategory)
+      
+      // 1. City + Type + Repair Category → /city/type/category
+      if (hasCity && hasType) {
+        return `/${cityNameToSlug(city)}/${facilityTypeToSlug(type)}/${repairCategorySlug}`
+      }
+      
+      // 2. Type + Repair Category (no city) → /type/category
+      if (hasType) {
+        return `/${facilityTypeToSlug(type)}/${repairCategorySlug}`
+      }
+    }
+    
+    // Standard URL generation (without repair category in URL)
     // 1. City + Sport + Type → /city/sport/type
     if (hasCity && hasSport && hasType) {
       return `/${cityNameToSlug(city)}/${sportNameToSlug(sport)}/${facilityTypeToSlug(type)}`
@@ -251,17 +268,9 @@ function FacilityFilters({
     }
 
     // Use simple, deterministic URL generation
-    // Note: Repair category is not part of URL structure, it's a query parameter
-    const newURL = generateURLFromFilters(newCity, newSport, newType)
-    // Add repair category as query parameter if needed
-    if (newRepairCategory && newType === 'repair_shop') {
-      const urlWithQuery = newURL.includes('?') 
-        ? `${newURL}&categorie=${encodeURIComponent(newRepairCategory)}`
-        : `${newURL}?categorie=${encodeURIComponent(newRepairCategory)}`
-      navigate(urlWithQuery)
-    } else {
-      navigate(newURL)
-    }
+    // Repair category is now part of URL structure for repair shops
+    const newURL = generateURLFromFilters(newCity, newSport, newType, newRepairCategory)
+    navigate(newURL)
   }
 
   // Get display value for city

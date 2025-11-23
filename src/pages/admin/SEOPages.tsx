@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES } from '../../data/romanian-cities'
-import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug } from '../../utils/seo'
+import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug, repairCategoryToSlug } from '../../utils/seo'
 
 interface SEOPage {
   id?: number
@@ -23,6 +23,19 @@ const FACILITY_TYPES = [
   { value: 'coach', label: 'Antrenori', slug: 'antrenori' },
   { value: 'repair_shop', label: 'Magazine Reparații', slug: 'magazine-reparatii' },
   { value: 'equipment_shop', label: 'Magazine Articole', slug: 'magazine-articole' }
+]
+
+const REPAIR_CATEGORIES = [
+  'Rachete tenis',
+  'Biciclete',
+  'Echipamente ski',
+  'Echipamente snowboard',
+  'Echipamente fitness',
+  'Echipamente fotbal',
+  'Echipamente baschet',
+  'Echipamente volei',
+  'Echipamente handbal',
+  'Altele'
 ]
 
 const ITEMS_PER_PAGE = 50
@@ -194,6 +207,25 @@ function SEOPages() {
               combinations.push({ url: `/${citySlug}/${sportSlug}/${type.slug}`, category: type.value })
             }
           })
+        })
+      })
+    }
+
+    // 9. /:type/:repair-category - only for repair shops
+    if (!selectedCategory || selectedCategory === 'repair_shop') {
+      REPAIR_CATEGORIES.forEach(repairCategory => {
+        const repairCategorySlug = repairCategoryToSlug(repairCategory)
+        combinations.push({ url: `/magazine-reparatii/${repairCategorySlug}`, category: 'repair_shop' })
+      })
+    }
+
+    // 10. /:city/:type/:repair-category - only for repair shops
+    if (!selectedCategory || selectedCategory === 'repair_shop') {
+      citiesToUse.forEach(city => {
+        REPAIR_CATEGORIES.forEach(repairCategory => {
+          const citySlug = cityNameToSlug(city.city)
+          const repairCategorySlug = repairCategoryToSlug(repairCategory)
+          combinations.push({ url: `/${citySlug}/magazine-reparatii/${repairCategorySlug}`, category: 'repair_shop' })
         })
       })
     }
