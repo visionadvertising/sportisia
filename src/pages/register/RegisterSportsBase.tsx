@@ -3052,7 +3052,7 @@ function RegisterSportsBase() {
                       }}>Facilități</label>
                       <div style={{
                         display: 'grid',
-                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
                         gap: '0.75rem'
                       }}>
                         {[
