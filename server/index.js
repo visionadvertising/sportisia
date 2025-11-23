@@ -240,6 +240,34 @@ async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `)
 
+    // Add new columns to facility_sports_fields if they don't exist (migration)
+    try {
+      const [fieldColumns] = await pool.query(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_NAME = 'facility_sports_fields' 
+        AND TABLE_SCHEMA = DATABASE()
+      `)
+      const existingFieldColumns = fieldColumns.map((col: any) => col.COLUMN_NAME)
+
+      if (!existingFieldColumns.includes('slot_size')) {
+        await pool.query(`ALTER TABLE facility_sports_fields ADD COLUMN slot_size INT DEFAULT 60 COMMENT 'Slot size in minutes (30, 60, 90)'`)
+        console.log('✅ Added slot_size column to facility_sports_fields')
+      }
+
+      if (!existingFieldColumns.includes('price_intervals')) {
+        await pool.query(`ALTER TABLE facility_sports_fields ADD COLUMN price_intervals JSON COMMENT 'Array of price intervals: [{startTime, endTime, price}]'`)
+        console.log('✅ Added price_intervals column to facility_sports_fields')
+      }
+
+      if (!existingFieldColumns.includes('opening_hours')) {
+        await pool.query(`ALTER TABLE facility_sports_fields ADD COLUMN opening_hours JSON COMMENT 'Opening hours per day: {monday: {isOpen, openTime, closeTime}, ...}'`)
+        console.log('✅ Added opening_hours column to facility_sports_fields')
+      }
+    } catch (error) {
+      console.error('Error adding columns to facility_sports_fields:', error)
+    }
+
     // Create admin users table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admin_users (
