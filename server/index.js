@@ -229,9 +229,8 @@ async function initDatabase() {
         price_per_hour DECIMAL(10, 2),
         description TEXT,
         features JSON,
-        slot_size INT DEFAULT 60 COMMENT 'Slot size in minutes (30, 60, 90)',
-        price_intervals JSON COMMENT 'Array of price intervals: [{startTime, endTime, price}]',
-        opening_hours JSON COMMENT 'Opening hours per day: {monday: {isOpen, openTime, closeTime}, ...}',
+        slot_size INT DEFAULT 60 COMMENT 'Slot size in minutes (30, 60, 90, 120)',
+        time_slots JSON COMMENT 'Array of time slots: [{day, startTime, endTime, status, price}]',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (facility_id) REFERENCES facilities(id) ON DELETE CASCADE,
@@ -255,14 +254,14 @@ async function initDatabase() {
         console.log('✅ Added slot_size column to facility_sports_fields')
       }
 
-      if (!existingFieldColumns.includes('price_intervals')) {
-        await pool.query(`ALTER TABLE facility_sports_fields ADD COLUMN price_intervals JSON COMMENT 'Array of price intervals: [{startTime, endTime, price}]'`)
-        console.log('✅ Added price_intervals column to facility_sports_fields')
+      if (!existingFieldColumns.includes('time_slots')) {
+        await pool.query(`ALTER TABLE facility_sports_fields ADD COLUMN time_slots JSON COMMENT 'Array of time slots: [{day, startTime, endTime, status, price}]'`)
+        console.log('✅ Added time_slots column to facility_sports_fields')
       }
-
-      if (!existingFieldColumns.includes('opening_hours')) {
-        await pool.query(`ALTER TABLE facility_sports_fields ADD COLUMN opening_hours JSON COMMENT 'Opening hours per day: {monday: {isOpen, openTime, closeTime}, ...}'`)
-        console.log('✅ Added opening_hours column to facility_sports_fields')
+      
+      // Migrate old price_intervals and opening_hours to time_slots if they exist
+      if (existingFieldColumns.includes('price_intervals') || existingFieldColumns.includes('opening_hours')) {
+        console.log('⚠️ Old columns detected, migration needed (manual step required)')
       }
     } catch (error) {
       console.error('Error adding columns to facility_sports_fields:', error)
@@ -833,9 +832,14 @@ app.post('/api/register', async (req, res) => {
             ? field.priceIntervals[0].price 
             : null
 
+          // Calculate legacy pricePerHour from first open slot with price for backward compatibility
+          const legacyPricePerHour = field.timeSlots && field.timeSlots.length > 0
+            ? (field.timeSlots.find(slot => slot.status === 'open' && slot.price !== null)?.price || null)
+            : null
+
           await connection.query(
-            `INSERT INTO facility_sports_fields (facility_id, sport_type, field_name, price_per_hour, description, features, slot_size, price_intervals, opening_hours)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO facility_sports_fields (facility_id, sport_type, field_name, price_per_hour, description, features, slot_size, time_slots)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               facilityId,
               field.sportType,
@@ -844,8 +848,7 @@ app.post('/api/register', async (req, res) => {
               field.description || null,
               JSON.stringify(field.features || {}),
               field.slotSize || 60, // Default 60 minutes
-              JSON.stringify(field.priceIntervals || []),
-              JSON.stringify(field.openingHours || {})
+              JSON.stringify(field.timeSlots || [])
             ]
           )
         }

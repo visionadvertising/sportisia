@@ -11,10 +11,12 @@ interface PricingDetail {
   price: number
 }
 
-interface PriceInterval {
-  startTime: string
-  endTime: string
-  price: number
+interface TimeSlot {
+  day: string // monday, tuesday, etc.
+  startTime: string // HH:mm format
+  endTime: string // HH:mm format
+  status: 'open' | 'closed' | 'not_specified' // Status of the slot
+  price: number | null // Price for this slot (null if not_specified or closed)
 }
 
 interface SportsField {
@@ -29,14 +31,8 @@ interface SportsField {
     hasLighting: boolean
   }
   // Pricing system - extensible for future online bookings
-  slotSize: number // in minutes: 30, 60, 90
-  priceIntervals: PriceInterval[] // Different prices for different time intervals
-  // Opening hours per field
-  openingHours: Record<string, {
-    isOpen: boolean | null,
-    openTime: string,
-    closeTime: string
-  }>
+  slotSize: number // in minutes: 30, 60, 90, 120
+  timeSlots: TimeSlot[] // Selected time slots with prices and status
 }
 
 function RegisterSportsBase() {
@@ -119,21 +115,8 @@ function RegisterSportsBase() {
       hasAirConditioning: false,
       hasLighting: false
     },
-    slotSize: 60, // Default 1 hour
-    priceIntervals: [{
-      startTime: '08:00',
-      endTime: '20:00',
-      price: 0
-    }],
-    openingHours: {
-      monday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-      tuesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-      wednesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-      thursday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-      friday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-      saturday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-      sunday: { isOpen: null, openTime: '09:00', closeTime: '18:00' }
-    }
+      slotSize: 60, // Default 1 hour
+      timeSlots: [] // Empty initially, user will select from grid
   }])
   const [showAddSportInput, setShowAddSportInput] = useState<number | null>(null)
   const [newSport, setNewSport] = useState('')
@@ -272,20 +255,7 @@ function RegisterSportsBase() {
         hasLighting: false
       },
       slotSize: 60, // Default 1 hour
-      priceIntervals: [{
-        startTime: '08:00',
-        endTime: '20:00',
-        price: 0
-      }],
-      openingHours: {
-        monday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-        tuesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-        wednesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-        thursday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-        friday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-        saturday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-        sunday: { isOpen: null, openTime: '09:00', closeTime: '18:00' }
-      }
+      timeSlots: [] // Empty initially, user will select from grid
     }])
   }
 
@@ -320,52 +290,89 @@ function RegisterSportsBase() {
     setSportsFields(updated)
   }
 
-  // Functions for managing price intervals
-  const addPriceInterval = (fieldIndex: number) => {
+  // Generate time slots based on slot size (from 00:00 to 23:59)
+  const generateTimeSlots = (slotSize: number): string[] => {
+    const slots: string[] = []
+    const totalMinutes = 24 * 60 // 24 hours in minutes
+    for (let minutes = 0; minutes < totalMinutes; minutes += slotSize) {
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      slots.push(`${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`)
+    }
+    return slots
+  }
+
+  // Calculate end time from start time and slot size
+  const getEndTime = (startTime: string, slotSize: number): string => {
+    const [hours, minutes] = startTime.split(':').map(Number)
+    const totalMinutes = hours * 60 + minutes + slotSize
+    const endHours = Math.floor(totalMinutes / 60) % 24
+    const endMins = totalMinutes % 60
+    return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
+  }
+
+  // Toggle slot selection in grid
+  const toggleSlotSelection = (fieldIndex: number, day: string, startTime: string) => {
     const updated = [...sportsFields]
-    updated[fieldIndex] = {
-      ...updated[fieldIndex],
-      priceIntervals: [
-        ...updated[fieldIndex].priceIntervals,
-        { startTime: '08:00', endTime: '20:00', price: 0 }
-      ]
+    const field = updated[fieldIndex]
+    const endTime = getEndTime(startTime, field.slotSize)
+    
+    // Check if slot already exists
+    const existingIndex = field.timeSlots.findIndex(
+      slot => slot.day === day && slot.startTime === startTime
+    )
+
+    if (existingIndex >= 0) {
+      // Remove slot if it exists
+      updated[fieldIndex] = {
+        ...field,
+        timeSlots: field.timeSlots.filter((_, i) => i !== existingIndex)
+      }
+    } else {
+      // Add new slot with default status
+      updated[fieldIndex] = {
+        ...field,
+        timeSlots: [
+          ...field.timeSlots,
+          {
+            day,
+            startTime,
+            endTime,
+            status: 'not_specified',
+            price: null
+          }
+        ]
+      }
     }
     setSportsFields(updated)
   }
 
-  const removePriceInterval = (fieldIndex: number, intervalIndex: number) => {
-    const updated = [...sportsFields]
-    if (updated[fieldIndex].priceIntervals.length > 1) {
-      updated[fieldIndex] = {
-        ...updated[fieldIndex],
-        priceIntervals: updated[fieldIndex].priceIntervals.filter((_, i) => i !== intervalIndex)
-      }
-      setSportsFields(updated)
-    }
-  }
-
-  const updatePriceInterval = (fieldIndex: number, intervalIndex: number, field: keyof PriceInterval, value: string | number) => {
+  // Update slot status and price
+  const updateSlot = (fieldIndex: number, day: string, startTime: string, updates: Partial<TimeSlot>) => {
     const updated = [...sportsFields]
     updated[fieldIndex] = {
       ...updated[fieldIndex],
-      priceIntervals: updated[fieldIndex].priceIntervals.map((interval, i) => 
-        i === intervalIndex ? { ...interval, [field]: value } : interval
+      timeSlots: updated[fieldIndex].timeSlots.map(slot => 
+        slot.day === day && slot.startTime === startTime
+          ? { ...slot, ...updates }
+          : slot
       )
     }
     setSportsFields(updated)
   }
 
-  // Function to update opening hours for a specific field
-  const updateFieldOpeningHours = (fieldIndex: number, day: string, data: { isOpen: boolean | null, openTime: string, closeTime: string }) => {
-    const updated = [...sportsFields]
-    updated[fieldIndex] = {
-      ...updated[fieldIndex],
-      openingHours: {
-        ...updated[fieldIndex].openingHours,
-        [day]: data
-      }
-    }
-    setSportsFields(updated)
+  // Check if slot is selected
+  const isSlotSelected = (fieldIndex: number, day: string, startTime: string): boolean => {
+    return sportsFields[fieldIndex].timeSlots.some(
+      slot => slot.day === day && slot.startTime === startTime
+    )
+  }
+
+  // Get slot data
+  const getSlotData = (fieldIndex: number, day: string, startTime: string): TimeSlot | null => {
+    return sportsFields[fieldIndex].timeSlots.find(
+      slot => slot.day === day && slot.startTime === startTime
+    ) || null
   }
 
   const addPricingDetail = () => {
@@ -447,13 +454,12 @@ function RegisterSportsBase() {
     // Validate that at least one sports field is complete
     const validFields = sportsFields.filter(field => {
       const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
-      const hasValidPrices = field.priceIntervals && field.priceIntervals.length > 0 && 
-        field.priceIntervals.some(interval => interval.price > 0)
-      return hasBasicInfo && hasValidPrices
+      const hasTimeSlots = field.timeSlots && field.timeSlots.length > 0
+      return hasBasicInfo && hasTimeSlots
     })
     
     if (!name || validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified) || validFields.length === 0) {
-      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon, un email și un teren complet cu prețuri)')
+      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon, un email și un teren complet cu sloturi configurate)')
       return
     }
 
@@ -2583,6 +2589,7 @@ function RegisterSportsBase() {
                         <option value={30}>30 minute</option>
                         <option value={60}>60 minute (1 oră)</option>
                         <option value={90}>90 minute (1.5 ore)</option>
+                        <option value={120}>120 minute (2 ore)</option>
                       </select>
                       <p style={{
                         marginTop: '0.5rem',
@@ -2594,194 +2601,174 @@ function RegisterSportsBase() {
                       </p>
                     </div>
 
-                    {/* Price Intervals */}
+                    {/* Time Slots Grid */}
                     <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                        <label style={{
-                          display: 'block',
-                          color: '#0f172a',
-                          fontWeight: '600',
-                          fontSize: '0.875rem',
-                          letterSpacing: '0.01em'
-                        }}>Intervale de preț *</label>
-                        <button
-                          type="button"
-                          onClick={() => addPriceInterval(index)}
-                          style={{
-                            padding: isMobile ? '0.625rem 1rem' : '0.5rem 1rem',
-                            background: '#10b981',
-                            color: 'white',
-                            border: '1.5px solid #10b981',
-                            borderRadius: '6px',
-                            fontSize: '0.8125rem',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            touchAction: 'manipulation'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isMobile) {
-                              e.currentTarget.style.background = '#059669'
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isMobile) {
-                              e.currentTarget.style.background = '#10b981'
-                            }
-                          }}
-                        >
-                          + Adaugă interval
-                        </button>
-                      </div>
-                      {field.priceIntervals && field.priceIntervals.map((interval, intervalIndex) => (
-                        <div key={intervalIndex} style={{
-                          padding: '1rem',
-                          marginBottom: '0.75rem',
-                          border: '1.5px solid #e2e8f0',
-                          borderRadius: '8px',
-                          background: '#f9fafb',
-                          position: 'relative'
-                        }}>
-                          {field.priceIntervals.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removePriceInterval(index, intervalIndex)}
-                              style={{
-                                position: 'absolute',
-                                top: '0.5rem',
-                                right: '0.5rem',
-                                background: '#fee2e2',
-                                color: '#dc2626',
-                                border: 'none',
-                                borderRadius: '4px',
-                                width: '24px',
-                                height: '24px',
-                                cursor: 'pointer',
-                                fontSize: '0.875rem',
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.75rem',
+                        color: '#0f172a',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.01em'
+                      }}>Selectează sloturile și configurează prețurile *</label>
+                      
+                      {/* Days Grid */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(7, 1fr)',
+                        gap: '0.5rem',
+                        marginBottom: '1rem',
+                        padding: '1rem',
+                        background: '#f9fafb',
+                        borderRadius: '8px',
+                        border: '1.5px solid #e2e8f0',
+                        overflowX: isMobile ? 'auto' : 'visible'
+                      }}>
+                        {[
+                          { key: 'monday', label: 'Luni' },
+                          { key: 'tuesday', label: 'Marți' },
+                          { key: 'wednesday', label: 'Miercuri' },
+                          { key: 'thursday', label: 'Joi' },
+                          { key: 'friday', label: 'Vineri' },
+                          { key: 'saturday', label: 'Sâmbătă' },
+                          { key: 'sunday', label: 'Duminică' }
+                        ].map((day) => {
+                          const timeSlots = generateTimeSlots(field.slotSize || 60)
+                          const selectedSlots = field.timeSlots.filter(slot => slot.day === day.key)
+                          
+                          return (
+                            <div key={day.key} style={{
+                              minWidth: isMobile ? '200px' : 'auto'
+                            }}>
+                              <div style={{
                                 fontWeight: '600',
+                                fontSize: '0.875rem',
+                                color: '#0f172a',
+                                marginBottom: '0.75rem',
+                                textAlign: 'center',
+                                padding: '0.5rem',
+                                background: '#ffffff',
+                                borderRadius: '6px',
+                                border: '1.5px solid #e2e8f0'
+                              }}>
+                                {day.label}
+                              </div>
+                              
+                              {/* Time Slots for this day */}
+                              <div style={{
                                 display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transition: 'all 0.2s'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!isMobile) {
-                                  e.currentTarget.style.background = '#fecaca'
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isMobile) {
-                                  e.currentTarget.style.background = '#fee2e2'
-                                }
-                              }}
-                            >
-                              ×
-                            </button>
-                          )}
-                          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                            <div>
-                              <label style={{
-                                display: 'block',
-                                marginBottom: '0.5rem',
-                                color: '#64748b',
-                                fontSize: '0.8125rem',
-                                fontWeight: '500'
-                              }}>De la</label>
-                              <input
-                                type="time"
-                                value={interval.startTime}
-                                onChange={(e) => updatePriceInterval(index, intervalIndex, 'startTime', e.target.value)}
-                                required
-                                style={{
-                                  width: '100%',
-                                  padding: isMobile ? '0.75rem' : '0.625rem 0.75rem',
-                                  border: '1.5px solid #e2e8f0',
-                                  borderRadius: '6px',
-                                  fontSize: isMobile ? '16px' : '0.875rem',
-                                  outline: 'none',
-                                  background: '#ffffff',
-                                  color: '#0f172a',
-                                  transition: 'all 0.2s ease'
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = '#10b981'
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = '#e2e8f0'
-                                }}
-                              />
+                                flexDirection: 'column',
+                                gap: '0.25rem',
+                                maxHeight: isMobile ? '300px' : '400px',
+                                overflowY: 'auto',
+                                padding: '0.25rem'
+                              }}>
+                                {timeSlots.map((startTime) => {
+                                  const isSelected = isSlotSelected(index, day.key, startTime)
+                                  const slotData = getSlotData(index, day.key, startTime)
+                                  const endTime = getEndTime(startTime, field.slotSize || 60)
+                                  
+                                  return (
+                                    <div key={startTime}>
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleSlotSelection(index, day.key, startTime)}
+                                        style={{
+                                          width: '100%',
+                                          padding: '0.5rem',
+                                          border: isSelected ? '2px solid #10b981' : '1.5px solid #e2e8f0',
+                                          borderRadius: '6px',
+                                          background: isSelected ? '#f0fdf4' : '#ffffff',
+                                          color: '#0f172a',
+                                          fontSize: '0.75rem',
+                                          fontWeight: '500',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s ease',
+                                          textAlign: 'center'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          if (!isMobile) {
+                                            e.currentTarget.style.borderColor = isSelected ? '#10b981' : '#cbd5e1'
+                                            e.currentTarget.style.background = isSelected ? '#f0fdf4' : '#f9fafb'
+                                          }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          if (!isMobile) {
+                                            e.currentTarget.style.borderColor = isSelected ? '#10b981' : '#e2e8f0'
+                                            e.currentTarget.style.background = isSelected ? '#f0fdf4' : '#ffffff'
+                                          }
+                                        }}
+                                      >
+                                        {startTime}
+                                      </button>
+                                      
+                                      {/* Configuration panel for selected slot */}
+                                      {isSelected && slotData && (
+                                        <div style={{
+                                          marginTop: '0.5rem',
+                                          padding: '0.75rem',
+                                          background: '#ffffff',
+                                          border: '1.5px solid #10b981',
+                                          borderRadius: '6px',
+                                          fontSize: '0.75rem'
+                                        }}>
+                                          <div style={{ marginBottom: '0.5rem', fontWeight: '600', color: '#0f172a' }}>
+                                            {startTime} - {endTime}
+                                          </div>
+                                          
+                                          {/* Status selector */}
+                                          <select
+                                            value={slotData.status}
+                                            onChange={(e) => updateSlot(index, day.key, startTime, { 
+                                              status: e.target.value as 'open' | 'closed' | 'not_specified' 
+                                            })}
+                                            style={{
+                                              width: '100%',
+                                              padding: '0.5rem',
+                                              border: '1.5px solid #e2e8f0',
+                                              borderRadius: '4px',
+                                              fontSize: '0.75rem',
+                                              marginBottom: '0.5rem',
+                                              cursor: 'pointer'
+                                            }}
+                                          >
+                                            <option value="not_specified">Nespecificat</option>
+                                            <option value="open">Deschis</option>
+                                            <option value="closed">Închis</option>
+                                          </select>
+                                          
+                                          {/* Price input (only if open) */}
+                                          {slotData.status === 'open' && (
+                                            <input
+                                              type="number"
+                                              placeholder="Preț (RON)"
+                                              value={slotData.price || ''}
+                                              onChange={(e) => updateSlot(index, day.key, startTime, { 
+                                                price: parseFloat(e.target.value) || null 
+                                              })}
+                                              min="0"
+                                              step="0.01"
+                                              style={{
+                                                width: '100%',
+                                                padding: '0.5rem',
+                                                border: '1.5px solid #e2e8f0',
+                                                borderRadius: '4px',
+                                                fontSize: '0.75rem'
+                                              }}
+                                            />
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                              </div>
                             </div>
-                            <div>
-                              <label style={{
-                                display: 'block',
-                                marginBottom: '0.5rem',
-                                color: '#64748b',
-                                fontSize: '0.8125rem',
-                                fontWeight: '500'
-                              }}>Până la</label>
-                              <input
-                                type="time"
-                                value={interval.endTime}
-                                onChange={(e) => updatePriceInterval(index, intervalIndex, 'endTime', e.target.value)}
-                                required
-                                style={{
-                                  width: '100%',
-                                  padding: isMobile ? '0.75rem' : '0.625rem 0.75rem',
-                                  border: '1.5px solid #e2e8f0',
-                                  borderRadius: '6px',
-                                  fontSize: isMobile ? '16px' : '0.875rem',
-                                  outline: 'none',
-                                  background: '#ffffff',
-                                  color: '#0f172a',
-                                  transition: 'all 0.2s ease'
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = '#10b981'
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = '#e2e8f0'
-                                }}
-                              />
-                            </div>
-                            <div>
-                              <label style={{
-                                display: 'block',
-                                marginBottom: '0.5rem',
-                                color: '#64748b',
-                                fontSize: '0.8125rem',
-                                fontWeight: '500'
-                              }}>Preț (RON)</label>
-                              <input
-                                type="number"
-                                placeholder="ex: 100"
-                                value={interval.price || ''}
-                                onChange={(e) => updatePriceInterval(index, intervalIndex, 'price', parseFloat(e.target.value) || 0)}
-                                min="0"
-                                step="0.01"
-                                required
-                                style={{
-                                  width: '100%',
-                                  padding: isMobile ? '0.75rem' : '0.625rem 0.75rem',
-                                  border: '1.5px solid #e2e8f0',
-                                  borderRadius: '6px',
-                                  fontSize: isMobile ? '16px' : '0.875rem',
-                                  outline: 'none',
-                                  background: '#ffffff',
-                                  color: '#0f172a',
-                                  transition: 'all 0.2s ease'
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = '#10b981'
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = '#e2e8f0'
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      {(!field.priceIntervals || field.priceIntervals.length === 0) && (
+                          )
+                        })}
+                      </div>
+                      
+                      {field.timeSlots.length === 0 && (
                         <p style={{
                           color: '#64748b',
                           fontSize: '0.8125rem',
@@ -2791,7 +2778,7 @@ function RegisterSportsBase() {
                           borderRadius: '6px',
                           border: '1.5px dashed #e2e8f0'
                         }}>
-                          Adaugă cel puțin un interval de preț (ex: 08:00-20:00 = 100 RON, 20:00-23:00 = 150 RON)
+                          Selectează sloturile din grid pentru a configura prețurile și programul
                         </p>
                       )}
                     </div>
@@ -2914,163 +2901,6 @@ function RegisterSportsBase() {
                       </div>
                     </div>
 
-                    {/* Opening Hours per Field */}
-                    <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
-                      <label style={{
-                        display: 'block',
-                        marginBottom: '0.75rem',
-                        color: '#0f172a',
-                        fontWeight: '600',
-                        fontSize: '0.875rem',
-                        letterSpacing: '0.01em'
-                      }}>Program</label>
-                      <div style={{
-                        padding: '1rem',
-                        border: '1.5px solid #e2e8f0',
-                        borderRadius: '8px',
-                        background: '#f9fafb'
-                      }}>
-                        {[
-                          { key: 'monday', label: 'Luni' },
-                          { key: 'tuesday', label: 'Marți' },
-                          { key: 'wednesday', label: 'Miercuri' },
-                          { key: 'thursday', label: 'Joi' },
-                          { key: 'friday', label: 'Vineri' },
-                          { key: 'saturday', label: 'Sâmbătă' },
-                          { key: 'sunday', label: 'Duminică' }
-                        ].map((day) => {
-                          const dayData = field.openingHours[day.key as keyof typeof field.openingHours]
-                          return (
-                            <div key={day.key} style={{
-                              display: 'flex',
-                              flexDirection: isMobile ? 'column' : 'row',
-                              alignItems: isMobile ? 'flex-start' : 'center',
-                              gap: isMobile ? '0.75rem' : '1rem',
-                              marginBottom: isMobile ? '1rem' : '0.75rem',
-                              paddingBottom: isMobile ? '1rem' : '0.75rem',
-                              borderBottom: day.key !== 'sunday' ? '1px solid #e2e8f0' : 'none'
-                            }}>
-                              <div style={{
-                                width: isMobile ? '100%' : '100px',
-                                fontWeight: '600',
-                                color: '#0f172a',
-                                fontSize: '0.875rem'
-                              }}>
-                                {day.label}
-                              </div>
-                              <div style={{
-                                display: 'flex',
-                                flexDirection: isMobile ? 'column' : 'row',
-                                alignItems: isMobile ? 'stretch' : 'center',
-                                gap: isMobile ? '0.5rem' : '0.75rem',
-                                flex: 1
-                              }}>
-                                <label style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.5rem',
-                                  cursor: 'pointer',
-                                  fontSize: '0.875rem',
-                                  color: '#64748b'
-                                }}>
-                                  <input
-                                    type="radio"
-                                    name={`${index}-${day.key}-status`}
-                                    checked={dayData.isOpen === true}
-                                    onChange={() => updateFieldOpeningHours(index, day.key, { ...dayData, isOpen: true })}
-                                    style={{ cursor: 'pointer', accentColor: '#10b981' }}
-                                  />
-                                  <span>Deschis</span>
-                                </label>
-                                <label style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.5rem',
-                                  cursor: 'pointer',
-                                  fontSize: '0.875rem',
-                                  color: '#64748b'
-                                }}>
-                                  <input
-                                    type="radio"
-                                    name={`${index}-${day.key}-status`}
-                                    checked={dayData.isOpen === false}
-                                    onChange={() => updateFieldOpeningHours(index, day.key, { ...dayData, isOpen: false })}
-                                    style={{ cursor: 'pointer', accentColor: '#10b981' }}
-                                  />
-                                  <span>Închis</span>
-                                </label>
-                                <label style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.5rem',
-                                  cursor: 'pointer',
-                                  fontSize: '0.875rem',
-                                  color: '#64748b'
-                                }}>
-                                  <input
-                                    type="radio"
-                                    name={`${index}-${day.key}-status`}
-                                    checked={dayData.isOpen === null}
-                                    onChange={() => updateFieldOpeningHours(index, day.key, { ...dayData, isOpen: null })}
-                                    style={{ cursor: 'pointer', accentColor: '#10b981' }}
-                                  />
-                                  <span>Nespecificat</span>
-                                </label>
-                                {dayData.isOpen === true && (
-                                  <>
-                                    <input
-                                      type="time"
-                                      value={dayData.openTime}
-                                      onChange={(e) => updateFieldOpeningHours(index, day.key, { ...dayData, openTime: e.target.value })}
-                                      style={{
-                                        padding: '0.5rem 0.75rem',
-                                        border: '1.5px solid #e2e8f0',
-                                        borderRadius: '6px',
-                                        fontSize: '0.875rem',
-                                        outline: 'none',
-                                        background: '#ffffff',
-                                        color: '#0f172a',
-                                        transition: 'all 0.2s ease',
-                                        width: isMobile ? '100%' : 'auto'
-                                      }}
-                                      onFocus={(e) => {
-                                        e.target.style.borderColor = '#10b981'
-                                      }}
-                                      onBlur={(e) => {
-                                        e.target.style.borderColor = '#e2e8f0'
-                                      }}
-                                    />
-                                    <span style={{ color: '#64748b', fontSize: '0.875rem' }}>-</span>
-                                    <input
-                                      type="time"
-                                      value={dayData.closeTime}
-                                      onChange={(e) => updateFieldOpeningHours(index, day.key, { ...dayData, closeTime: e.target.value })}
-                                      style={{
-                                        padding: '0.5rem 0.75rem',
-                                        border: '1.5px solid #e2e8f0',
-                                        borderRadius: '6px',
-                                        fontSize: '0.875rem',
-                                        outline: 'none',
-                                        background: '#ffffff',
-                                        color: '#0f172a',
-                                        transition: 'all 0.2s ease',
-                                        width: isMobile ? '100%' : 'auto'
-                                      }}
-                                      onFocus={(e) => {
-                                        e.target.style.borderColor = '#10b981'
-                                      }}
-                                      onBlur={(e) => {
-                                        e.target.style.borderColor = '#e2e8f0'
-                                      }}
-                                    />
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
                   </div>
                 ))}
               </div>
