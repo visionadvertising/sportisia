@@ -391,6 +391,11 @@ function RegisterSportsBase() {
     const field = updated[fieldIndex]
     const slotSet = selectedSlotsForBulk[fieldIndex] || new Set()
     
+    if (slotSet.size === 0) {
+      console.warn('No slots selected for bulk update')
+      return
+    }
+    
     // Remove existing slots that match selected ones
     const filteredSlots = field.timeSlots.filter(slot => {
       const slotKey = `${slot.day}:${slot.startTime}`
