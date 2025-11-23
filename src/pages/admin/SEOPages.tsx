@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES } from '../../data/romanian-cities'
 import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug } from '../../utils/seo'
@@ -28,14 +28,23 @@ const FACILITY_TYPES = [
 const ITEMS_PER_PAGE = 50
 
 function SEOPages() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const categoryFromUrl = searchParams.get('category') || ''
+  
   const [allPages, setAllPages] = useState<SEOPage[]>([])
   const [seoPagesMap, setSeoPagesMap] = useState<Record<string, SEOPage>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('') // Filter by facility type
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoryFromUrl) // Filter by facility type
   const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
+  
+  // Sync selectedCategory with URL
+  useEffect(() => {
+    const category = searchParams.get('category') || ''
+    setSelectedCategory(category)
+  }, [searchParams])
 
   useEffect(() => {
     // Generate initial combinations with ROMANIAN_CITIES immediately so page is not blank
@@ -354,8 +363,15 @@ function SEOPages() {
               <select
                 value={selectedCategory}
                 onChange={(e) => {
-                  setSelectedCategory(e.target.value)
+                  const newCategory = e.target.value
+                  setSelectedCategory(newCategory)
                   setCurrentPage(1)
+                  // Update URL
+                  if (newCategory) {
+                    setSearchParams({ category: newCategory })
+                  } else {
+                    setSearchParams({})
+                  }
                 }}
                 style={{
                   padding: '0.625rem 1rem',
