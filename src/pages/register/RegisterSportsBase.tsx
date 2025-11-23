@@ -274,7 +274,18 @@ function RegisterSportsBase() {
 
   const updateSportsField = (index: number, field: keyof SportsField, value: any) => {
     const updated = [...sportsFields]
-    updated[index] = { ...updated[index], [field]: value }
+    
+    // If slotSize changes, clear timeSlots that are no longer valid
+    if (field === 'slotSize' && value !== updated[index].slotSize) {
+      updated[index] = { 
+        ...updated[index], 
+        [field]: value,
+        timeSlots: [] // Clear slots when slot size changes
+      }
+    } else {
+      updated[index] = { ...updated[index], [field]: value }
+    }
+    
     setSportsFields(updated)
   }
 
