@@ -119,7 +119,7 @@ async function initDatabase() {
         facility_type ENUM('field', 'coach', 'repair_shop', 'equipment_shop') NOT NULL,
         name VARCHAR(255) NOT NULL,
         city VARCHAR(255) NOT NULL,
-        location VARCHAR(255) NOT NULL,
+        location VARCHAR(255),
         phone VARCHAR(20) NOT NULL,
         email VARCHAR(255),
         description TEXT,
@@ -361,6 +361,20 @@ async function addMissingColumns() {
     if (!existingColumns.includes('map_coordinates')) {
       await pool.query(`ALTER TABLE facilities ADD COLUMN map_coordinates JSON AFTER location_not_specified`)
       console.log('✅ Added map_coordinates column')
+    }
+
+    // Modify location column to allow NULL if it's currently NOT NULL
+    const [locationColumn] = await pool.query(`
+      SELECT IS_NULLABLE, COLUMN_TYPE
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'facilities'
+      AND COLUMN_NAME = 'location'
+    `)
+    
+    if (locationColumn.length > 0 && locationColumn[0].IS_NULLABLE === 'NO') {
+      await pool.query(`ALTER TABLE facilities MODIFY COLUMN location VARCHAR(255)`)
+      console.log('✅ Modified location column to allow NULL')
     }
     
     // Add repair_categories for repair shops
