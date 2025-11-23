@@ -733,11 +733,11 @@ app.post('/api/register', async (req, res) => {
       // New common fields
       logoFile, socialMedia, gallery,
       // Field specific (sport is also used for equipment shops - can be 'general' or specific sport)
-      sport, pricePerHour, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
+      sport, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
       // New: sportsFields array for multiple fields per sports base
       sportsFields,
       // Coach specific
-      specialization, experienceYears, pricePerLesson, certifications, languages,
+      specialization, experienceYears, certifications, languages,
       // Repair shop specific
       servicesOffered, brandsServiced, averageRepairTime, repairCategories,
       // Equipment shop specific
@@ -745,6 +745,10 @@ app.post('/api/register', async (req, res) => {
       // Common
       website, openingHours
     } = req.body
+    
+    // Extract pricePerHour and pricePerLesson separately to allow modification
+    let pricePerHour = req.body.pricePerHour
+    let pricePerLesson = req.body.pricePerLesson
 
     // Validate required fields
     if (!facilityType || !name || !city || (!location && !locationNotSpecified) || !phone || !email) {
