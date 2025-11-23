@@ -108,6 +108,9 @@ function SEOPages() {
 
   const generateAllCombinations = () => {
     const combinations: SEOPage[] = []
+    
+    // Use current availableCities or fallback to ROMANIAN_CITIES
+    const citiesToUse = availableCities.length > 0 ? availableCities : ROMANIAN_CITIES
 
     // If a specific category is selected, only generate combinations for that category
     const typesToGenerate = selectedCategory 
