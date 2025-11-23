@@ -3252,14 +3252,7 @@ function RegisterSportsBase() {
                 }}>
                   Datele de conectare (au fost trimise și pe email):
                 </p>
-              
-              <div style={{
-                background: '#f8fafc',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                marginBottom: '2rem',
-                border: '1px solid #e2e8f0'
-              }}>
+                
                 <div style={{ marginBottom: '1rem' }}>
                   <strong style={{ color: '#0f172a', fontSize: '0.875rem' }}>Username:</strong>
                   <div style={{
