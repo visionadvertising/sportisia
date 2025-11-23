@@ -1482,19 +1482,45 @@ app.get('/api/facilities/:slug', async (req, res) => {
       }
     } else {
       // It's a slug, search by matching name and city
-      const [allFacilities] = await pool.query('SELECT * FROM facilities WHERE status = ?', ['active'])
+      // First try active facilities, then all facilities (for debugging/private access)
+      const [activeFacilities] = await pool.query('SELECT * FROM facilities WHERE status = ?', ['active'])
       
-      for (const f of allFacilities) {
+      for (const f of activeFacilities) {
         const facilitySlug = createSlug(f.name || '', f.city || '')
+        console.log(`[SLUG] Checking: "${facilitySlug}" vs "${slug}" for facility ${f.id} (${f.name}, ${f.city})`)
         if (facilitySlug === slug) {
           facility = f
           facilityId = f.id
           break
         }
       }
+      
+      // If not found in active, try all facilities (for private access or pending facilities)
+      if (!facility) {
+        const [allFacilities] = await pool.query('SELECT * FROM facilities')
+        for (const f of allFacilities) {
+          const facilitySlug = createSlug(f.name || '', f.city || '')
+          console.log(`[SLUG] Checking all: "${facilitySlug}" vs "${slug}" for facility ${f.id} (${f.name}, ${f.city})`)
+          if (facilitySlug === slug) {
+            facility = f
+            facilityId = f.id
+            break
+          }
+        }
+      }
     }
 
     if (!facility) {
+      // Log for debugging
+      console.log(`[SLUG] Facility not found for slug: "${slug}"`)
+      const [allFacilities] = await pool.query('SELECT id, name, city, status FROM facilities LIMIT 10')
+      console.log(`[SLUG] Sample facilities:`, allFacilities.map(f => ({
+        id: f.id,
+        name: f.name,
+        city: f.city,
+        status: f.status,
+        slug: createSlug(f.name || '', f.city || '')
+      })))
       return res.status(404).json({ success: false, error: 'Baza sportivă nu a fost găsită' })
     }
 
