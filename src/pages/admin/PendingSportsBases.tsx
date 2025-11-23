@@ -21,6 +21,8 @@ interface Facility {
 const ITEMS_PER_PAGE = 10
 
 function PendingSportsBases() {
+  console.log('PendingSportsBases: Component rendered/rendering')
+  
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
@@ -28,6 +30,7 @@ function PendingSportsBases() {
   const [success, setSuccess] = useState('')
 
   useEffect(() => {
+    console.log('PendingSportsBases: useEffect called, loading facilities...')
     loadFacilities()
   }, [])
 
