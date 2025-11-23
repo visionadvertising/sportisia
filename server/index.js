@@ -769,10 +769,34 @@ app.post('/api/register', async (req, res) => {
           }
           // Validate each field
           for (const field of parsedSportsFields) {
-            if (!field.fieldName || !field.sportType || !field.pricePerHour || field.pricePerHour <= 0) {
+            if (!field.fieldName || !field.sportType) {
               return res.status(400).json({
                 success: false,
-                error: 'Fiecare teren trebuie să aibă nume, tip sport și preț valid'
+                error: 'Fiecare teren trebuie să aibă nume și tip sport'
+              })
+            }
+            
+            // Check if field has time slots configured
+            if (!field.timeSlots || !Array.isArray(field.timeSlots) || field.timeSlots.length === 0) {
+              return res.status(400).json({
+                success: false,
+                error: 'Fiecare teren trebuie să aibă cel puțin un interval de timp configurat'
+              })
+            }
+            
+            // Check if at least one time slot has a price (for open slots)
+            const hasPrice = field.timeSlots.some(slot => 
+              slot.status === 'open' && slot.price !== null && slot.price > 0
+            )
+            
+            // Note: We allow slots with 'not_specified' or 'closed' status, but at least one should have a price
+            // If all slots are closed or not_specified, that's also acceptable (facility can set prices later)
+            // But if there are open slots, at least one should have a price
+            const hasOpenSlots = field.timeSlots.some(slot => slot.status === 'open')
+            if (hasOpenSlots && !hasPrice) {
+              return res.status(400).json({
+                success: false,
+                error: 'Fiecare teren trebuie să aibă cel puțin un interval deschis cu preț configurat'
               })
             }
           }
