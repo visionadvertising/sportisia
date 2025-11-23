@@ -466,7 +466,7 @@ app.post('/api/register', async (req, res) => {
       name, city, county, location, locationNotSpecified, mapCoordinates, phone, email, contactPerson, description, imageUrl,
       // New common fields
       logoFile, socialMedia, gallery,
-      // Field specific
+      // Field specific (sport is also used for equipment shops - can be 'general' or specific sport)
       sport, pricePerHour, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
       // Coach specific
       specialization, experienceYears, pricePerLesson, certifications, languages,
@@ -475,9 +475,7 @@ app.post('/api/register', async (req, res) => {
       // Equipment shop specific
       productsCategories, brandsAvailable, deliveryAvailable,
       // Common
-      website, openingHours,
-      // sport for equipment shops (can be 'general' or specific sport)
-      sport
+      website, openingHours
     } = req.body
 
     // Validate required fields
