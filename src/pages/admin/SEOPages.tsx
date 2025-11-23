@@ -39,7 +39,26 @@ function SEOPages() {
   const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
 
   useEffect(() => {
-    loadCities()
+    // Generate initial combinations with ROMANIAN_CITIES immediately so page is not blank
+    if (ROMANIAN_CITIES.length > 0) {
+      const initialCombinations: SEOPage[] = []
+      // Add basic combinations
+      initialCombinations.push({ url: '/toate' })
+      ROMANIAN_CITIES.forEach(city => {
+        const citySlug = cityNameToSlug(city.city)
+        initialCombinations.push({ url: `/${citySlug}` })
+      })
+      KNOWN_SPORTS.forEach(sport => {
+        const sportSlug = sportNameToSlug(sport)
+        initialCombinations.push({ url: `/${sportSlug}` })
+      })
+      FACILITY_TYPES.forEach(type => {
+        initialCombinations.push({ url: `/${type.slug}`, category: type.value })
+      })
+      setAllPages(initialCombinations)
+      setLoading(false) // Set loading to false so content is visible immediately
+    }
+    loadCities() // Load cities from API in background
   }, [])
 
   useEffect(() => {
@@ -98,8 +117,8 @@ function SEOPages() {
     }
 
     // 2. /:city
-    console.log('Generating combinations for cities:', availableCities.map(c => c.city))
-    availableCities.forEach(city => {
+    console.log('Generating combinations for cities:', citiesToUse.map(c => c.city))
+    citiesToUse.forEach(city => {
       const citySlug = cityNameToSlug(city.city)
       console.log(`City: ${city.city} -> Slug: ${citySlug}`)
       combinations.push({ url: `/${citySlug}` })
@@ -121,7 +140,7 @@ function SEOPages() {
 
     // 5. /:city/:sport - only for categories that use sport
     if (!selectedCategory || sportCategories.includes(selectedCategory)) {
-      availableCities.forEach(city => {
+      citiesToUse.forEach(city => {
         KNOWN_SPORTS.forEach(sport => {
           const citySlug = cityNameToSlug(city.city)
           const sportSlug = sportNameToSlug(sport)
@@ -131,7 +150,7 @@ function SEOPages() {
     }
 
     // 6. /:city/:type
-    availableCities.forEach(city => {
+    citiesToUse.forEach(city => {
       typesToGenerate.forEach(type => {
         const citySlug = cityNameToSlug(city.city)
         combinations.push({ url: `/${citySlug}/${type.slug}`, category: type.value })
@@ -152,7 +171,7 @@ function SEOPages() {
 
     // 8. /:city/:sport/:type - only for categories that use sport
     if (!selectedCategory || sportCategories.includes(selectedCategory)) {
-      availableCities.forEach(city => {
+      citiesToUse.forEach(city => {
         KNOWN_SPORTS.forEach(sport => {
           typesToGenerate.forEach(type => {
             if (sportCategories.includes(type.value)) {
@@ -166,6 +185,10 @@ function SEOPages() {
     }
 
     setAllPages(combinations)
+    // If this is the initial load and we have combinations, set loading to false
+    if (combinations.length > 0 && loading) {
+      setLoading(false)
+    }
   }
 
   const fetchSEOPages = async () => {
