@@ -1390,7 +1390,47 @@ app.get('/api/admin/site-settings', async (req, res) => {
   }
 })
 
-// PUT update site logo
+// PUT update site setting by key
+app.put('/api/admin/site-settings/:key', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Neautorizat' })
+    }
+
+    const settingKey = req.params.key
+    const { setting_value } = req.body
+
+    if (!setting_value) {
+      return res.status(400).json({
+        success: false,
+        error: 'Valoarea setării este obligatorie'
+      })
+    }
+
+    await pool.query(
+      `INSERT INTO site_settings (setting_key, setting_value) 
+       VALUES (?, ?) 
+       ON DUPLICATE KEY UPDATE setting_value = ?, updated_at = CURRENT_TIMESTAMP`,
+      [settingKey, setting_value, setting_value]
+    )
+
+    res.json({
+      success: true,
+      message: `Setarea "${settingKey}" a fost actualizată cu succes`
+    })
+  } catch (error) {
+    console.error('Error updating site setting:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// PUT update site logo (kept for backward compatibility)
 app.put('/api/admin/site-settings/logo', async (req, res) => {
   try {
     if (!pool) {
