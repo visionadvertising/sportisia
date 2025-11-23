@@ -248,7 +248,7 @@ async function initDatabase() {
         WHERE TABLE_NAME = 'facility_sports_fields' 
         AND TABLE_SCHEMA = DATABASE()
       `)
-      const existingFieldColumns = fieldColumns.map((col: any) => col.COLUMN_NAME)
+      const existingFieldColumns = fieldColumns.map((col) => col.COLUMN_NAME)
 
       if (!existingFieldColumns.includes('slot_size')) {
         await pool.query(`ALTER TABLE facility_sports_fields ADD COLUMN slot_size INT DEFAULT 60 COMMENT 'Slot size in minutes (30, 60, 90)'`)
