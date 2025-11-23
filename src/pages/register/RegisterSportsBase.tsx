@@ -89,11 +89,6 @@ function RegisterSportsBase() {
   const [galleryFiles, setGalleryFiles] = useState<File[]>([])
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
   
-  // State for bulk selection mode
-  const [bulkSelectionMode, setBulkSelectionMode] = useState<Record<number, boolean>>({})
-  const [selectedSlotsForBulk, setSelectedSlotsForBulk] = useState<Record<number, Set<string>>>({}) // fieldIndex -> Set of "day:startTime"
-  const [showBulkModal, setShowBulkModal] = useState<Record<number, boolean>>({})
-  const [bulkSettings, setBulkSettings] = useState<Record<number, { status: 'open' | 'closed' | 'not_specified', price: number | null }>>({})
 
   // Step 5: Specific Details
   const [openingHours, setOpeningHours] = useState<Record<string, {
@@ -308,160 +303,18 @@ function RegisterSportsBase() {
     setSportsFields(updated)
   }
 
-  // Generate time slots based on slot size (from 00:00 to 23:59)
-  const generateTimeSlots = (slotSize: number): string[] => {
-    const slots: string[] = []
-    const totalMinutes = 24 * 60 // 24 hours in minutes
-    for (let minutes = 0; minutes < totalMinutes; minutes += slotSize) {
-      const hours = Math.floor(minutes / 60)
-      const mins = minutes % 60
-      slots.push(`${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`)
-    }
-    return slots
-  }
-
-  // Calculate end time from start time and slot size
-  const getEndTime = (startTime: string, slotSize: number): string => {
-    const [hours, minutes] = startTime.split(':').map(Number)
-    const totalMinutes = hours * 60 + minutes + slotSize
-    const endHours = Math.floor(totalMinutes / 60) % 24
-    const endMins = totalMinutes % 60
-    return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
-  }
-
-  // Toggle slot selection in grid
-  const toggleSlotSelection = (fieldIndex: number, day: string, startTime: string, isBulkMode: boolean = false) => {
-    if (isBulkMode && bulkSelectionMode[fieldIndex]) {
-      // Bulk selection mode: add/remove from bulk selection set
-      const slotKey = `${day}:${startTime}`
-      const updated = { ...selectedSlotsForBulk }
-      if (!updated[fieldIndex]) {
-        updated[fieldIndex] = new Set()
-      }
-      const slotSet = new Set(updated[fieldIndex])
-      
-      if (slotSet.has(slotKey)) {
-        slotSet.delete(slotKey)
-      } else {
-        slotSet.add(slotKey)
-      }
-      
-      updated[fieldIndex] = slotSet
-      setSelectedSlotsForBulk(updated)
-    } else {
-      // Normal mode: toggle individual slot
-      const updated = [...sportsFields]
-      const field = updated[fieldIndex]
-      const endTime = getEndTime(startTime, field.slotSize)
-      
-      // Check if slot already exists
-      const existingIndex = field.timeSlots.findIndex(
-        slot => slot.day === day && slot.startTime === startTime
-      )
-
-      if (existingIndex >= 0) {
-        // Remove slot if it exists
-        updated[fieldIndex] = {
-          ...field,
-          timeSlots: field.timeSlots.filter((_, i) => i !== existingIndex)
-        }
-      } else {
-        // Add new slot with default status
-        updated[fieldIndex] = {
-          ...field,
-          timeSlots: [
-            ...field.timeSlots,
-            {
-              day,
-              startTime,
-              endTime,
-              status: 'not_specified',
-              price: null
-            }
-          ]
-        }
-      }
-      setSportsFields(updated)
-    }
-  }
-
-  // Apply bulk settings to all selected slots
-  const applyBulkSettings = (fieldIndex: number, status: 'open' | 'closed' | 'not_specified', price: number | null) => {
-    const updated = [...sportsFields]
-    const field = updated[fieldIndex]
-    const slotSet = selectedSlotsForBulk[fieldIndex] || new Set()
-    
-    if (slotSet.size === 0) {
-      console.warn('No slots selected for bulk update')
-      return
-    }
-    
-    // Remove existing slots that match selected ones
-    const filteredSlots = field.timeSlots.filter(slot => {
-      const slotKey = `${slot.day}:${slot.startTime}`
-      return !slotSet.has(slotKey)
-    })
-    
-    // Add new slots with bulk settings
-    const newSlots: TimeSlot[] = Array.from(slotSet).map(slotKey => {
-      const [day, startTime] = slotKey.split(':')
-      const endTime = getEndTime(startTime, field.slotSize)
-      return {
-        day,
-        startTime,
-        endTime,
-        status,
-        price: status === 'open' ? price : null
-      }
-    })
-    
-    updated[fieldIndex] = {
-      ...field,
-      timeSlots: [...filteredSlots, ...newSlots]
-    }
-    
-    setSportsFields(updated)
-    
-    // Clear bulk selection
-    const updatedBulk = { ...selectedSlotsForBulk }
-    delete updatedBulk[fieldIndex]
-    setSelectedSlotsForBulk(updatedBulk)
-    setBulkSelectionMode({ ...bulkSelectionMode, [fieldIndex]: false })
-  }
-
-  // Check if slot is in bulk selection
-  const isSlotInBulkSelection = (fieldIndex: number, day: string, startTime: string): boolean => {
-    if (!bulkSelectionMode[fieldIndex]) return false
-    const slotKey = `${day}:${startTime}`
-    return selectedSlotsForBulk[fieldIndex]?.has(slotKey) || false
-  }
-
-  // Update slot status and price
+  // Update slot status and price (used in the new simple interface)
   const updateSlot = (fieldIndex: number, day: string, startTime: string, updates: Partial<TimeSlot>) => {
     const updated = [...sportsFields]
     updated[fieldIndex] = {
       ...updated[fieldIndex],
       timeSlots: updated[fieldIndex].timeSlots.map(slot => 
-        slot.day === day && slot.startTime === startTime
+        slot.day === day && slot.startTime === startTime && slot.endTime === (updates.endTime || slot.endTime)
           ? { ...slot, ...updates }
           : slot
       )
     }
     setSportsFields(updated)
-  }
-
-  // Check if slot is selected
-  const isSlotSelected = (fieldIndex: number, day: string, startTime: string): boolean => {
-    return sportsFields[fieldIndex].timeSlots.some(
-      slot => slot.day === day && slot.startTime === startTime
-    )
-  }
-
-  // Get slot data
-  const getSlotData = (fieldIndex: number, day: string, startTime: string): TimeSlot | null => {
-    return sportsFields[fieldIndex].timeSlots.find(
-      slot => slot.day === day && slot.startTime === startTime
-    ) || null
   }
 
   const addPricingDetail = () => {
@@ -500,15 +353,14 @@ function RegisterSportsBase() {
         }
         break
       case 4:
-        // Validate that at least one field is complete
+        // Validate that at least one field is complete with time slots
         const validFields = sportsFields.filter(field => {
           const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
-          const hasValidPrices = field.priceIntervals && field.priceIntervals.length > 0 && 
-            field.priceIntervals.some(interval => interval.price > 0)
-          return hasBasicInfo && hasValidPrices
+          const hasTimeSlots = field.timeSlots && field.timeSlots.length > 0
+          return hasBasicInfo && hasTimeSlots
         })
         if (validFields.length === 0) {
-          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și cel puțin un interval de preț)')
+          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și cel puțin un interval de timp configurat)')
           return false
         }
         break
@@ -2690,385 +2542,349 @@ function RegisterSportsBase() {
                       </p>
                     </div>
 
-                    {/* Time Slots Grid */}
+                    {/* Time Slots - Simple List by Day */}
                     <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.75rem',
+                        color: '#0f172a',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.01em'
+                      }}>Program și prețuri *</label>
+                      
+                      {/* Days List */}
                       <div style={{
                         display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '0.75rem',
-                        flexWrap: 'wrap',
-                        gap: '0.75rem'
+                        flexDirection: 'column',
+                        gap: '1rem'
                       }}>
-                        <label style={{
-                          color: '#0f172a',
-                          fontWeight: '600',
-                          fontSize: '0.875rem',
-                          letterSpacing: '0.01em'
-                        }}>Selectează sloturile și configurează prețurile *</label>
-                        
-                        {/* Bulk Selection Toggle */}
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setBulkSelectionMode({ ...bulkSelectionMode, [index]: !bulkSelectionMode[index] })
-                              if (bulkSelectionMode[index]) {
-                                // Clear bulk selection when disabling
-                                const updated = { ...selectedSlotsForBulk }
-                                delete updated[index]
-                                setSelectedSlotsForBulk(updated)
-                              }
-                            }}
-                            style={{
-                              padding: isMobile ? '0.625rem 1rem' : '0.5rem 1rem',
-                              background: bulkSelectionMode[index] ? '#10b981' : '#ffffff',
-                              color: bulkSelectionMode[index] ? 'white' : '#0f172a',
-                              border: `1.5px solid ${bulkSelectionMode[index] ? '#10b981' : '#e2e8f0'}`,
-                              borderRadius: '6px',
-                              fontSize: '0.8125rem',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              touchAction: 'manipulation',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            {bulkSelectionMode[index] ? '✓ Selecție multiplă' : 'Selecție multiplă'}
-                          </button>
+                        {[
+                          { key: 'monday', label: 'Luni' },
+                          { key: 'tuesday', label: 'Marți' },
+                          { key: 'wednesday', label: 'Miercuri' },
+                          { key: 'thursday', label: 'Joi' },
+                          { key: 'friday', label: 'Vineri' },
+                          { key: 'saturday', label: 'Sâmbătă' },
+                          { key: 'sunday', label: 'Duminică' }
+                        ].map((day) => {
+                          const daySlots = field.timeSlots.filter(slot => slot.day === day.key)
                           
-                          {/* Bulk Settings Button */}
-                          {bulkSelectionMode[index] && selectedSlotsForBulk[index] && selectedSlotsForBulk[index].size > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setShowBulkModal({ ...showBulkModal, [index]: true })
-                                setBulkSettings({ ...bulkSettings, [index]: { status: 'not_specified', price: null } })
-                              }}
-                              style={{
-                                padding: isMobile ? '0.625rem 1rem' : '0.5rem 1rem',
-                                background: '#3b82f6',
-                                color: 'white',
-                                border: '1.5px solid #3b82f6',
-                                borderRadius: '6px',
-                                fontSize: '0.8125rem',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                touchAction: 'manipulation',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              Setează ({selectedSlotsForBulk[index]?.size || 0})
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Grid: Days vertical, Times horizontal */}
-                      <div style={{
-                        marginBottom: '1rem',
-                        padding: '1rem',
-                        background: '#ffffff',
-                        borderRadius: '12px',
-                        border: '1.5px solid #e2e8f0',
-                        overflowX: 'auto',
-                        overflowY: 'hidden',
-                        WebkitOverflowScrolling: 'touch',
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: '#cbd5e1 #f1f5f9'
-                      }}>
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: isMobile ? '100px repeat(auto-fit, minmax(80px, 1fr))' : '120px repeat(auto-fit, minmax(90px, 1fr))',
-                          gap: '0.5rem',
-                          minWidth: 'fit-content'
-                        }}>
-                          {/* Header row with time slots */}
-                          <div style={{
-                            position: 'sticky',
-                            left: 0,
-                            zIndex: 20,
-                            background: '#ffffff'
-                          }}></div>
-                          {generateTimeSlots(field.slotSize || 60).map((startTime) => {
-                            const endTime = getEndTime(startTime, field.slotSize || 60)
-                            const slotDuration = field.slotSize || 60
-                            return (
-                              <div key={startTime} style={{
+                          return (
+                            <div key={day.key} style={{
+                              padding: '1rem',
+                              background: '#ffffff',
+                              borderRadius: '12px',
+                              border: '1.5px solid #e2e8f0'
+                            }}>
+                              {/* Day Header */}
+                              <div style={{
                                 display: 'flex',
-                                flexDirection: 'column',
+                                justifyContent: 'space-between',
                                 alignItems: 'center',
-                                gap: '0.25rem'
+                                marginBottom: '0.75rem'
                               }}>
-                                <div style={{
+                                <h3 style={{
+                                  margin: 0,
+                                  fontSize: '0.9375rem',
                                   fontWeight: '600',
-                                  fontSize: isMobile ? '0.75rem' : '0.8125rem',
-                                  color: '#0f172a',
-                                  padding: '0.5rem',
-                                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-                                  borderRadius: '8px',
-                                  border: '1px solid #e2e8f0',
-                                  width: '100%',
-                                  textAlign: 'center',
-                                  minHeight: isMobile ? '48px' : '52px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}>
-                                  {startTime}
-                                </div>
-                                <div style={{
-                                  fontSize: '0.625rem',
-                                  color: '#64748b',
-                                  fontWeight: '500',
-                                  textAlign: 'center'
-                                }}>
-                                  {slotDuration} min
-                                </div>
-                              </div>
-                            )
-                          })}
-                          
-                          {/* Rows for each day */}
-                          {[
-                            { key: 'monday', label: 'Luni' },
-                            { key: 'tuesday', label: 'Marți' },
-                            { key: 'wednesday', label: 'Miercuri' },
-                            { key: 'thursday', label: 'Joi' },
-                            { key: 'friday', label: 'Vineri' },
-                            { key: 'saturday', label: 'Sâmbătă' },
-                            { key: 'sunday', label: 'Duminică' }
-                          ].map((day) => {
-                            const timeSlots = generateTimeSlots(field.slotSize || 60)
-                            const isBulkMode = bulkSelectionMode[index]
-                            
-                            return (
-                              <>
-                                {/* Day label - sticky */}
-                                <div key={`${day.key}-label`} style={{
-                                  position: 'sticky',
-                                  left: 0,
-                                  zIndex: 15,
-                                  background: '#ffffff',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  padding: '0.5rem',
-                                  fontWeight: '600',
-                                  fontSize: isMobile ? '0.8125rem' : '0.875rem',
-                                  color: '#0f172a',
-                                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-                                  borderRadius: '8px',
-                                  border: '1px solid #e2e8f0',
-                                  minHeight: isMobile ? '56px' : '60px'
+                                  color: '#0f172a'
                                 }}>
                                   {day.label}
-                                </div>
-                                
-                                {/* Time slots for this day */}
-                                {timeSlots.map((startTime) => {
-                                  const isSelected = isSlotSelected(index, day.key, startTime)
-                                  const isBulkSelected = isSlotInBulkSelection(index, day.key, startTime)
-                                  const slotData = getSlotData(index, day.key, startTime)
-                                  const endTime = getEndTime(startTime, field.slotSize || 60)
-                                  
-                                  // Determine visual state
-                                  let bgColor = '#ffffff'
-                                  let borderColor = '#e2e8f0'
-                                  let textColor = '#64748b'
-                                  
-                                  if (isBulkMode && isBulkSelected) {
-                                    bgColor = '#dbeafe'
-                                    borderColor = '#3b82f6'
-                                    textColor = '#1e40af'
-                                  } else if (isSelected && slotData) {
-                                    if (slotData.status === 'open') {
-                                      bgColor = '#f0fdf4'
-                                      borderColor = '#10b981'
-                                      textColor = '#059669'
-                                    } else if (slotData.status === 'closed') {
-                                      bgColor = '#fef2f2'
-                                      borderColor = '#ef4444'
-                                      textColor = '#dc2626'
-                                    } else {
-                                      bgColor = '#fefce8'
-                                      borderColor = '#eab308'
-                                      textColor = '#ca8a04'
+                                </h3>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...sportsFields]
+                                    const newSlot: TimeSlot = {
+                                      day: day.key,
+                                      startTime: '08:00',
+                                      endTime: '09:00',
+                                      status: 'not_specified',
+                                      price: null
                                     }
-                                  }
-                                  
-                                  return (
-                                    <button
-                                      key={`${day.key}-${startTime}`}
-                                      type="button"
-                                      onClick={() => toggleSlotSelection(index, day.key, startTime, isBulkMode)}
-                                      style={{
-                                        aspectRatio: '1',
-                                        minWidth: isMobile ? '56px' : '60px',
-                                        minHeight: isMobile ? '56px' : '60px',
-                                        padding: '0.5rem',
-                                        border: `2px solid ${borderColor}`,
-                                        borderRadius: '8px',
-                                        background: bgColor,
-                                        color: textColor,
-                                        fontSize: isMobile ? '0.6875rem' : '0.75rem',
-                                        fontWeight: '600',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.15s ease',
-                                        textAlign: 'center',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '0.125rem',
-                                        position: 'relative',
-                                        boxShadow: isSelected || isBulkSelected ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
-                                      }}
-                                      onMouseEnter={(e) => {
-                                        if (!isMobile) {
-                                          e.currentTarget.style.transform = 'scale(1.05)'
-                                          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.15)'
-                                        }
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        if (!isMobile) {
-                                          e.currentTarget.style.transform = 'scale(1)'
-                                          e.currentTarget.style.boxShadow = isSelected || isBulkSelected ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
-                                        }
-                                      }}
-                                    >
-                                      {isSelected && slotData && (
-                                        <span style={{
-                                          position: 'absolute',
-                                          top: '2px',
-                                          right: '4px',
-                                          fontSize: '0.625rem',
-                                          opacity: 0.8
-                                        }}>
-                                          {slotData.status === 'open' && slotData.price ? `💰` : slotData.status === 'closed' ? `🚫` : `⏸️`}
-                                        </span>
-                                      )}
-                                    </button>
-                                  )
-                                })}
-                              </>
-                            )
-                          })}
-                        </div>
-                      </div>
-                      
-                      {/* Configuration panel for selected slots (only in normal mode, shown below grid) */}
-                      {!bulkSelectionMode[index] && sportsFields[index].timeSlots.length > 0 && (
-                        <div style={{
-                          marginTop: '1rem',
-                          padding: '1rem',
-                          background: '#f9fafb',
-                          borderRadius: '8px',
-                          border: '1.5px solid #e2e8f0'
-                        }}>
-                          <div style={{
-                            fontSize: '0.875rem',
-                            fontWeight: '600',
-                            color: '#0f172a',
-                            marginBottom: '0.75rem'
-                          }}>
-                            Sloturi configurate ({sportsFields[index].timeSlots.length})
-                          </div>
-                          <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(250px, 1fr))',
-                            gap: '0.75rem'
-                          }}>
-                            {sportsFields[index].timeSlots.map((slot, slotIndex) => {
-                              const endTime = getEndTime(slot.startTime, field.slotSize || 60)
-                              const dayLabels: Record<string, string> = {
-                                monday: 'Luni',
-                                tuesday: 'Marți',
-                                wednesday: 'Miercuri',
-                                thursday: 'Joi',
-                                friday: 'Vineri',
-                                saturday: 'Sâmbătă',
-                                sunday: 'Duminică'
-                              }
-                              
-                              return (
-                                <div key={slotIndex} style={{
-                                  padding: '0.75rem',
-                                  background: '#ffffff',
-                                  borderRadius: '6px',
-                                  border: '1.5px solid #e2e8f0'
-                                }}>
-                                  <div style={{
+                                    updated[index] = {
+                                      ...updated[index],
+                                      timeSlots: [...updated[index].timeSlots, newSlot]
+                                    }
+                                    setSportsFields(updated)
+                                  }}
+                                  style={{
+                                    padding: '0.5rem 1rem',
+                                    background: '#10b981',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
                                     fontSize: '0.8125rem',
                                     fontWeight: '600',
-                                    color: '#0f172a',
-                                    marginBottom: '0.5rem'
-                                  }}>
-                                    {dayLabels[slot.day]} {slot.startTime} - {endTime}
-                                  </div>
-                                  
-                                  <select
-                                    value={slot.status}
-                                    onChange={(e) => updateSlot(index, slot.day, slot.startTime, { 
-                                      status: e.target.value as 'open' | 'closed' | 'not_specified' 
-                                    })}
-                                    style={{
-                                      width: '100%',
-                                      padding: '0.5rem',
-                                      border: '1.5px solid #e2e8f0',
-                                      borderRadius: '6px',
-                                      fontSize: '0.75rem',
-                                      marginBottom: '0.5rem',
-                                      cursor: 'pointer',
-                                      background: '#ffffff'
-                                    }}
-                                  >
-                                    <option value="not_specified">Nespecificat</option>
-                                    <option value="open">Deschis</option>
-                                    <option value="closed">Închis</option>
-                                  </select>
-                                  
-                                  {slot.status === 'open' && (
-                                    <input
-                                      type="number"
-                                      placeholder="Preț (RON)"
-                                      value={slot.price || ''}
-                                      onChange={(e) => updateSlot(index, slot.day, slot.startTime, { 
-                                        price: parseFloat(e.target.value) || null 
-                                      })}
-                                      min="0"
-                                      step="0.01"
-                                      style={{
-                                        width: '100%',
-                                        padding: '0.5rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                  }}
+                                >
+                                  <span>+</span> Adaugă interval
+                                </button>
+                              </div>
+                              
+                              {/* Time Intervals for this day */}
+                              {daySlots.length === 0 ? (
+                                <p style={{
+                                  color: '#94a3b8',
+                                  fontSize: '0.8125rem',
+                                  fontStyle: 'italic',
+                                  margin: 0,
+                                  padding: '0.75rem',
+                                  textAlign: 'center',
+                                  background: '#f9fafb',
+                                  borderRadius: '6px'
+                                }}>
+                                  Nu există intervale configurate
+                                </p>
+                              ) : (
+                                <div style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '0.75rem'
+                                }}>
+                                  {daySlots.map((slot, slotIndex) => {
+                                    const allSlotsForDay = field.timeSlots.filter(s => s.day === day.key)
+                                    const actualIndex = allSlotsForDay.findIndex(s => 
+                                      s.day === slot.day && 
+                                      s.startTime === slot.startTime && 
+                                      s.endTime === slot.endTime
+                                    )
+                                    
+                                    return (
+                                      <div key={slotIndex} style={{
+                                        padding: '1rem',
+                                        background: '#f9fafb',
+                                        borderRadius: '8px',
                                         border: '1.5px solid #e2e8f0',
-                                        borderRadius: '6px',
-                                        fontSize: '0.75rem',
-                                        background: '#ffffff'
-                                      }}
-                                    />
-                                  )}
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '0.75rem'
+                                      }}>
+                                        {/* Time inputs */}
+                                        <div style={{
+                                          display: 'grid',
+                                          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr auto',
+                                          gap: '0.75rem',
+                                          alignItems: 'end'
+                                        }}>
+                                          <div>
+                                            <label style={{
+                                              display: 'block',
+                                              fontSize: '0.75rem',
+                                              fontWeight: '500',
+                                              color: '#64748b',
+                                              marginBottom: '0.375rem'
+                                            }}>
+                                              De la
+                                            </label>
+                                            <input
+                                              type="time"
+                                              value={slot.startTime}
+                                              onChange={(e) => {
+                                                const updated = [...sportsFields]
+                                                const slotToUpdate = updated[index].timeSlots.findIndex(s => 
+                                                  s.day === slot.day && 
+                                                  s.startTime === slot.startTime && 
+                                                  s.endTime === slot.endTime
+                                                )
+                                                if (slotToUpdate !== -1) {
+                                                  updated[index].timeSlots[slotToUpdate] = {
+                                                    ...updated[index].timeSlots[slotToUpdate],
+                                                    startTime: e.target.value
+                                                  }
+                                                  setSportsFields(updated)
+                                                }
+                                              }}
+                                              style={{
+                                                width: '100%',
+                                                padding: '0.625rem',
+                                                border: '1.5px solid #e2e8f0',
+                                                borderRadius: '6px',
+                                                fontSize: '0.875rem',
+                                                background: '#ffffff'
+                                              }}
+                                            />
+                                          </div>
+                                          
+                                          <div>
+                                            <label style={{
+                                              display: 'block',
+                                              fontSize: '0.75rem',
+                                              fontWeight: '500',
+                                              color: '#64748b',
+                                              marginBottom: '0.375rem'
+                                            }}>
+                                              Până la
+                                            </label>
+                                            <input
+                                              type="time"
+                                              value={slot.endTime}
+                                              onChange={(e) => {
+                                                const updated = [...sportsFields]
+                                                const slotToUpdate = updated[index].timeSlots.findIndex(s => 
+                                                  s.day === slot.day && 
+                                                  s.startTime === slot.startTime && 
+                                                  s.endTime === slot.endTime
+                                                )
+                                                if (slotToUpdate !== -1) {
+                                                  updated[index].timeSlots[slotToUpdate] = {
+                                                    ...updated[index].timeSlots[slotToUpdate],
+                                                    endTime: e.target.value
+                                                  }
+                                                  setSportsFields(updated)
+                                                }
+                                              }}
+                                              style={{
+                                                width: '100%',
+                                                padding: '0.625rem',
+                                                border: '1.5px solid #e2e8f0',
+                                                borderRadius: '6px',
+                                                fontSize: '0.875rem',
+                                                background: '#ffffff'
+                                              }}
+                                            />
+                                          </div>
+                                          
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const updated = [...sportsFields]
+                                              updated[index] = {
+                                                ...updated[index],
+                                                timeSlots: updated[index].timeSlots.filter(s => 
+                                                  !(s.day === slot.day && 
+                                                    s.startTime === slot.startTime && 
+                                                    s.endTime === slot.endTime)
+                                                )
+                                              }
+                                              setSportsFields(updated)
+                                            }}
+                                            style={{
+                                              padding: '0.625rem 1rem',
+                                              background: '#ef4444',
+                                              color: 'white',
+                                              border: 'none',
+                                              borderRadius: '6px',
+                                              fontSize: '0.8125rem',
+                                              fontWeight: '600',
+                                              cursor: 'pointer',
+                                              transition: 'all 0.2s ease',
+                                              whiteSpace: 'nowrap'
+                                            }}
+                                          >
+                                            Șterge
+                                          </button>
+                                        </div>
+                                        
+                                        {/* Status and Price */}
+                                        <div style={{
+                                          display: 'grid',
+                                          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                                          gap: '0.75rem'
+                                        }}>
+                                          <div>
+                                            <label style={{
+                                              display: 'block',
+                                              fontSize: '0.75rem',
+                                              fontWeight: '500',
+                                              color: '#64748b',
+                                              marginBottom: '0.375rem'
+                                            }}>
+                                              Status
+                                            </label>
+                                            <select
+                                              value={slot.status}
+                                              onChange={(e) => {
+                                                const updated = [...sportsFields]
+                                                const slotToUpdate = updated[index].timeSlots.findIndex(s => 
+                                                  s.day === slot.day && 
+                                                  s.startTime === slot.startTime && 
+                                                  s.endTime === slot.endTime
+                                                )
+                                                if (slotToUpdate !== -1) {
+                                                  updated[index].timeSlots[slotToUpdate] = {
+                                                    ...updated[index].timeSlots[slotToUpdate],
+                                                    status: e.target.value as 'open' | 'closed' | 'not_specified',
+                                                    price: e.target.value === 'open' ? updated[index].timeSlots[slotToUpdate].price : null
+                                                  }
+                                                  setSportsFields(updated)
+                                                }
+                                              }}
+                                              style={{
+                                                width: '100%',
+                                                padding: '0.625rem',
+                                                border: '1.5px solid #e2e8f0',
+                                                borderRadius: '6px',
+                                                fontSize: '0.875rem',
+                                                cursor: 'pointer',
+                                                background: '#ffffff'
+                                              }}
+                                            >
+                                              <option value="not_specified">Nespecificat</option>
+                                              <option value="open">Deschis</option>
+                                              <option value="closed">Închis</option>
+                                            </select>
+                                          </div>
+                                          
+                                          {slot.status === 'open' && (
+                                            <div>
+                                              <label style={{
+                                                display: 'block',
+                                                fontSize: '0.75rem',
+                                                fontWeight: '500',
+                                                color: '#64748b',
+                                                marginBottom: '0.375rem'
+                                              }}>
+                                                Preț (RON)
+                                              </label>
+                                              <input
+                                                type="number"
+                                                placeholder="0.00"
+                                                value={slot.price || ''}
+                                                onChange={(e) => {
+                                                  const updated = [...sportsFields]
+                                                  const slotToUpdate = updated[index].timeSlots.findIndex(s => 
+                                                    s.day === slot.day && 
+                                                    s.startTime === slot.startTime && 
+                                                    s.endTime === slot.endTime
+                                                  )
+                                                  if (slotToUpdate !== -1) {
+                                                    updated[index].timeSlots[slotToUpdate] = {
+                                                      ...updated[index].timeSlots[slotToUpdate],
+                                                      price: parseFloat(e.target.value) || null
+                                                    }
+                                                    setSportsFields(updated)
+                                                  }
+                                                }}
+                                                min="0"
+                                                step="0.01"
+                                                style={{
+                                                  width: '100%',
+                                                  padding: '0.625rem',
+                                                  border: '1.5px solid #e2e8f0',
+                                                  borderRadius: '6px',
+                                                  fontSize: '0.875rem',
+                                                  background: '#ffffff'
+                                                }}
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
                                 </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {field.timeSlots.length === 0 && !bulkSelectionMode[index] && (
-                        <p style={{
-                          color: '#64748b',
-                          fontSize: '0.8125rem',
-                          textAlign: 'center',
-                          padding: '1rem',
-                          background: '#f9fafb',
-                          borderRadius: '6px',
-                          border: '1.5px dashed #e2e8f0'
-                        }}>
-                          Selectează sloturile din grid pentru a configura prețurile și programul
-                        </p>
-                      )}
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
                     
                     {/* Description */}
