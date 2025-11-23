@@ -434,6 +434,250 @@ function Home() {
             )}
           </div>
 
+          {/* Dynamic Options Dropdown - THIRD (Sport or Repair Category) */}
+          {showSportFilter && (
+            <div style={{ position: 'relative' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.75rem',
+                color: '#0f172a',
+                fontWeight: '600',
+                fontSize: '0.875rem'
+              }}>Sport</label>
+              <input
+                type="text"
+                value={selectedSport || sportSearch}
+                onChange={(e) => {
+                  setSportSearch(e.target.value)
+                  setShowSportDropdown(true)
+                  if (!e.target.value) {
+                    setSelectedSport('')
+                  }
+                }}
+                onClick={() => setShowSportDropdown(true)}
+                onFocus={(e) => {
+                  setShowSportDropdown(true)
+                  e.target.style.borderColor = '#10b981'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0'
+                  e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  setTimeout(() => setShowSportDropdown(false), 250)
+                }}
+                placeholder="Caută sau selectează sport"
+                style={{
+                  width: '100%',
+                  padding: '0.875rem 1rem',
+                  paddingRight: '2.5rem',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '400',
+                  lineHeight: '1.5',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                right: '0.75rem',
+                top: '2.75rem',
+                pointerEvents: 'none'
+              }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                  <path d="M5 7.5l5 5 5-5"/>
+                </svg>
+              </div>
+              {showSportDropdown && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '0.25rem',
+                  background: '#ffffff',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  zIndex: 1000
+                }}>
+                  {availableSports
+                    .filter(sportOption => 
+                      !sportSearch || 
+                      sportOption.toLowerCase().includes(sportSearch.toLowerCase())
+                    )
+                    .map(sportOption => (
+                      <div
+                        key={sportOption}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          setSelectedSport(sportOption)
+                          setSportSearch('')
+                          setShowSportDropdown(false)
+                        }}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f1f5f9',
+                          color: '#0f172a',
+                          fontSize: '0.9375rem',
+                          fontWeight: '500',
+                          transition: 'background 0.15s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#f0fdf4'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#ffffff'
+                        }}
+                      >
+                        {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {showRepairCategoryFilter && (
+            <div style={{ position: 'relative' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.75rem',
+                color: '#0f172a',
+                fontWeight: '600',
+                fontSize: '0.875rem'
+              }}>Categorie reparații</label>
+              <input
+                type="text"
+                value={selectedRepairCategory ? REPAIR_CATEGORIES.find(c => c.value === selectedRepairCategory)?.label || '' : repairCategorySearch}
+                onChange={(e) => {
+                  setRepairCategorySearch(e.target.value)
+                  setShowRepairCategoryDropdown(true)
+                  if (!e.target.value) {
+                    setSelectedRepairCategory('')
+                  }
+                }}
+                onClick={() => setShowRepairCategoryDropdown(true)}
+                onFocus={(e) => {
+                  setShowRepairCategoryDropdown(true)
+                  e.target.style.borderColor = '#10b981'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0'
+                  e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  setTimeout(() => setShowRepairCategoryDropdown(false), 250)
+                }}
+                placeholder="Caută sau selectează categorie"
+                style={{
+                  width: '100%',
+                  padding: '0.875rem 1rem',
+                  paddingRight: '2.5rem',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '400',
+                  lineHeight: '1.5',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                right: '0.75rem',
+                top: '2.75rem',
+                pointerEvents: 'none'
+              }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                  <path d="M5 7.5l5 5 5-5"/>
+                </svg>
+              </div>
+              {showRepairCategoryDropdown && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '0.25rem',
+                  background: '#ffffff',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  zIndex: 1000
+                }}>
+                  {REPAIR_CATEGORIES
+                    .filter(categoryOption => 
+                      !repairCategorySearch || 
+                      categoryOption.label.toLowerCase().includes(repairCategorySearch.toLowerCase())
+                    )
+                    .map(categoryOption => (
+                      <div
+                        key={categoryOption.value}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          setSelectedRepairCategory(categoryOption.value)
+                          setRepairCategorySearch('')
+                          setShowRepairCategoryDropdown(false)
+                        }}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f1f5f9',
+                          color: '#0f172a',
+                          fontSize: '0.9375rem',
+                          fontWeight: '500',
+                          transition: 'background 0.15s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#f0fdf4'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#ffffff'
+                        }}
+                      >
+                        {categoryOption.label}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!showSportFilter && !showRepairCategoryFilter && (
+            <div style={{ position: 'relative' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.75rem',
+                color: '#0f172a',
+                fontWeight: '600',
+                fontSize: '0.875rem'
+              }}>Opțiuni</label>
+              <div style={{
+                width: '100%',
+                padding: '0.875rem 1rem',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                background: '#f8fafc',
+                color: '#64748b',
+                textAlign: 'center'
+              }}>
+                Selectează un tip de serviciu
+              </div>
+            </div>
+          )}
 
           {/* Search Button */}
           <div style={{ 
