@@ -1552,7 +1552,7 @@ function RegisterSportsBase() {
                   fontWeight: '600',
                   fontSize: '0.875rem',
                   letterSpacing: '0.01em'
-                }}>Denumire facilitate *</label>
+                }}>Denumire Baza sportivă *</label>
                 <input
                   type="text"
                   value={name}
