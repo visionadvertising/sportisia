@@ -34,6 +34,7 @@ function SEOPages() {
   const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('') // Filter by facility type
   const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
 
   useEffect(() => {
@@ -45,7 +46,7 @@ function SEOPages() {
       generateAllCombinations()
       fetchSEOPages()
     }
-  }, [availableCities])
+  }, [availableCities, selectedCategory])
 
   const loadCities = async () => {
     try {
@@ -85,8 +86,15 @@ function SEOPages() {
   const generateAllCombinations = () => {
     const combinations: SEOPage[] = []
 
-    // 1. /toate (no filters)
-    combinations.push({ url: '/toate' })
+    // If a specific category is selected, only generate combinations for that category
+    const typesToGenerate = selectedCategory 
+      ? FACILITY_TYPES.filter(t => t.value === selectedCategory)
+      : FACILITY_TYPES
+
+    // 1. /toate (no filters) - only if no category filter
+    if (!selectedCategory) {
+      combinations.push({ url: '/toate' })
+    }
 
     // 2. /:city
     console.log('Generating combinations for cities:', availableCities.map(c => c.city))
@@ -96,52 +104,65 @@ function SEOPages() {
       combinations.push({ url: `/${citySlug}` })
     })
 
-    // 3. /:sport
-    KNOWN_SPORTS.forEach(sport => {
-      const sportSlug = sportNameToSlug(sport)
-      combinations.push({ url: `/${sportSlug}` })
-    })
+    // 3. /:sport - only for categories that use sport (field, coach, equipment_shop)
+    const sportCategories = ['field', 'coach', 'equipment_shop']
+    if (!selectedCategory || sportCategories.includes(selectedCategory)) {
+      KNOWN_SPORTS.forEach(sport => {
+        const sportSlug = sportNameToSlug(sport)
+        combinations.push({ url: `/${sportSlug}` })
+      })
+    }
 
     // 4. /:type
-    FACILITY_TYPES.forEach(type => {
+    typesToGenerate.forEach(type => {
       combinations.push({ url: `/${type.slug}` })
     })
 
-    // 5. /:city/:sport
-    availableCities.forEach(city => {
-      KNOWN_SPORTS.forEach(sport => {
-        const citySlug = cityNameToSlug(city.city)
-        const sportSlug = sportNameToSlug(sport)
-        combinations.push({ url: `/${citySlug}/${sportSlug}` })
+    // 5. /:city/:sport - only for categories that use sport
+    if (!selectedCategory || sportCategories.includes(selectedCategory)) {
+      availableCities.forEach(city => {
+        KNOWN_SPORTS.forEach(sport => {
+          const citySlug = cityNameToSlug(city.city)
+          const sportSlug = sportNameToSlug(sport)
+          combinations.push({ url: `/${citySlug}/${sportSlug}` })
+        })
       })
-    })
+    }
 
     // 6. /:city/:type
     availableCities.forEach(city => {
-      FACILITY_TYPES.forEach(type => {
+      typesToGenerate.forEach(type => {
         const citySlug = cityNameToSlug(city.city)
         combinations.push({ url: `/${citySlug}/${type.slug}` })
       })
     })
 
-    // 7. /:sport/:type
-    KNOWN_SPORTS.forEach(sport => {
-      FACILITY_TYPES.forEach(type => {
-        const sportSlug = sportNameToSlug(sport)
-        combinations.push({ url: `/${sportSlug}/${type.slug}` })
-      })
-    })
-
-    // 8. /:city/:sport/:type
-    availableCities.forEach(city => {
+    // 7. /:sport/:type - only for categories that use sport
+    if (!selectedCategory || sportCategories.includes(selectedCategory)) {
       KNOWN_SPORTS.forEach(sport => {
-        FACILITY_TYPES.forEach(type => {
-          const citySlug = cityNameToSlug(city.city)
-          const sportSlug = sportNameToSlug(sport)
-          combinations.push({ url: `/${citySlug}/${sportSlug}/${type.slug}` })
+        typesToGenerate.forEach(type => {
+          if (sportCategories.includes(type.value)) {
+            const sportSlug = sportNameToSlug(sport)
+            combinations.push({ url: `/${sportSlug}/${type.slug}` })
+          }
         })
       })
-    })
+    }
+
+    // 8. /:city/:sport/:type - only for categories that use sport
+    if (!selectedCategory || sportCategories.includes(selectedCategory)) {
+      availableCities.forEach(city => {
+        KNOWN_SPORTS.forEach(sport => {
+          typesToGenerate.forEach(type => {
+            if (sportCategories.includes(type.value)) {
+              const citySlug = cityNameToSlug(city.city)
+              const sportSlug = sportNameToSlug(sport)
+              combinations.push({ url: `/${citySlug}/${sportSlug}/${type.slug}` })
+            }
+          })
+        })
+      })
+    }
 
     setAllPages(combinations)
   }
@@ -270,6 +291,58 @@ function SEOPages() {
               }}>
                 {filteredPages.length} combinații de filtre {searchTerm ? 'găsite' : 'disponibile'}
               </p>
+            </div>
+          </div>
+
+          {/* Category Filter */}
+          <div style={{
+            display: 'flex',
+            gap: '1rem',
+            marginBottom: '1.5rem',
+            flexWrap: 'wrap',
+            alignItems: 'center'
+          }}>
+            <div style={{ flex: '0 0 auto' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.5rem',
+                color: '#0f172a',
+                fontWeight: '600',
+                fontSize: '0.875rem'
+              }}>
+                Filtrează după categorie:
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value)
+                  setCurrentPage(1)
+                }}
+                style={{
+                  padding: '0.625rem 1rem',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '0.9375rem',
+                  outline: 'none',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                  minWidth: '200px'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#10b981'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0'
+                  e.target.style.boxShadow = 'none'
+                }}
+              >
+                <option value="">Toate categoriile</option>
+                {FACILITY_TYPES.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
