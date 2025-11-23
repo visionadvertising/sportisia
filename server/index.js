@@ -551,6 +551,63 @@ initDatabase()
   })
 
 // Health check endpoint
+// Geocoding endpoints - proxy pentru Nominatim (evită CORS)
+app.get('/api/geocode', async (req, res) => {
+  try {
+    const { q } = req.query
+    if (!q) {
+      return res.status(400).json({ error: 'Query parameter "q" is required' })
+    }
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`,
+      {
+        headers: {
+          'User-Agent': 'Sportisia/1.0 (contact@sportisia.ro)'
+        }
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Nominatim API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+    res.json(data)
+  } catch (error) {
+    console.error('Geocoding error:', error)
+    res.status(500).json({ error: 'Geocoding failed', details: error.message })
+  }
+})
+
+app.get('/api/reverse-geocode', async (req, res) => {
+  try {
+    const { lat, lon } = req.query
+    if (!lat || !lon) {
+      return res.status(400).json({ error: 'Query parameters "lat" and "lon" are required' })
+    }
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+      {
+        headers: {
+          'User-Agent': 'Sportisia/1.0 (contact@sportisia.ro)'
+        }
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Nominatim API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+    res.json(data)
+  } catch (error) {
+    console.error('Reverse geocoding error:', error)
+    res.status(500).json({ error: 'Reverse geocoding failed', details: error.message })
+  }
+})
+
 app.get('/api/health', (req, res) => {
   res.json({ 
     success: true, 
