@@ -11,10 +11,15 @@ interface PricingDetail {
   price: number
 }
 
+interface PriceInterval {
+  startTime: string
+  endTime: string
+  price: number
+}
+
 interface SportsField {
   fieldName: string
   sportType: string
-  pricePerHour: number | null
   description: string
   features: {
     hasParking: boolean
@@ -23,6 +28,15 @@ interface SportsField {
     hasAirConditioning: boolean
     hasLighting: boolean
   }
+  // Pricing system - extensible for future online bookings
+  slotSize: number // in minutes: 30, 60, 90
+  priceIntervals: PriceInterval[] // Different prices for different time intervals
+  // Opening hours per field
+  openingHours: Record<string, {
+    isOpen: boolean | null,
+    openTime: string,
+    closeTime: string
+  }>
 }
 
 function RegisterSportsBase() {
@@ -97,7 +111,6 @@ function RegisterSportsBase() {
   const [sportsFields, setSportsFields] = useState<SportsField[]>([{
     fieldName: '',
     sportType: searchParams.get('sport') || '',
-    pricePerHour: null,
     description: '',
     features: {
       hasParking: false,
@@ -105,6 +118,21 @@ function RegisterSportsBase() {
       hasChangingRoom: false,
       hasAirConditioning: false,
       hasLighting: false
+    },
+    slotSize: 60, // Default 1 hour
+    priceIntervals: [{
+      startTime: '08:00',
+      endTime: '20:00',
+      price: 0
+    }],
+    openingHours: {
+      monday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+      tuesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+      wednesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+      thursday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+      friday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+      saturday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+      sunday: { isOpen: null, openTime: '09:00', closeTime: '18:00' }
     }
   }])
   const [showAddSportInput, setShowAddSportInput] = useState<number | null>(null)
@@ -235,7 +263,6 @@ function RegisterSportsBase() {
     setSportsFields([...sportsFields, {
       fieldName: '',
       sportType: '',
-      pricePerHour: null,
       description: '',
       features: {
         hasParking: false,
@@ -243,6 +270,21 @@ function RegisterSportsBase() {
         hasChangingRoom: false,
         hasAirConditioning: false,
         hasLighting: false
+      },
+      slotSize: 60, // Default 1 hour
+      priceIntervals: [{
+        startTime: '08:00',
+        endTime: '20:00',
+        price: 0
+      }],
+      openingHours: {
+        monday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+        tuesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+        wednesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+        thursday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+        friday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+        saturday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
+        sunday: { isOpen: null, openTime: '09:00', closeTime: '18:00' }
       }
     }])
   }
@@ -273,6 +315,54 @@ function RegisterSportsBase() {
       features: {
         ...updated[index].features,
         [feature]: value
+      }
+    }
+    setSportsFields(updated)
+  }
+
+  // Functions for managing price intervals
+  const addPriceInterval = (fieldIndex: number) => {
+    const updated = [...sportsFields]
+    updated[fieldIndex] = {
+      ...updated[fieldIndex],
+      priceIntervals: [
+        ...updated[fieldIndex].priceIntervals,
+        { startTime: '08:00', endTime: '20:00', price: 0 }
+      ]
+    }
+    setSportsFields(updated)
+  }
+
+  const removePriceInterval = (fieldIndex: number, intervalIndex: number) => {
+    const updated = [...sportsFields]
+    if (updated[fieldIndex].priceIntervals.length > 1) {
+      updated[fieldIndex] = {
+        ...updated[fieldIndex],
+        priceIntervals: updated[fieldIndex].priceIntervals.filter((_, i) => i !== intervalIndex)
+      }
+      setSportsFields(updated)
+    }
+  }
+
+  const updatePriceInterval = (fieldIndex: number, intervalIndex: number, field: keyof PriceInterval, value: string | number) => {
+    const updated = [...sportsFields]
+    updated[fieldIndex] = {
+      ...updated[fieldIndex],
+      priceIntervals: updated[fieldIndex].priceIntervals.map((interval, i) => 
+        i === intervalIndex ? { ...interval, [field]: value } : interval
+      )
+    }
+    setSportsFields(updated)
+  }
+
+  // Function to update opening hours for a specific field
+  const updateFieldOpeningHours = (fieldIndex: number, day: string, data: { isOpen: boolean | null, openTime: string, closeTime: string }) => {
+    const updated = [...sportsFields]
+    updated[fieldIndex] = {
+      ...updated[fieldIndex],
+      openingHours: {
+        ...updated[fieldIndex].openingHours,
+        [day]: data
       }
     }
     setSportsFields(updated)
@@ -315,14 +405,14 @@ function RegisterSportsBase() {
         break
       case 4:
         // Validate that at least one field is complete
-        const validFields = sportsFields.filter(field => 
-          field.fieldName.trim() && 
-          field.sportType.trim() && 
-          field.pricePerHour !== null && 
-          field.pricePerHour > 0
-        )
+        const validFields = sportsFields.filter(field => {
+          const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
+          const hasValidPrices = field.priceIntervals && field.priceIntervals.length > 0 && 
+            field.priceIntervals.some(interval => interval.price > 0)
+          return hasBasicInfo && hasValidPrices
+        })
         if (validFields.length === 0) {
-          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și preț)')
+          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și cel puțin un interval de preț)')
           return false
         }
         break
@@ -355,15 +445,15 @@ function RegisterSportsBase() {
     const validEmails = emails.filter(e => e.trim() !== '')
     
     // Validate that at least one sports field is complete
-    const validFields = sportsFields.filter(field => 
-      field.fieldName.trim() && 
-      field.sportType.trim() && 
-      field.pricePerHour !== null && 
-      field.pricePerHour > 0
-    )
+    const validFields = sportsFields.filter(field => {
+      const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
+      const hasValidPrices = field.priceIntervals && field.priceIntervals.length > 0 && 
+        field.priceIntervals.some(interval => interval.price > 0)
+      return hasBasicInfo && hasValidPrices
+    })
     
     if (!name || validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified) || validFields.length === 0) {
-      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon, un email și un teren complet)')
+      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon, un email și un teren complet cu prețuri)')
       return
     }
 
@@ -388,12 +478,6 @@ function RegisterSportsBase() {
           })
         })
       )
-
-      const formattedOpeningHours = Object.entries(openingHours).map(([day, data]) => {
-        if (data.isOpen === null) return null
-        if (data.isOpen === false) return `${day}: closed`
-        return `${day}: ${data.openTime}-${data.closeTime}`
-      }).filter(Boolean).join('; ')
 
       // Filter out empty values
       const validPhones = phones.filter(p => p.trim() !== '')
@@ -420,23 +504,26 @@ function RegisterSportsBase() {
         website: website || null,
         socialMedia: JSON.stringify(socialMedia),
         gallery: JSON.stringify(galleryBase64),
-        openingHours: formattedOpeningHours || null,
-        // Legacy fields for backward compatibility (use first field's sport)
+        openingHours: null, // No longer used at facility level, each field has its own schedule
+        // Legacy fields for backward compatibility (use first field's sport and first price interval)
         sport: validFields.length > 0 ? validFields[0].sportType : '',
-        pricePerHour: validFields.length > 0 ? validFields[0].pricePerHour : null,
+        pricePerHour: validFields.length > 0 && validFields[0].priceIntervals && validFields[0].priceIntervals.length > 0 
+          ? validFields[0].priceIntervals[0].price : null,
         pricingDetails: JSON.stringify(pricingDetails),
         hasParking: validFields.some(f => f.features.hasParking),
         hasShower: validFields.some(f => f.features.hasShower),
         hasChangingRoom: validFields.some(f => f.features.hasChangingRoom),
         hasAirConditioning: validFields.some(f => f.features.hasAirConditioning),
         hasLighting: validFields.some(f => f.features.hasLighting),
-        // New field: sports fields array
+        // New field: sports fields array with extensible pricing system
         sportsFields: JSON.stringify(validFields.map(field => ({
           fieldName: field.fieldName,
           sportType: field.sportType,
-          pricePerHour: field.pricePerHour,
           description: field.description || null,
-          features: field.features
+          features: field.features,
+          slotSize: field.slotSize || 60, // Default 60 minutes
+          priceIntervals: field.priceIntervals || [],
+          openingHours: field.openingHours || {}
         })))
       }
 
@@ -491,13 +578,12 @@ function RegisterSportsBase() {
     }
   }
 
-  const totalSteps = 5
+  const totalSteps = 4
   const steps = [
     'Date de contact',
     'Branding',
     'Galerie',
-    'Sport și prețuri',
-    'Facilități și program'
+    'Terenuri, prețuri și program'
   ]
 
   // Rest of the component JSX will be similar to Register.tsx but simplified for sports bases
@@ -641,7 +727,7 @@ function RegisterSportsBase() {
           </div>
         )}
 
-        <form onSubmit={currentStep === 5 ? (e) => handleSubmit(e) : (e) => { e.preventDefault(); nextStep(); }}>
+        <form onSubmit={currentStep === 4 ? (e) => handleSubmit(e) : (e) => { e.preventDefault(); nextStep(); }}>
           {/* Step 1: Contact Details - Identical to RegisterRepairShop */}
           {currentStep === 1 && (
             <div>
@@ -2454,7 +2540,7 @@ function RegisterSportsBase() {
                       )}
                     </div>
                     
-                    {/* Price Per Hour */}
+                    {/* Slot Size */}
                     <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
                       <label style={{
                         display: 'block',
@@ -2463,15 +2549,11 @@ function RegisterSportsBase() {
                         fontWeight: '600',
                         fontSize: '0.875rem',
                         letterSpacing: '0.01em'
-                      }}>Preț pe oră (RON) *</label>
-                      <input
-                        type="number"
-                        placeholder="ex: 100"
-                        value={field.pricePerHour || ''}
-                        onChange={(e) => updateSportsField(index, 'pricePerHour', e.target.value ? parseFloat(e.target.value) : null)}
-                        min="0"
-                        step="0.01"
-                        required={field.pricePerHour === null}
+                      }}>Dimensiune slot (minute) *</label>
+                      <select
+                        value={field.slotSize || 60}
+                        onChange={(e) => updateSportsField(index, 'slotSize', parseInt(e.target.value))}
+                        required
                         style={{
                           width: '100%',
                           padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
@@ -2486,7 +2568,8 @@ function RegisterSportsBase() {
                           lineHeight: '1.5',
                           boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
                           WebkitAppearance: 'none',
-                          touchAction: 'manipulation'
+                          touchAction: 'manipulation',
+                          cursor: 'pointer'
                         }}
                         onFocus={(e) => {
                           e.target.style.borderColor = '#10b981'
@@ -2496,7 +2579,221 @@ function RegisterSportsBase() {
                           e.target.style.borderColor = '#e2e8f0'
                           e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                         }}
-                      />
+                      >
+                        <option value={30}>30 minute</option>
+                        <option value={60}>60 minute (1 oră)</option>
+                        <option value={90}>90 minute (1.5 ore)</option>
+                      </select>
+                      <p style={{
+                        marginTop: '0.5rem',
+                        fontSize: '0.8125rem',
+                        color: '#64748b',
+                        lineHeight: '1.5'
+                      }}>
+                        Dimensiunea slotului pentru rezervări (extensibil pentru rezervări online viitoare)
+                      </p>
+                    </div>
+
+                    {/* Price Intervals */}
+                    <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <label style={{
+                          display: 'block',
+                          color: '#0f172a',
+                          fontWeight: '600',
+                          fontSize: '0.875rem',
+                          letterSpacing: '0.01em'
+                        }}>Intervale de preț *</label>
+                        <button
+                          type="button"
+                          onClick={() => addPriceInterval(index)}
+                          style={{
+                            padding: isMobile ? '0.625rem 1rem' : '0.5rem 1rem',
+                            background: '#10b981',
+                            color: 'white',
+                            border: '1.5px solid #10b981',
+                            borderRadius: '6px',
+                            fontSize: '0.8125rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            touchAction: 'manipulation'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isMobile) {
+                              e.currentTarget.style.background = '#059669'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isMobile) {
+                              e.currentTarget.style.background = '#10b981'
+                            }
+                          }}
+                        >
+                          + Adaugă interval
+                        </button>
+                      </div>
+                      {field.priceIntervals && field.priceIntervals.map((interval, intervalIndex) => (
+                        <div key={intervalIndex} style={{
+                          padding: '1rem',
+                          marginBottom: '0.75rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          background: '#f9fafb',
+                          position: 'relative'
+                        }}>
+                          {field.priceIntervals.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removePriceInterval(index, intervalIndex)}
+                              style={{
+                                position: 'absolute',
+                                top: '0.5rem',
+                                right: '0.5rem',
+                                background: '#fee2e2',
+                                color: '#dc2626',
+                                border: 'none',
+                                borderRadius: '4px',
+                                width: '24px',
+                                height: '24px',
+                                cursor: 'pointer',
+                                fontSize: '0.875rem',
+                                fontWeight: '600',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isMobile) {
+                                  e.currentTarget.style.background = '#fecaca'
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isMobile) {
+                                  e.currentTarget.style.background = '#fee2e2'
+                                }
+                              }}
+                            >
+                              ×
+                            </button>
+                          )}
+                          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                            <div>
+                              <label style={{
+                                display: 'block',
+                                marginBottom: '0.5rem',
+                                color: '#64748b',
+                                fontSize: '0.8125rem',
+                                fontWeight: '500'
+                              }}>De la</label>
+                              <input
+                                type="time"
+                                value={interval.startTime}
+                                onChange={(e) => updatePriceInterval(index, intervalIndex, 'startTime', e.target.value)}
+                                required
+                                style={{
+                                  width: '100%',
+                                  padding: isMobile ? '0.75rem' : '0.625rem 0.75rem',
+                                  border: '1.5px solid #e2e8f0',
+                                  borderRadius: '6px',
+                                  fontSize: isMobile ? '16px' : '0.875rem',
+                                  outline: 'none',
+                                  background: '#ffffff',
+                                  color: '#0f172a',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor = '#10b981'
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor = '#e2e8f0'
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{
+                                display: 'block',
+                                marginBottom: '0.5rem',
+                                color: '#64748b',
+                                fontSize: '0.8125rem',
+                                fontWeight: '500'
+                              }}>Până la</label>
+                              <input
+                                type="time"
+                                value={interval.endTime}
+                                onChange={(e) => updatePriceInterval(index, intervalIndex, 'endTime', e.target.value)}
+                                required
+                                style={{
+                                  width: '100%',
+                                  padding: isMobile ? '0.75rem' : '0.625rem 0.75rem',
+                                  border: '1.5px solid #e2e8f0',
+                                  borderRadius: '6px',
+                                  fontSize: isMobile ? '16px' : '0.875rem',
+                                  outline: 'none',
+                                  background: '#ffffff',
+                                  color: '#0f172a',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor = '#10b981'
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor = '#e2e8f0'
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{
+                                display: 'block',
+                                marginBottom: '0.5rem',
+                                color: '#64748b',
+                                fontSize: '0.8125rem',
+                                fontWeight: '500'
+                              }}>Preț (RON)</label>
+                              <input
+                                type="number"
+                                placeholder="ex: 100"
+                                value={interval.price || ''}
+                                onChange={(e) => updatePriceInterval(index, intervalIndex, 'price', parseFloat(e.target.value) || 0)}
+                                min="0"
+                                step="0.01"
+                                required
+                                style={{
+                                  width: '100%',
+                                  padding: isMobile ? '0.75rem' : '0.625rem 0.75rem',
+                                  border: '1.5px solid #e2e8f0',
+                                  borderRadius: '6px',
+                                  fontSize: isMobile ? '16px' : '0.875rem',
+                                  outline: 'none',
+                                  background: '#ffffff',
+                                  color: '#0f172a',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor = '#10b981'
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor = '#e2e8f0'
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {(!field.priceIntervals || field.priceIntervals.length === 0) && (
+                        <p style={{
+                          color: '#64748b',
+                          fontSize: '0.8125rem',
+                          textAlign: 'center',
+                          padding: '1rem',
+                          background: '#f9fafb',
+                          borderRadius: '6px',
+                          border: '1.5px dashed #e2e8f0'
+                        }}>
+                          Adaugă cel puțin un interval de preț (ex: 08:00-20:00 = 100 RON, 20:00-23:00 = 150 RON)
+                        </p>
+                      )}
                     </div>
                     
                     {/* Description */}
@@ -2543,8 +2840,8 @@ function RegisterSportsBase() {
                       />
                     </div>
                     
-                    {/* Features */}
-                    <div>
+                    {/* Features - Toggle Switches */}
+                    <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
                       <label style={{
                         display: 'block',
                         marginBottom: '0.75rem',
@@ -2564,36 +2861,214 @@ function RegisterSportsBase() {
                           { key: 'hasChangingRoom', label: 'Vestiar' },
                           { key: 'hasAirConditioning', label: 'Aer condiționat' },
                           { key: 'hasLighting', label: 'Iluminat' }
-                        ].map(feature => (
-                          <label key={feature.key} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            cursor: 'pointer',
-                            padding: '0.75rem',
-                            borderRadius: '8px',
-                            border: '1.5px solid #e2e8f0',
-                            background: field.features[feature.key as keyof SportsField['features']] ? '#f0fdf4' : '#ffffff',
-                            transition: 'all 0.2s ease'
-                          }}>
-                            <input
-                              type="checkbox"
-                              checked={field.features[feature.key as keyof SportsField['features']]}
-                              onChange={(e) => updateSportsFieldFeature(index, feature.key as keyof SportsField['features'], e.target.checked)}
-                              style={{
-                                width: '20px',
-                                height: '20px',
-                                marginRight: '0.75rem',
-                                cursor: 'pointer',
-                                accentColor: '#10b981'
-                              }}
-                            />
-                            <span style={{
-                              fontSize: '0.875rem',
-                              fontWeight: '500',
-                              color: '#0f172a'
-                            }}>{feature.label}</span>
-                          </label>
-                        ))}
+                        ].map(feature => {
+                          const isChecked = field.features[feature.key as keyof SportsField['features']]
+                          return (
+                            <label key={feature.key} style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              cursor: 'pointer',
+                              padding: '0.75rem',
+                              borderRadius: '8px',
+                              border: '1.5px solid #e2e8f0',
+                              background: isChecked ? '#f0fdf4' : '#ffffff',
+                              transition: 'all 0.2s ease'
+                            }}>
+                              <span style={{
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                color: '#0f172a'
+                              }}>{feature.label}</span>
+                              <div
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  updateSportsFieldFeature(index, feature.key as keyof SportsField['features'], !isChecked)
+                                }}
+                                style={{
+                                  width: '44px',
+                                  height: '24px',
+                                  borderRadius: '12px',
+                                  background: isChecked ? '#10b981' : '#cbd5e1',
+                                  position: 'relative',
+                                  cursor: 'pointer',
+                                  transition: 'background 0.2s ease',
+                                  flexShrink: 0
+                                }}
+                              >
+                                <div style={{
+                                  width: '20px',
+                                  height: '20px',
+                                  borderRadius: '50%',
+                                  background: '#ffffff',
+                                  position: 'absolute',
+                                  top: '2px',
+                                  left: isChecked ? '22px' : '2px',
+                                  transition: 'left 0.2s ease',
+                                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+                                }} />
+                              </div>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Opening Hours per Field */}
+                    <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.75rem',
+                        color: '#0f172a',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.01em'
+                      }}>Program</label>
+                      <div style={{
+                        padding: '1rem',
+                        border: '1.5px solid #e2e8f0',
+                        borderRadius: '8px',
+                        background: '#f9fafb'
+                      }}>
+                        {[
+                          { key: 'monday', label: 'Luni' },
+                          { key: 'tuesday', label: 'Marți' },
+                          { key: 'wednesday', label: 'Miercuri' },
+                          { key: 'thursday', label: 'Joi' },
+                          { key: 'friday', label: 'Vineri' },
+                          { key: 'saturday', label: 'Sâmbătă' },
+                          { key: 'sunday', label: 'Duminică' }
+                        ].map((day) => {
+                          const dayData = field.openingHours[day.key as keyof typeof field.openingHours]
+                          return (
+                            <div key={day.key} style={{
+                              display: 'flex',
+                              flexDirection: isMobile ? 'column' : 'row',
+                              alignItems: isMobile ? 'flex-start' : 'center',
+                              gap: isMobile ? '0.75rem' : '1rem',
+                              marginBottom: isMobile ? '1rem' : '0.75rem',
+                              paddingBottom: isMobile ? '1rem' : '0.75rem',
+                              borderBottom: day.key !== 'sunday' ? '1px solid #e2e8f0' : 'none'
+                            }}>
+                              <div style={{
+                                width: isMobile ? '100%' : '100px',
+                                fontWeight: '600',
+                                color: '#0f172a',
+                                fontSize: '0.875rem'
+                              }}>
+                                {day.label}
+                              </div>
+                              <div style={{
+                                display: 'flex',
+                                flexDirection: isMobile ? 'column' : 'row',
+                                alignItems: isMobile ? 'stretch' : 'center',
+                                gap: isMobile ? '0.5rem' : '0.75rem',
+                                flex: 1
+                              }}>
+                                <label style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                  color: '#64748b'
+                                }}>
+                                  <input
+                                    type="radio"
+                                    name={`${index}-${day.key}-status`}
+                                    checked={dayData.isOpen === true}
+                                    onChange={() => updateFieldOpeningHours(index, day.key, { ...dayData, isOpen: true })}
+                                    style={{ cursor: 'pointer', accentColor: '#10b981' }}
+                                  />
+                                  <span>Deschis</span>
+                                </label>
+                                <label style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                  color: '#64748b'
+                                }}>
+                                  <input
+                                    type="radio"
+                                    name={`${index}-${day.key}-status`}
+                                    checked={dayData.isOpen === false}
+                                    onChange={() => updateFieldOpeningHours(index, day.key, { ...dayData, isOpen: false })}
+                                    style={{ cursor: 'pointer', accentColor: '#10b981' }}
+                                  />
+                                  <span>Închis</span>
+                                </label>
+                                <label style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                  color: '#64748b'
+                                }}>
+                                  <input
+                                    type="radio"
+                                    name={`${index}-${day.key}-status`}
+                                    checked={dayData.isOpen === null}
+                                    onChange={() => updateFieldOpeningHours(index, day.key, { ...dayData, isOpen: null })}
+                                    style={{ cursor: 'pointer', accentColor: '#10b981' }}
+                                  />
+                                  <span>Nespecificat</span>
+                                </label>
+                                {dayData.isOpen === true && (
+                                  <>
+                                    <input
+                                      type="time"
+                                      value={dayData.openTime}
+                                      onChange={(e) => updateFieldOpeningHours(index, day.key, { ...dayData, openTime: e.target.value })}
+                                      style={{
+                                        padding: '0.5rem 0.75rem',
+                                        border: '1.5px solid #e2e8f0',
+                                        borderRadius: '6px',
+                                        fontSize: '0.875rem',
+                                        outline: 'none',
+                                        background: '#ffffff',
+                                        color: '#0f172a',
+                                        transition: 'all 0.2s ease',
+                                        width: isMobile ? '100%' : 'auto'
+                                      }}
+                                      onFocus={(e) => {
+                                        e.target.style.borderColor = '#10b981'
+                                      }}
+                                      onBlur={(e) => {
+                                        e.target.style.borderColor = '#e2e8f0'
+                                      }}
+                                    />
+                                    <span style={{ color: '#64748b', fontSize: '0.875rem' }}>-</span>
+                                    <input
+                                      type="time"
+                                      value={dayData.closeTime}
+                                      onChange={(e) => updateFieldOpeningHours(index, day.key, { ...dayData, closeTime: e.target.value })}
+                                      style={{
+                                        padding: '0.5rem 0.75rem',
+                                        border: '1.5px solid #e2e8f0',
+                                        borderRadius: '6px',
+                                        fontSize: '0.875rem',
+                                        outline: 'none',
+                                        background: '#ffffff',
+                                        color: '#0f172a',
+                                        transition: 'all 0.2s ease',
+                                        width: isMobile ? '100%' : 'auto'
+                                      }}
+                                      onFocus={(e) => {
+                                        e.target.style.borderColor = '#10b981'
+                                      }}
+                                      onBlur={(e) => {
+                                        e.target.style.borderColor = '#e2e8f0'
+                                      }}
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
@@ -2602,325 +3077,8 @@ function RegisterSportsBase() {
             </div>
           )}
 
-          {/* Step 5: Facilities and Opening Hours */}
-          {currentStep === 5 && (
-            <div>
-              <h2 style={{ 
-                fontSize: isMobile ? '1.25rem' : '1.75rem', 
-                color: '#0f172a', 
-                marginBottom: isMobile ? '1.5rem' : '2.5rem',
-                fontWeight: '600',
-                letterSpacing: '-0.02em',
-                lineHeight: '1.3'
-              }}>
-                Facilități și program
-              </h2>
-              
-              {/* Opening Hours */}
-              <div style={{ marginBottom: isMobile ? '2rem' : '3rem' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '1.5rem',
-                  color: '#0f172a',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  letterSpacing: '0.01em'
-                }}>Program</label>
-                <div style={{
-                  padding: '0'
-                }}>
-                  {[
-                    { key: 'monday', label: 'Luni' },
-                    { key: 'tuesday', label: 'Marți' },
-                    { key: 'wednesday', label: 'Miercuri' },
-                    { key: 'thursday', label: 'Joi' },
-                    { key: 'friday', label: 'Vineri' },
-                    { key: 'saturday', label: 'Sâmbătă' },
-                    { key: 'sunday', label: 'Duminică' }
-                  ].map((day) => {
-                    const dayData = openingHours[day.key as keyof typeof openingHours]
-                    return (
-                      <div key={day.key} style={{
-                        display: 'flex',
-                        flexDirection: isMobile ? 'column' : 'row',
-                        alignItems: isMobile ? 'flex-start' : 'center',
-                        gap: isMobile ? '0.75rem' : '2rem',
-                        marginBottom: isMobile ? '1rem' : '1.5rem',
-                        paddingBottom: isMobile ? '1rem' : '1.5rem',
-                        borderBottom: '1px solid #e2e8f0'
-                      }}>
-                        <div style={{ 
-                          width: isMobile ? '100%' : '120px', 
-                          fontWeight: '600', 
-                          color: '#0f172a',
-                          fontSize: '0.875rem',
-                          letterSpacing: '0.01em'
-                        }}>
-                          {day.label}
-                        </div>
-                        <div style={{ 
-                          display: 'flex', 
-                          flexDirection: isMobile ? 'column' : 'row',
-                          alignItems: isMobile ? 'stretch' : 'center', 
-                          gap: isMobile ? '0.75rem' : '1rem', 
-                          flex: 1,
-                          width: isMobile ? '100%' : 'auto'
-                        }}>
-                          <select
-                            value={dayData.isOpen === null ? 'not_specified' : dayData.isOpen ? 'open' : 'closed'}
-                            onChange={(e) => {
-                              const newValue = e.target.value === 'not_specified' ? null : e.target.value === 'open'
-                              setOpeningHours({
-                                ...openingHours,
-                                [day.key]: {
-                                  ...dayData,
-                                  isOpen: newValue
-                                }
-                              })
-                            }}
-                            style={{
-                              padding: isMobile ? '0.75rem 1rem' : '0.5rem 0',
-                              border: isMobile ? '1.5px solid #e2e8f0' : 'none',
-                              borderBottom: isMobile ? 'none' : '1px solid #e2e8f0',
-                              borderRadius: isMobile ? '8px' : '0',
-                              fontSize: isMobile ? '16px' : '0.875rem',
-                              cursor: 'pointer',
-                              background: isMobile ? '#ffffff' : 'transparent',
-                              color: '#0f172a',
-                              transition: 'all 0.2s ease',
-                              boxShadow: isMobile ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none',
-                              width: isMobile ? '100%' : 'auto',
-                              WebkitAppearance: 'none',
-                              touchAction: 'manipulation'
-                            }}
-                            onFocus={(e) => {
-                              if (isMobile) {
-                                e.target.style.borderColor = '#0f172a'
-                                e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
-                              } else {
-                                e.target.style.borderBottomColor = '#0f172a'
-                              }
-                            }}
-                            onBlur={(e) => {
-                              if (isMobile) {
-                                e.target.style.borderColor = '#e2e8f0'
-                                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                              } else {
-                                e.target.style.borderBottomColor = '#e2e8f0'
-                              }
-                            }}
-                          >
-                            <option value="not_specified">Nu specifică</option>
-                            <option value="open">Deschis</option>
-                            <option value="closed">Închis</option>
-                          </select>
-                          {dayData.isOpen === true && (
-                            <>
-                              <input
-                                type="time"
-                                value={dayData.openTime}
-                                onChange={(e) => {
-                                  setOpeningHours({
-                                    ...openingHours,
-                                    [day.key]: {
-                                      ...dayData,
-                                      openTime: e.target.value
-                                    }
-                                  })
-                                }}
-                                style={{
-                                  padding: isMobile ? '0.875rem 1rem' : '0.75rem 1rem',
-                                  border: '1.5px solid #e2e8f0',
-                                  borderRadius: '8px',
-                                  fontSize: isMobile ? '16px' : '0.875rem',
-                                  background: '#ffffff',
-                                  color: '#0f172a',
-                                  transition: 'all 0.2s ease',
-                                  fontWeight: '400',
-                                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                                  width: isMobile ? '100%' : 'auto',
-                                  WebkitAppearance: 'none',
-                                  touchAction: 'manipulation',
-                                  outline: 'none'
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = '#0f172a'
-                                  e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = '#e2e8f0'
-                                  e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                                }}
-                              />
-                              {!isMobile && <span style={{ color: '#64748b', fontSize: '0.875rem' }}>—</span>}
-                              <input
-                                type="time"
-                                value={dayData.closeTime}
-                                onChange={(e) => {
-                                  setOpeningHours({
-                                    ...openingHours,
-                                    [day.key]: {
-                                      ...dayData,
-                                      closeTime: e.target.value
-                                    }
-                                  })
-                                }}
-                                style={{
-                                  padding: isMobile ? '0.875rem 1rem' : '0.75rem 1rem',
-                                  border: '1.5px solid #e2e8f0',
-                                  borderRadius: '8px',
-                                  fontSize: isMobile ? '16px' : '0.875rem',
-                                  background: '#ffffff',
-                                  color: '#0f172a',
-                                  transition: 'all 0.2s ease',
-                                  fontWeight: '400',
-                                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                                  width: isMobile ? '100%' : 'auto',
-                                  WebkitAppearance: 'none',
-                                  touchAction: 'manipulation',
-                                  outline: 'none'
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = '#0f172a'
-                                  e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = '#e2e8f0'
-                                  e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                                }}
-                              />
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Facilities */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-                gap: isMobile ? '1rem' : '1.5rem',
-                marginTop: isMobile ? '1.5rem' : '2rem'
-              }}>
-                <label style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.75rem', 
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#0f172a'
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={hasParking}
-                    onChange={(e) => setHasParking(e.target.checked)}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      accentColor: '#10b981',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <span>Parcare</span>
-                </label>
-                <label style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.75rem', 
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#0f172a'
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={hasShower}
-                    onChange={(e) => setHasShower(e.target.checked)}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      accentColor: '#10b981',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <span>Dusuri</span>
-                </label>
-                <label style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.75rem', 
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#0f172a'
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={hasChangingRoom}
-                    onChange={(e) => setHasChangingRoom(e.target.checked)}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      accentColor: '#10b981',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <span>Vestiar</span>
-                </label>
-                <label style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.75rem', 
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#0f172a'
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={hasAirConditioning}
-                    onChange={(e) => setHasAirConditioning(e.target.checked)}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      accentColor: '#10b981',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <span>Aer condiționat</span>
-                </label>
-                <label style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.75rem', 
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#0f172a'
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={hasLighting}
-                    onChange={(e) => setHasLighting(e.target.checked)}
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                      accentColor: '#10b981',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <span>Iluminat</span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Success Step - Same as RegisterRepairShop */}
-          {currentStep === 6 && credentials && (
+          {/* Success Step */}
+          {currentStep === 5 && credentials && (
             <div style={{
               textAlign: 'center',
               padding: isMobile ? '2rem 1rem' : '3rem'

@@ -229,6 +229,9 @@ async function initDatabase() {
         price_per_hour DECIMAL(10, 2),
         description TEXT,
         features JSON,
+        slot_size INT DEFAULT 60 COMMENT 'Slot size in minutes (30, 60, 90)',
+        price_intervals JSON COMMENT 'Array of price intervals: [{startTime, endTime, price}]',
+        opening_hours JSON COMMENT 'Opening hours per day: {monday: {isOpen, openTime, closeTime}, ...}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (facility_id) REFERENCES facilities(id) ON DELETE CASCADE,
@@ -797,16 +800,24 @@ app.post('/api/register', async (req, res) => {
       if (facilityType === 'field' && parsedSportsFields && parsedSportsFields.length > 0) {
         console.log(`[REGISTER] Inserting ${parsedSportsFields.length} sports fields for facility ${facilityId}`)
         for (const field of parsedSportsFields) {
+          // Calculate legacy pricePerHour from first price interval for backward compatibility
+          const legacyPricePerHour = field.priceIntervals && field.priceIntervals.length > 0 
+            ? field.priceIntervals[0].price 
+            : null
+
           await connection.query(
-            `INSERT INTO facility_sports_fields (facility_id, sport_type, field_name, price_per_hour, description, features)
-             VALUES (?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO facility_sports_fields (facility_id, sport_type, field_name, price_per_hour, description, features, slot_size, price_intervals, opening_hours)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               facilityId,
               field.sportType,
               field.fieldName || null,
-              field.pricePerHour ? parseFloat(field.pricePerHour) : null,
+              legacyPricePerHour ? parseFloat(legacyPricePerHour) : null, // Legacy field for backward compatibility
               field.description || null,
-              JSON.stringify(field.features || {})
+              JSON.stringify(field.features || {}),
+              field.slotSize || 60, // Default 60 minutes
+              JSON.stringify(field.priceIntervals || []),
+              JSON.stringify(field.openingHours || {})
             ]
           )
         }
