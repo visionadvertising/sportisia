@@ -128,6 +128,15 @@ function RegisterSportsBase() {
   const [sportSearch, setSportSearch] = useState<Record<number, string>>({})
   const [showSportDropdown, setShowSportDropdown] = useState<Record<number, boolean>>({})
   
+  // Pricing mode: simple (default) or advanced
+  const [pricingMode, setPricingMode] = useState<Record<number, 'simple' | 'advanced'>>({})
+  // Simple pricing: one price and time range for all days
+  const [simplePricing, setSimplePricing] = useState<Record<number, {
+    price: number | null
+    startTime: string
+    endTime: string
+  }>>({})
+  
   // Legacy fields for backward compatibility (will be removed)
   const [sport, setSport] = useState('')
   const [pricingDetails, setPricingDetails] = useState<PricingDetail[]>([])
@@ -353,14 +362,16 @@ function RegisterSportsBase() {
         }
         break
       case 4:
-        // Validate that at least one field is complete with time slots
-        const validFields = sportsFields.filter(field => {
+        // Validate that at least one field is complete with time slots or simple pricing
+        const validFields = sportsFields.filter((field, idx) => {
           const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
-          const hasTimeSlots = field.timeSlots && field.timeSlots.length > 0
-          return hasBasicInfo && hasTimeSlots
+          const isAdvanced = pricingMode[idx] === 'advanced'
+          const hasTimeSlots = isAdvanced ? (field.timeSlots && field.timeSlots.length > 0) : true
+          const hasSimplePricing = !isAdvanced ? (simplePricing[idx]?.price !== null && simplePricing[idx]?.price !== undefined) : true
+          return hasBasicInfo && hasTimeSlots && hasSimplePricing
         })
         if (validFields.length === 0) {
-          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și cel puțin un interval de timp configurat)')
+          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și preț configurat)')
           return false
         }
         break
@@ -2541,18 +2552,247 @@ function RegisterSportsBase() {
                       </p>
                     </div>
 
-                    {/* Time Slots - Simple List by Day */}
+                    {/* Pricing System - Simple or Advanced */}
                     <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
-                      <label style={{
-                        display: 'block',
-                        marginBottom: '0.75rem',
-                        color: '#0f172a',
-                        fontWeight: '600',
-                        fontSize: '0.875rem',
-                        letterSpacing: '0.01em'
-                      }}>Program și prețuri *</label>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '1rem',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem'
+                      }}>
+                        <label style={{
+                          color: '#0f172a',
+                          fontWeight: '600',
+                          fontSize: '0.875rem',
+                          letterSpacing: '0.01em'
+                        }}>Program și prețuri *</label>
+                        
+                        {/* Toggle between Simple and Advanced Pricing */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          padding: '0.375rem',
+                          background: '#f1f5f9',
+                          borderRadius: '8px',
+                          border: '1.5px solid #e2e8f0'
+                        }}>
+                          <span style={{
+                            fontSize: '0.8125rem',
+                            fontWeight: '500',
+                            color: pricingMode[index] === 'simple' ? '#0f172a' : '#64748b'
+                          }}>
+                            Simplificat
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newMode = pricingMode[index] === 'simple' ? 'advanced' : 'simple'
+                              setPricingMode({ ...pricingMode, [index]: newMode })
+                              
+                              // When switching to simple, initialize if not exists
+                              if (newMode === 'simple' && !simplePricing[index]) {
+                                setSimplePricing({
+                                  ...simplePricing,
+                                  [index]: {
+                                    price: null,
+                                    startTime: '08:00',
+                                    endTime: '20:00'
+                                  }
+                                })
+                              }
+                            }}
+                            style={{
+                              width: '48px',
+                              height: '24px',
+                              borderRadius: '12px',
+                              border: 'none',
+                              background: pricingMode[index] === 'advanced' ? '#10b981' : '#cbd5e1',
+                              cursor: 'pointer',
+                              position: 'relative',
+                              transition: 'all 0.3s ease',
+                              padding: '2px'
+                            }}
+                          >
+                            <div style={{
+                              width: '20px',
+                              height: '20px',
+                              borderRadius: '50%',
+                              background: '#ffffff',
+                              transform: pricingMode[index] === 'advanced' ? 'translateX(24px)' : 'translateX(0)',
+                              transition: 'transform 0.3s ease',
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                            }} />
+                          </button>
+                          <span style={{
+                            fontSize: '0.8125rem',
+                            fontWeight: '500',
+                            color: pricingMode[index] === 'advanced' ? '#0f172a' : '#64748b'
+                          }}>
+                            Avansat
+                          </span>
+                        </div>
+                      </div>
                       
-                      {/* Days List */}
+                      {/* Simple Pricing Mode */}
+                      {pricingMode[index] !== 'advanced' && (
+                        <div style={{
+                          padding: '1.5rem',
+                          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                          borderRadius: '12px',
+                          border: '1.5px solid #e2e8f0',
+                          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+                        }}>
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
+                            gap: '1rem',
+                            alignItems: 'end'
+                          }}>
+                            <div>
+                              <label style={{
+                                display: 'block',
+                                fontSize: '0.8125rem',
+                                fontWeight: '600',
+                                color: '#0f172a',
+                                marginBottom: '0.5rem'
+                              }}>
+                                Preț (RON)
+                              </label>
+                              <input
+                                type="number"
+                                placeholder="0.00"
+                                value={simplePricing[index]?.price || ''}
+                                onChange={(e) => {
+                                  setSimplePricing({
+                                    ...simplePricing,
+                                    [index]: {
+                                      ...(simplePricing[index] || { startTime: '08:00', endTime: '20:00' }),
+                                      price: parseFloat(e.target.value) || null
+                                    }
+                                  })
+                                }}
+                                min="0"
+                                step="0.01"
+                                style={{
+                                  width: '100%',
+                                  padding: '0.75rem',
+                                  border: '1.5px solid #e2e8f0',
+                                  borderRadius: '8px',
+                                  fontSize: '0.9375rem',
+                                  background: '#ffffff',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor = '#10b981'
+                                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor = '#e2e8f0'
+                                  e.target.style.boxShadow = 'none'
+                                }}
+                              />
+                            </div>
+                            
+                            <div>
+                              <label style={{
+                                display: 'block',
+                                fontSize: '0.8125rem',
+                                fontWeight: '600',
+                                color: '#0f172a',
+                                marginBottom: '0.5rem'
+                              }}>
+                                De la
+                              </label>
+                              <input
+                                type="time"
+                                value={simplePricing[index]?.startTime || '08:00'}
+                                onChange={(e) => {
+                                  setSimplePricing({
+                                    ...simplePricing,
+                                    [index]: {
+                                      ...(simplePricing[index] || { price: null, endTime: '20:00' }),
+                                      startTime: e.target.value
+                                    }
+                                  })
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.75rem',
+                                  border: '1.5px solid #e2e8f0',
+                                  borderRadius: '8px',
+                                  fontSize: '0.9375rem',
+                                  background: '#ffffff',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor = '#10b981'
+                                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor = '#e2e8f0'
+                                  e.target.style.boxShadow = 'none'
+                                }}
+                              />
+                            </div>
+                            
+                            <div>
+                              <label style={{
+                                display: 'block',
+                                fontSize: '0.8125rem',
+                                fontWeight: '600',
+                                color: '#0f172a',
+                                marginBottom: '0.5rem'
+                              }}>
+                                Până la
+                              </label>
+                              <input
+                                type="time"
+                                value={simplePricing[index]?.endTime || '20:00'}
+                                onChange={(e) => {
+                                  setSimplePricing({
+                                    ...simplePricing,
+                                    [index]: {
+                                      ...(simplePricing[index] || { price: null, startTime: '08:00' }),
+                                      endTime: e.target.value
+                                    }
+                                  })
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.75rem',
+                                  border: '1.5px solid #e2e8f0',
+                                  borderRadius: '8px',
+                                  fontSize: '0.9375rem',
+                                  background: '#ffffff',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onFocus={(e) => {
+                                  e.target.style.borderColor = '#10b981'
+                                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                }}
+                                onBlur={(e) => {
+                                  e.target.style.borderColor = '#e2e8f0'
+                                  e.target.style.boxShadow = 'none'
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <p style={{
+                            marginTop: '0.75rem',
+                            fontSize: '0.75rem',
+                            color: '#64748b',
+                            lineHeight: '1.5'
+                          }}>
+                            Acest preț va fi aplicat pentru toate zilele săptămânii în intervalul specificat
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Advanced Pricing Mode - Days List */}
+                      {pricingMode[index] === 'advanced' && (
                       <div style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -2571,10 +2811,11 @@ function RegisterSportsBase() {
                           
                           return (
                             <div key={day.key} style={{
-                              padding: '1rem',
-                              background: '#ffffff',
+                              padding: '1.25rem',
+                              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
                               borderRadius: '12px',
-                              border: '1.5px solid #e2e8f0'
+                              border: '1.5px solid #e2e8f0',
+                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
                             }}>
                               {/* Day Header */}
                               <div style={{
@@ -2609,18 +2850,31 @@ function RegisterSportsBase() {
                                     setSportsFields(updated)
                                   }}
                                   style={{
-                                    padding: '0.5rem 1rem',
-                                    background: '#10b981',
+                                    padding: '0.625rem 1.25rem',
+                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                                     color: 'white',
                                     border: 'none',
-                                    borderRadius: '6px',
+                                    borderRadius: '8px',
                                     fontSize: '0.8125rem',
                                     fontWeight: '600',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s ease',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '0.5rem'
+                                    gap: '0.5rem',
+                                    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!isMobile) {
+                                      e.currentTarget.style.transform = 'translateY(-1px)'
+                                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)'
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!isMobile) {
+                                      e.currentTarget.style.transform = 'translateY(0)'
+                                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
+                                    }
                                   }}
                                 >
                                   <span>+</span> Adaugă interval
@@ -2657,13 +2911,27 @@ function RegisterSportsBase() {
                                     
                                     return (
                                       <div key={slotIndex} style={{
-                                        padding: '1rem',
-                                        background: '#f9fafb',
-                                        borderRadius: '8px',
+                                        padding: '1.25rem',
+                                        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                                        borderRadius: '10px',
                                         border: '1.5px solid #e2e8f0',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        gap: '0.75rem'
+                                        gap: '1rem',
+                                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        if (!isMobile) {
+                                          e.currentTarget.style.borderColor = '#10b981'
+                                          e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.1)'
+                                        }
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        if (!isMobile) {
+                                          e.currentTarget.style.borderColor = '#e2e8f0'
+                                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)'
+                                        }
                                       }}>
                                         {/* Time inputs */}
                                         <div style={{
@@ -2675,10 +2943,10 @@ function RegisterSportsBase() {
                                           <div>
                                             <label style={{
                                               display: 'block',
-                                              fontSize: '0.75rem',
-                                              fontWeight: '500',
-                                              color: '#64748b',
-                                              marginBottom: '0.375rem'
+                                              fontSize: '0.8125rem',
+                                              fontWeight: '600',
+                                              color: '#0f172a',
+                                              marginBottom: '0.5rem'
                                             }}>
                                               De la
                                             </label>
@@ -2702,11 +2970,20 @@ function RegisterSportsBase() {
                                               }}
                                               style={{
                                                 width: '100%',
-                                                padding: '0.625rem',
+                                                padding: '0.75rem',
                                                 border: '1.5px solid #e2e8f0',
-                                                borderRadius: '6px',
-                                                fontSize: '0.875rem',
-                                                background: '#ffffff'
+                                                borderRadius: '8px',
+                                                fontSize: '0.9375rem',
+                                                background: '#ffffff',
+                                                transition: 'all 0.2s ease'
+                                              }}
+                                              onFocus={(e) => {
+                                                e.target.style.borderColor = '#10b981'
+                                                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                              }}
+                                              onBlur={(e) => {
+                                                e.target.style.borderColor = '#e2e8f0'
+                                                e.target.style.boxShadow = 'none'
                                               }}
                                             />
                                           </div>
@@ -2714,10 +2991,10 @@ function RegisterSportsBase() {
                                           <div>
                                             <label style={{
                                               display: 'block',
-                                              fontSize: '0.75rem',
-                                              fontWeight: '500',
-                                              color: '#64748b',
-                                              marginBottom: '0.375rem'
+                                              fontSize: '0.8125rem',
+                                              fontWeight: '600',
+                                              color: '#0f172a',
+                                              marginBottom: '0.5rem'
                                             }}>
                                               Până la
                                             </label>
@@ -2741,11 +3018,20 @@ function RegisterSportsBase() {
                                               }}
                                               style={{
                                                 width: '100%',
-                                                padding: '0.625rem',
+                                                padding: '0.75rem',
                                                 border: '1.5px solid #e2e8f0',
-                                                borderRadius: '6px',
-                                                fontSize: '0.875rem',
-                                                background: '#ffffff'
+                                                borderRadius: '8px',
+                                                fontSize: '0.9375rem',
+                                                background: '#ffffff',
+                                                transition: 'all 0.2s ease'
+                                              }}
+                                              onFocus={(e) => {
+                                                e.target.style.borderColor = '#10b981'
+                                                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                              }}
+                                              onBlur={(e) => {
+                                                e.target.style.borderColor = '#e2e8f0'
+                                                e.target.style.boxShadow = 'none'
                                               }}
                                             />
                                           </div>
@@ -2765,16 +3051,31 @@ function RegisterSportsBase() {
                                               setSportsFields(updated)
                                             }}
                                             style={{
-                                              padding: '0.625rem 1rem',
+                                              padding: '0.75rem 1.25rem',
                                               background: '#ef4444',
                                               color: 'white',
                                               border: 'none',
-                                              borderRadius: '6px',
+                                              borderRadius: '8px',
                                               fontSize: '0.8125rem',
                                               fontWeight: '600',
                                               cursor: 'pointer',
                                               transition: 'all 0.2s ease',
-                                              whiteSpace: 'nowrap'
+                                              whiteSpace: 'nowrap',
+                                              boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              if (!isMobile) {
+                                                e.currentTarget.style.background = '#dc2626'
+                                                e.currentTarget.style.transform = 'translateY(-1px)'
+                                                e.currentTarget.style.boxShadow = '0 4px 6px rgba(239, 68, 68, 0.3)'
+                                              }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              if (!isMobile) {
+                                                e.currentTarget.style.background = '#ef4444'
+                                                e.currentTarget.style.transform = 'translateY(0)'
+                                                e.currentTarget.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.2)'
+                                              }
                                             }}
                                           >
                                             Șterge
@@ -2790,10 +3091,10 @@ function RegisterSportsBase() {
                                           <div>
                                             <label style={{
                                               display: 'block',
-                                              fontSize: '0.75rem',
-                                              fontWeight: '500',
-                                              color: '#64748b',
-                                              marginBottom: '0.375rem'
+                                              fontSize: '0.8125rem',
+                                              fontWeight: '600',
+                                              color: '#0f172a',
+                                              marginBottom: '0.5rem'
                                             }}>
                                               Status
                                             </label>
@@ -2817,12 +3118,21 @@ function RegisterSportsBase() {
                                               }}
                                               style={{
                                                 width: '100%',
-                                                padding: '0.625rem',
+                                                padding: '0.75rem',
                                                 border: '1.5px solid #e2e8f0',
-                                                borderRadius: '6px',
-                                                fontSize: '0.875rem',
+                                                borderRadius: '8px',
+                                                fontSize: '0.9375rem',
                                                 cursor: 'pointer',
-                                                background: '#ffffff'
+                                                background: '#ffffff',
+                                                transition: 'all 0.2s ease'
+                                              }}
+                                              onFocus={(e) => {
+                                                e.currentTarget.style.borderColor = '#10b981'
+                                                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                              }}
+                                              onBlur={(e) => {
+                                                e.currentTarget.style.borderColor = '#e2e8f0'
+                                                e.currentTarget.style.boxShadow = 'none'
                                               }}
                                             >
                                               <option value="not_specified">Nespecificat</option>
@@ -2835,10 +3145,10 @@ function RegisterSportsBase() {
                                             <div>
                                               <label style={{
                                                 display: 'block',
-                                                fontSize: '0.75rem',
-                                                fontWeight: '500',
-                                                color: '#64748b',
-                                                marginBottom: '0.375rem'
+                                                fontSize: '0.8125rem',
+                                                fontWeight: '600',
+                                                color: '#0f172a',
+                                                marginBottom: '0.5rem'
                                               }}>
                                                 Preț (RON)
                                               </label>
@@ -2865,11 +3175,20 @@ function RegisterSportsBase() {
                                                 step="0.01"
                                                 style={{
                                                   width: '100%',
-                                                  padding: '0.625rem',
+                                                  padding: '0.75rem',
                                                   border: '1.5px solid #e2e8f0',
-                                                  borderRadius: '6px',
-                                                  fontSize: '0.875rem',
-                                                  background: '#ffffff'
+                                                  borderRadius: '8px',
+                                                  fontSize: '0.9375rem',
+                                                  background: '#ffffff',
+                                                  transition: 'all 0.2s ease'
+                                                }}
+                                                onFocus={(e) => {
+                                                  e.target.style.borderColor = '#10b981'
+                                                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                                }}
+                                                onBlur={(e) => {
+                                                  e.target.style.borderColor = '#e2e8f0'
+                                                  e.target.style.boxShadow = 'none'
                                                 }}
                                               />
                                             </div>
@@ -2884,6 +3203,7 @@ function RegisterSportsBase() {
                           )
                         })}
                       </div>
+                      )}
                     </div>
                     
                     {/* Description */}
