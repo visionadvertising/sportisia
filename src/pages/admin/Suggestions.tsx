@@ -444,7 +444,6 @@ function Suggestions() {
           )}
         </div>
       </div>
-    </div>
   )
 }
 

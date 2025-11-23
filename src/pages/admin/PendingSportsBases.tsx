@@ -336,7 +336,6 @@ function PendingSportsBases() {
           </>
         )}
       </div>
-    </div>
   )
 }
 

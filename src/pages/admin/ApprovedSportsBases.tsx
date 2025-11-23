@@ -294,7 +294,6 @@ function ApprovedSportsBases() {
             )}
           </>
         )}
-      </div>
     </div>
   )
 }

@@ -322,7 +322,6 @@ function PendingCoaches() {
             )}
           </>
         )}
-      </div>
     </div>
   )
 }

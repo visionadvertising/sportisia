@@ -762,7 +762,6 @@ function SEOPages() {
           </div>
         </div>
       </div>
-    </div>
   )
 }
 
