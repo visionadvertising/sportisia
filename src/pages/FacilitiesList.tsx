@@ -102,6 +102,14 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
     return `Momentan nu sunt ${title.toLowerCase()} disponibile.`
   }
 
+  // Generate page title with city if selected
+  const getPageTitle = () => {
+    if (selectedCity) {
+      return `${title} în ${selectedCity}`
+    }
+    return title
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -116,65 +124,18 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
         color: 'white'
       }}>
         <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          justifyContent: 'space-between',
-          alignItems: isMobile ? 'flex-start' : 'center',
-          gap: isMobile ? '1.5rem' : '2rem'
+          maxWidth: '1200px',
+          margin: '0 auto'
         }}>
           <h1 style={{
             fontSize: isMobile ? '2rem' : '3rem',
             color: 'white',
-            margin: 0,
+            marginBottom: isMobile ? '1.5rem' : '2rem',
             fontWeight: '700',
             lineHeight: '1.2',
-            letterSpacing: '-0.02em',
-            flex: 1,
-            textAlign: isMobile ? 'center' : 'left'
-          }}>{title}</h1>
-          <Link
-            to="/register"
-            style={{
-              padding: isMobile ? '0.875rem 1.5rem' : '0.75rem 2rem',
-              background: '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: isMobile ? '0.9375rem' : '1rem',
-              fontWeight: '600',
-              cursor: 'pointer',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              width: isMobile ? '100%' : 'auto',
-              justifyContent: 'center',
-              minHeight: isMobile ? '44px' : 'auto',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
-            }}
-            onMouseEnter={(e) => {
-              if (!isMobile) {
-                e.currentTarget.style.background = '#059669'
-                e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
-                e.currentTarget.style.transform = 'translateY(-1px)'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isMobile) {
-                e.currentTarget.style.background = '#10b981'
-                e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
-                e.currentTarget.style.transform = 'translateY(0)'
-              }
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10 4v12M4 10h12"/>
-            </svg>
-            Adaugă {type === 'field' ? 'Teren' : type === 'coach' ? 'Antrenor' : type === 'repair_shop' ? 'Magazin' : 'Magazin'}
-          </Link>
+            padding: isMobile ? '0 0.5rem' : '0',
+            letterSpacing: '-0.02em'
+          }}>{getPageTitle()}</h1>
         </div>
       </div>
 
