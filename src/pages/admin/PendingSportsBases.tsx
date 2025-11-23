@@ -73,6 +73,7 @@ function PendingSportsBases() {
       console.error('Error loading pending sports bases:', err)
       setError(err.message || 'Eroare la încărcarea cererilor')
     } finally {
+      console.log('PendingSportsBases: Setting loading to false')
       setLoading(false)
     }
   }
@@ -169,7 +170,7 @@ function PendingSportsBases() {
           <div style={{ textAlign: 'center', padding: '3rem' }}>
             <p>Se încarcă...</p>
           </div>
-        ) : currentFacilities.length === 0 ? (
+        ) : facilities.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem' }}>
             <p style={{ color: '#64748b', fontSize: '1.125rem' }}>
               Nu există baze sportive în așteptare.
