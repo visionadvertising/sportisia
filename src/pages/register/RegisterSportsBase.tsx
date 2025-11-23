@@ -353,16 +353,14 @@ function RegisterSportsBase() {
         }
         break
       case 4:
-        // Validate that at least one field is complete with time slots or simple pricing
-        const validFields = sportsFields.filter((field, idx) => {
+        // Validate that at least one field is complete with time slots
+        const validFields = sportsFields.filter(field => {
           const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
-          const isAdvanced = pricingMode[idx] === 'advanced'
-          const hasTimeSlots = isAdvanced ? (field.timeSlots && field.timeSlots.length > 0) : true
-          const hasSimplePricing = !isAdvanced ? (simplePricing[idx]?.price !== null && simplePricing[idx]?.price !== undefined) : true
-          return hasBasicInfo && hasTimeSlots && hasSimplePricing
+          const hasTimeSlots = field.timeSlots && field.timeSlots.length > 0
+          return hasBasicInfo && hasTimeSlots
         })
         if (validFields.length === 0) {
-          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și preț configurat)')
+          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și cel puțin un interval de timp configurat)')
           return false
         }
         break
