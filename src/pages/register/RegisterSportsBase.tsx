@@ -29,6 +29,22 @@ interface SportsField {
     hasChangingRoom: boolean
     hasAirConditioning: boolean
     hasLighting: boolean
+    hasWiFi: boolean
+    hasBar: boolean
+    hasFirstAid: boolean
+    hasEquipmentRental: boolean
+    hasLocker: boolean
+    hasTowelService: boolean
+    hasWaterFountain: boolean
+    hasSeating: boolean
+    hasScoreboard: boolean
+    hasSoundSystem: boolean
+    hasHeating: boolean
+    hasCover: boolean
+    hasGrass: boolean
+    hasArtificialGrass: boolean
+    hasIndoor: boolean
+    hasOutdoor: boolean
   }
   // Pricing system - extensible for future online bookings
   slotSize: number // in minutes: 30, 60, 90, 120
@@ -114,7 +130,23 @@ function RegisterSportsBase() {
       hasShower: false,
       hasChangingRoom: false,
       hasAirConditioning: false,
-      hasLighting: false
+      hasLighting: false,
+      hasWiFi: false,
+      hasBar: false,
+      hasFirstAid: false,
+      hasEquipmentRental: false,
+      hasLocker: false,
+      hasTowelService: false,
+      hasWaterFountain: false,
+      hasSeating: false,
+      hasScoreboard: false,
+      hasSoundSystem: false,
+      hasHeating: false,
+      hasCover: false,
+      hasGrass: false,
+      hasArtificialGrass: false,
+      hasIndoor: false,
+      hasOutdoor: false
     },
       slotSize: 60, // Default 1 hour
       timeSlots: [] // Empty initially, user will select from grid
@@ -3028,7 +3060,23 @@ function RegisterSportsBase() {
                           { key: 'hasShower', label: 'Duș' },
                           { key: 'hasChangingRoom', label: 'Vestiar' },
                           { key: 'hasAirConditioning', label: 'Aer condiționat' },
-                          { key: 'hasLighting', label: 'Iluminat' }
+                          { key: 'hasLighting', label: 'Iluminat' },
+                          { key: 'hasWiFi', label: 'WiFi' },
+                          { key: 'hasBar', label: 'Bar/Restaurant' },
+                          { key: 'hasFirstAid', label: 'Sală prim ajutor' },
+                          { key: 'hasEquipmentRental', label: 'Închiriere echipament' },
+                          { key: 'hasLocker', label: 'Locker-uri' },
+                          { key: 'hasTowelService', label: 'Serviciu prosoape' },
+                          { key: 'hasWaterFountain', label: 'Fântână apă' },
+                          { key: 'hasSeating', label: 'Tribună/Locuri' },
+                          { key: 'hasScoreboard', label: 'Tablou de scor' },
+                          { key: 'hasSoundSystem', label: 'Sistem sonor' },
+                          { key: 'hasHeating', label: 'Încălzire' },
+                          { key: 'hasCover', label: 'Acoperiș' },
+                          { key: 'hasGrass', label: 'Iarbă naturală' },
+                          { key: 'hasArtificialGrass', label: 'Iarbă sintetică' },
+                          { key: 'hasIndoor', label: 'Interior' },
+                          { key: 'hasOutdoor', label: 'Exterior' }
                         ].map(feature => {
                           const isChecked = field.features[feature.key as keyof SportsField['features']]
                           return (
