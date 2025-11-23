@@ -3157,7 +3157,7 @@ function RegisterSportsBase() {
             </div>
           )}
 
-          {/* Success Step */}
+          {/* Success Step - Outside form since it doesn't need form submission */}
           {currentStep === 5 && credentials && (
             <div style={{
               textAlign: 'center',
