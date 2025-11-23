@@ -30,24 +30,29 @@ let pool
 
 async function initDatabase() {
   try {
+    console.log('🔄 Initializing database...')
     const dbUrl = process.env.DATABASE_URL
     if (!dbUrl) {
       throw new Error('DATABASE_URL environment variable is required')
     }
     
+    console.log('📋 DATABASE_URL format check:', dbUrl.substring(0, 20) + '...')
+    
     // Parse DATABASE_URL
     const url = new URL(dbUrl.replace('mysql://', 'http://'))
     const username = url.username
-    const password = url.password
+    const password = url.password ? '***' : 'missing'
     const host = url.hostname
     const port = url.port || 3306
     const database = url.pathname.slice(1)
+
+    console.log(`🔌 Connecting to database: ${host}:${port}/${database} (user: ${username}, password: ${password})`)
 
     pool = mysql.createPool({
       host,
       port: parseInt(port),
       user: username,
-      password,
+      password: url.password,
       database,
       waitForConnections: true,
       connectionLimit: 10,
@@ -55,6 +60,7 @@ async function initDatabase() {
     })
 
     // Test connection
+    console.log('🧪 Testing database connection...')
     const connection = await pool.getConnection()
     console.log('✅ Database connected successfully')
     connection.release()
@@ -348,9 +354,20 @@ async function addMissingColumns() {
 }
 
 // Initialize database on startup
-initDatabase().catch((error) => {
-  console.error('❌ Failed to initialize database:', error)
-})
+// Initialize database on startup
+let dbInitialized = false
+initDatabase()
+  .then(() => {
+    dbInitialized = true
+    console.log('✅ Database initialization completed')
+  })
+  .catch((error) => {
+    console.error('❌ Failed to initialize database:', error)
+    console.error('Error details:', error.message)
+    console.error('DATABASE_URL is set:', !!process.env.DATABASE_URL)
+    dbInitialized = false
+    // Don't exit, but log the error - server will still start but endpoints will return 503
+  })
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -359,7 +376,8 @@ app.get('/api/health', (req, res) => {
     message: 'API is running', 
     timestamp: new Date().toISOString(),
     port: PORT,
-    env: process.env.NODE_ENV || 'development'
+    env: process.env.NODE_ENV || 'development',
+    database: dbInitialized && pool ? 'connected' : 'not initialized'
   })
 })
 
