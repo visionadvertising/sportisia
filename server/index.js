@@ -473,7 +473,7 @@ async function getSMTPConfig() {
   }
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(to, subject, html) {
   try {
     const smtpConfig = await getSMTPConfig()
     if (!smtpConfig) {
@@ -1652,8 +1652,8 @@ app.get('/api/admin/smtp-config', async (req, res) => {
       'SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE "smtp_%"'
     )
     
-    const config: any = {}
-    rows.forEach((row: any) => {
+    const config = {}
+    rows.forEach((row) => {
       const key = row.setting_key.replace('smtp_', '')
       config[key] = row.setting_value || ''
     })
