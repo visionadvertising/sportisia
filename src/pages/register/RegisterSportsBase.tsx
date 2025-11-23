@@ -256,7 +256,12 @@ function RegisterSportsBase() {
     setError('')
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
     setError('')
     
     if (!name || !phone || !email || !city || (!location && !locationNotSpecified) || !sport) {
@@ -486,7 +491,7 @@ function RegisterSportsBase() {
           </div>
         )}
 
-        <form onSubmit={currentStep === 5 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+        <form onSubmit={currentStep === 5 ? (e) => handleSubmit(e) : (e) => { e.preventDefault(); nextStep(); }}>
           {/* Step 1: Contact Details - Identical to RegisterRepairShop */}
           {currentStep === 1 && (
             <div>
