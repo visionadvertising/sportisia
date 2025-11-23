@@ -992,14 +992,14 @@ app.get('/api/facilities/:id', async (req, res) => {
   }
 })
 
-// GET facilities filtered by type, city, sport
+// GET facilities filtered by type, city, sport, repairCategory
 app.get('/api/facilities', async (req, res) => {
   try {
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const { type, city, sport, status = 'active' } = req.query
+    const { type, city, sport, status = 'active', repairCategory } = req.query
 
     let query = 'SELECT * FROM facilities WHERE 1=1'
     const params = []
@@ -1022,6 +1022,12 @@ app.get('/api/facilities', async (req, res) => {
     if (status) {
       query += ' AND status = ?'
       params.push(status)
+    }
+
+    // Filter by repair category for repair shops
+    if (repairCategory && type === 'repair_shop') {
+      query += ' AND JSON_CONTAINS(repair_categories, ?)'
+      params.push(JSON.stringify(repairCategory))
     }
 
     query += ' ORDER BY created_at DESC'

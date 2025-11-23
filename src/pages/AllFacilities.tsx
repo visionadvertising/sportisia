@@ -90,6 +90,11 @@ function AllFacilities() {
   let city = ''
   let sport = ''
   let facilityType = ''
+  let repairCategory = ''
+  
+  // Parse query parameters for repair category (if any)
+  const searchParams = new URLSearchParams(window.location.search)
+  repairCategory = searchParams.get('categorie') || ''
   
   // Determine what each parameter represents
   // Priority: Check facility types first, then sports, then cities
@@ -130,7 +135,7 @@ function AllFacilities() {
   useEffect(() => {
     fetchFacilities()
     fetchSeoData()
-  }, [city, sport, facilityType])
+  }, [city, sport, facilityType, repairCategory])
 
   const fetchSeoData = async () => {
     try {
@@ -229,8 +234,13 @@ function AllFacilities() {
           queryParams.append('city', city)
         }
         
-        if (sport && (type === 'field' || type === 'coach')) {
+        if (sport && (type === 'field' || type === 'coach' || type === 'equipment_shop')) {
           queryParams.append('sport', sport)
+        }
+        
+        // Add repair category filter for repair shops
+        if (type === 'repair_shop' && repairCategory) {
+          queryParams.append('repairCategory', repairCategory)
         }
         
         const response = await fetch(`${API_BASE_URL}/facilities?${queryParams}`)
@@ -468,7 +478,8 @@ function AllFacilities() {
           selectedCity={city}
           selectedSport={sportValue}
           selectedType={typeValue}
-          showTypeFilter={true}
+          selectedRepairCategory={repairCategory}
+          showTypeFilter={!typeValue} // Hide type filter when a specific type is already selected
         />
 
           {loading ? (

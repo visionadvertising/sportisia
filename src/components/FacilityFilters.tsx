@@ -9,8 +9,9 @@ interface FacilityFiltersProps {
   selectedCity?: string
   selectedSport?: string
   selectedType?: string
+  selectedRepairCategory?: string
   showTypeFilter?: boolean
-  onFiltersChange?: (filters: { city: string; sport: string; type: string }) => void
+  onFiltersChange?: (filters: { city: string; sport: string; type: string; repairCategory?: string }) => void
 }
 
 const FACILITY_TYPES = [
@@ -19,6 +20,20 @@ const FACILITY_TYPES = [
   { value: 'coach', label: 'Antrenori' },
   { value: 'repair_shop', label: 'Magazine Reparații' },
   { value: 'equipment_shop', label: 'Magazine Articole' }
+]
+
+const REPAIR_CATEGORIES = [
+  { value: '', label: 'Toate categoriile' },
+  { value: 'Rachete tenis', label: 'Rachete tenis' },
+  { value: 'Biciclete', label: 'Biciclete' },
+  { value: 'Echipamente ski', label: 'Echipamente ski' },
+  { value: 'Echipamente snowboard', label: 'Echipamente snowboard' },
+  { value: 'Echipamente fitness', label: 'Echipamente fitness' },
+  { value: 'Echipamente fotbal', label: 'Echipamente fotbal' },
+  { value: 'Echipamente baschet', label: 'Echipamente baschet' },
+  { value: 'Echipamente volei', label: 'Echipamente volei' },
+  { value: 'Echipamente handbal', label: 'Echipamente handbal' },
+  { value: 'Altele', label: 'Altele' }
 ]
 
 const SPORTS = [
@@ -36,6 +51,7 @@ function FacilityFilters({
   selectedCity = '', 
   selectedSport = '', 
   selectedType = '',
+  selectedRepairCategory = '',
   showTypeFilter = true,
   onFiltersChange 
 }: FacilityFiltersProps) {
@@ -44,6 +60,7 @@ function FacilityFilters({
   const [city, setCity] = useState(selectedCity)
   const [sport, setSport] = useState(selectedSport)
   const [type, setType] = useState(selectedType)
+  const [repairCategory, setRepairCategory] = useState(selectedRepairCategory)
   const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
   const [availableSports, setAvailableSports] = useState<string[]>(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash'])
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -53,6 +70,16 @@ function FacilityFilters({
   const [showSportDropdown, setShowSportDropdown] = useState(false)
   const [typeSearch, setTypeSearch] = useState('')
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
+  const [repairCategorySearch, setRepairCategorySearch] = useState('')
+  const [showRepairCategoryDropdown, setShowRepairCategoryDropdown] = useState(false)
+  
+  // Determine which filters to show based on selectedType
+  const isRepairShop = selectedType === 'repair_shop'
+  const isEquipmentShop = selectedType === 'equipment_shop'
+  const isFieldOrCoach = selectedType === 'field' || selectedType === 'coach'
+  const showSportFilter = !isRepairShop // Sport filter for all except repair shops
+  const showTypeFilterConditional = showTypeFilter && !isRepairShop && !isEquipmentShop && !isFieldOrCoach // Type filter only when no specific type is selected
+  const showRepairCategoryFilter = isRepairShop // Repair category filter only for repair shops
 
   useEffect(() => {
     const handleResize = () => {
@@ -117,7 +144,8 @@ function FacilityFilters({
     setCity(selectedCity)
     setSport(selectedSport)
     setType(selectedType)
-  }, [selectedCity, selectedSport, selectedType])
+    setRepairCategory(selectedRepairCategory)
+  }, [selectedCity, selectedSport, selectedType, selectedRepairCategory])
 
   const handleCityChange = (newCity: string) => {
     const updatedCity = newCity || ''
@@ -125,7 +153,7 @@ function FacilityFilters({
     setCitySearch('')
     setShowCityDropdown(false)
     // Use current state values, but override with new city
-    updateFilters(updatedCity, sport || selectedSport || '', type || selectedType || '')
+    updateFilters(updatedCity, sport || selectedSport || '', type || selectedType || '', repairCategory || selectedRepairCategory || '')
   }
 
   const handleSportChange = (newSport: string) => {
@@ -134,7 +162,7 @@ function FacilityFilters({
     setSportSearch('')
     setShowSportDropdown(false)
     // Use current state values, but override with new sport
-    updateFilters(city || selectedCity || '', updatedSport, type || selectedType || '')
+    updateFilters(city || selectedCity || '', updatedSport, type || selectedType || '', repairCategory || selectedRepairCategory || '')
   }
 
   const handleTypeChange = (newType: string) => {
@@ -143,7 +171,16 @@ function FacilityFilters({
     setTypeSearch('')
     setShowTypeDropdown(false)
     // Use current state values, but override with new type
-    updateFilters(city || selectedCity || '', sport || selectedSport || '', updatedType)
+    updateFilters(city || selectedCity || '', sport || selectedSport || '', updatedType, repairCategory || selectedRepairCategory || '')
+  }
+
+  const handleRepairCategoryChange = (newCategory: string) => {
+    const updatedCategory = newCategory || ''
+    setRepairCategory(updatedCategory)
+    setRepairCategorySearch('')
+    setShowRepairCategoryDropdown(false)
+    // Use current state values, but override with new category
+    updateFilters(city || selectedCity || '', sport || selectedSport || '', type || selectedType || '', updatedCategory)
   }
 
   // Simple, deterministic function to generate URL from filters
@@ -207,15 +244,24 @@ function FacilityFilters({
     return '/toate'
   }
 
-  const updateFilters = (newCity: string, newSport: string, newType: string) => {
+  const updateFilters = (newCity: string, newSport: string, newType: string, newRepairCategory: string = '') => {
     if (onFiltersChange) {
-      onFiltersChange({ city: newCity, sport: newSport, type: newType })
+      onFiltersChange({ city: newCity, sport: newSport, type: newType, repairCategory: newRepairCategory })
       return
     }
 
     // Use simple, deterministic URL generation
+    // Note: Repair category is not part of URL structure, it's a query parameter
     const newURL = generateURLFromFilters(newCity, newSport, newType)
-    navigate(newURL)
+    // Add repair category as query parameter if needed
+    if (newRepairCategory && newType === 'repair_shop') {
+      const urlWithQuery = newURL.includes('?') 
+        ? `${newURL}&categorie=${encodeURIComponent(newRepairCategory)}`
+        : `${newURL}?categorie=${encodeURIComponent(newRepairCategory)}`
+      navigate(urlWithQuery)
+    } else {
+      navigate(newURL)
+    }
   }
 
   // Get display value for city
@@ -256,9 +302,13 @@ function FacilityFilters({
         display: 'grid',
         gridTemplateColumns: isMobile 
           ? '1fr' 
-          : showTypeFilter 
-            ? 'repeat(3, 1fr)' 
-            : 'repeat(2, 1fr)',
+          : (showRepairCategoryFilter 
+              ? 'repeat(2, 1fr)' // City + Repair Category
+              : showTypeFilterConditional 
+                ? 'repeat(3, 1fr)' // City + Sport + Type
+                : showSportFilter 
+                  ? 'repeat(2, 1fr)' // City + Sport
+                  : '1fr'), // City only
         gap: isMobile ? '1rem' : '1.25rem'
       }}>
         {/* City Searchable Dropdown */}
@@ -397,15 +447,16 @@ function FacilityFilters({
           )}
         </div>
 
-        {/* Sport Searchable Dropdown */}
-        <div style={{ position: 'relative' }}>
-          <label style={{
-            display: 'block',
-            marginBottom: '0.75rem',
-            color: '#0f172a',
-            fontWeight: '600',
-            fontSize: '0.875rem'
-          }}>Sport</label>
+        {/* Sport Searchable Dropdown - Only show if not repair shop */}
+        {showSportFilter && (
+          <div style={{ position: 'relative' }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.75rem',
+              color: '#0f172a',
+              fontWeight: '600',
+              fontSize: '0.875rem'
+            }}>Sport</label>
           <input
             type="text"
             value={getSportDisplayValue()}
@@ -526,10 +577,144 @@ function FacilityFilters({
                 ))}
             </div>
           )}
-        </div>
+          </div>
+        )}
 
-        {/* Type Searchable Dropdown */}
-        {showTypeFilter && (
+        {/* Repair Category Searchable Dropdown - Only show for repair shops */}
+        {showRepairCategoryFilter && (
+          <div style={{ position: 'relative' }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.75rem',
+              color: '#0f172a',
+              fontWeight: '600',
+              fontSize: '0.875rem'
+            }}>Categorie reparații</label>
+            <input
+              type="text"
+              value={getRepairCategoryDisplayValue()}
+              onChange={(e) => {
+                setRepairCategorySearch(e.target.value)
+                setShowRepairCategoryDropdown(true)
+                if (!e.target.value) {
+                  setRepairCategory('')
+                  setRepairCategorySearch('')
+                }
+              }}
+              onClick={() => setShowRepairCategoryDropdown(true)}
+              onFocus={(e) => {
+                setShowRepairCategoryDropdown(true)
+                e.target.style.borderColor = '#10b981'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                setTimeout(() => setShowRepairCategoryDropdown(false), 250)
+              }}
+              placeholder="Caută sau selectează categorie"
+              style={{
+                width: '100%',
+                padding: '0.875rem 1rem',
+                paddingRight: '2.5rem',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                outline: 'none',
+                background: '#ffffff',
+                color: '#0f172a',
+                transition: 'all 0.2s ease',
+                fontWeight: '400',
+                lineHeight: '1.5',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              right: '0.75rem',
+              top: '2.75rem',
+              pointerEvents: 'none'
+            }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                <path d="M5 7.5l5 5 5-5"/>
+              </svg>
+            </div>
+            {showRepairCategoryDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: '0.25rem',
+                background: '#ffffff',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                zIndex: 1000
+              }}>
+                <div
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    handleRepairCategoryChange('')
+                  }}
+                  style={{
+                    padding: '0.75rem 1rem',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid #f1f5f9',
+                    color: '#0f172a',
+                    fontSize: '0.9375rem',
+                    fontWeight: '500',
+                    transition: 'background 0.15s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f0fdf4'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#ffffff'
+                  }}
+                >
+                  Toate categoriile
+                </div>
+                {REPAIR_CATEGORIES
+                  .filter(categoryOption => 
+                    !repairCategorySearch || 
+                    categoryOption.label.toLowerCase().includes(repairCategorySearch.toLowerCase())
+                  )
+                  .map(categoryOption => (
+                    <div
+                      key={categoryOption.value}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        handleRepairCategoryChange(categoryOption.value)
+                      }}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f1f5f9',
+                        color: '#0f172a',
+                        fontSize: '0.9375rem',
+                        fontWeight: '500',
+                        transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f0fdf4'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#ffffff'
+                      }}
+                    >
+                      {categoryOption.label}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Type Searchable Dropdown - Only show when no specific type is selected */}
+        {showTypeFilterConditional && (
           <div style={{ position: 'relative' }}>
             <label style={{
               display: 'block',
