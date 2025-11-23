@@ -2557,11 +2557,6 @@ function RegisterSportsBase() {
                         flexDirection: 'column',
                         gap: '1rem'
                       }}>
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '1rem'
-                      }}>
                         {[
                           { key: 'monday', label: 'Luni' },
                           { key: 'tuesday', label: 'Marți' },
@@ -2967,7 +2962,6 @@ function RegisterSportsBase() {
                           )
                         })}
                       </div>
-                      )}
                     </div>
                     
                     {/* Description */}
