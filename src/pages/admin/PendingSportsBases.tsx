@@ -42,22 +42,33 @@ function PendingSportsBases() {
         return
       }
 
+      console.log('Loading pending sports bases from:', `${API_BASE_URL}/admin/pending-facilities?type=field`)
       const response = await fetch(`${API_BASE_URL}/admin/pending-facilities?type=field`, {
         headers: {
           'Authorization': `Bearer ${adminToken}`
         }
       })
+      
+      console.log('Response status:', response.status)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const data = await response.json()
+      console.log('Response data:', data)
+      
       if (data.success) {
         // Filter only 'field' type facilities
-        const sportsBases = data.data.filter((f: Facility) => f.facility_type === 'field')
+        const sportsBases = data.data ? data.data.filter((f: Facility) => f.facility_type === 'field') : []
+        console.log('Filtered sports bases:', sportsBases.length)
         setFacilities(sportsBases)
       } else {
         setError(data.error || 'Eroare la încărcarea cererilor')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading pending sports bases:', err)
-      setError('Eroare la încărcarea cererilor')
+      setError(err.message || 'Eroare la încărcarea cererilor')
     } finally {
       setLoading(false)
     }
