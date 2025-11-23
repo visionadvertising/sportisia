@@ -5,6 +5,17 @@ import { citySlugToName, sportSlugToName, slugToFacilityType, repairCategorySlug
 import FacilityFilters from '../components/FacilityFilters'
 import { parseURLToFilters, getFacilityCount, generateSEOTitle, generateSEODescription, generateDescription } from '../utils/seoContentGenerator'
 
+// Helper function to create SEO-friendly slug
+function createSlug(name: string, city: string): string {
+  const text = `${name} ${city}`
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+}
+
 interface Facility {
   id: number
   facility_type: string
@@ -22,6 +33,12 @@ interface Facility {
   specialization?: string
   services_offered?: string
   products_categories?: string
+  sportsFields?: Array<{
+    sport_type: string
+    field_name?: string
+    price_per_hour?: number
+  }>
+  gallery?: string | string[]
 }
 
 const FACILITY_TYPE_LABELS: Record<string, string> = {
@@ -653,10 +670,40 @@ function AllFacilities() {
                     : 'repeat(auto-fill, minmax(320px, 1fr))',
                   gap: isMobile ? '1.5rem' : '2rem'
                 }}>
-                  {typeFacilities.map((facility) => (
+                  {typeFacilities.map((facility) => {
+                    // Generate SEO-friendly URL
+                    const facilityUrl = facility.facility_type === 'field' 
+                      ? `/baza-sportiva/${createSlug(facility.name, facility.city)}`
+                      : `/facility/${facility.id}`
+                    
+                    // Get first image from gallery or use image_url/logo_url
+                    let displayImage = facility.image_url || facility.logo_url
+                    if (facility.gallery) {
+                      const gallery = typeof facility.gallery === 'string' 
+                        ? (() => { try { return JSON.parse(facility.gallery) } catch { return [] } })()
+                        : facility.gallery
+                      if (Array.isArray(gallery) && gallery.length > 0) {
+                        displayImage = gallery[0]
+                      }
+                    }
+                    
+                    // Get sports from sportsFields for sports bases
+                    const sports = facility.facility_type === 'field' && facility.sportsFields
+                      ? facility.sportsFields.map(f => f.sport_type).filter(Boolean)
+                      : facility.sport ? [facility.sport] : []
+                    
+                    // Get price from sportsFields or legacy price_per_hour
+                    const price = facility.facility_type === 'field' && facility.sportsFields && facility.sportsFields.length > 0
+                      ? facility.sportsFields
+                          .map(f => f.price_per_hour)
+                          .filter(p => p && p > 0)
+                          .sort((a, b) => (a || 0) - (b || 0))[0]
+                      : facility.price_per_hour
+                    
+                    return (
                     <Link
                       key={facility.id}
-                      to={`/facility/${facility.id}`}
+                      to={facilityUrl}
                       style={{
                         background: 'white',
                         borderRadius: '12px',
@@ -683,11 +730,11 @@ function AllFacilities() {
                         }
                       }}
                     >
-                      {(facility.image_url || facility.logo_url) && (
+                      {displayImage && (
                         <div style={{
                           width: '100%',
                           height: isMobile ? '200px' : '220px',
-                          background: `url(${facility.image_url || facility.logo_url}) center/cover`,
+                          background: `url(${displayImage}) center/cover`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
                           position: 'relative'
@@ -713,36 +760,54 @@ function AllFacilities() {
                           <span style={{ fontSize: '1rem' }}>📍</span>
                           <span>{facility.city}{facility.location ? `, ${facility.location}` : ''}</span>
                         </p>
-                        {facility.sport && (
+                        {sports.length > 0 && (
                           <div style={{
                             margin: '0 0 1rem 0',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.375rem 0.75rem',
-                            background: '#f0fdf4',
-                            borderRadius: '6px',
-                            color: '#10b981',
-                            fontWeight: '600',
-                            fontSize: isMobile ? '0.8125rem' : '0.875rem'
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '0.5rem'
                           }}>
-                            <span>🎾</span>
-                            <span>{SPORT_NAMES[facility.sport] || facility.sport}</span>
+                            {sports.map((sport, idx) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  padding: '0.375rem 0.75rem',
+                                  background: '#f0fdf4',
+                                  borderRadius: '6px',
+                                  color: '#10b981',
+                                  fontWeight: '600',
+                                  fontSize: isMobile ? '0.8125rem' : '0.875rem'
+                                }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                                  <path d="M4 22h16"/>
+                                  <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                                  <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                                </svg>
+                                <span>{SPORT_NAMES[sport] || sport}</span>
+                              </div>
+                            ))}
                           </div>
                         )}
-                        {(facility.price_per_hour || facility.price_per_lesson) && (
+                        {(price || facility.price_per_lesson) && (
                           <div style={{
                             marginTop: '1rem',
                             paddingTop: '1rem',
                             borderTop: '1px solid #f1f5f9'
                           }}>
-                            {facility.price_per_hour && (
+                            {price && (
                               <p style={{
                                 margin: 0,
                                 color: '#0f172a',
                                 fontSize: isMobile ? '1.125rem' : '1.25rem',
                                 fontWeight: '700'
-                              }}>De la {facility.price_per_hour} RON/oră</p>
+                              }}>De la {price} RON/oră</p>
                             )}
                             {facility.price_per_lesson && (
                               <p style={{
@@ -775,7 +840,8 @@ function AllFacilities() {
                         )}
                       </div>
                     </Link>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             ))}
