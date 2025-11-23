@@ -263,29 +263,35 @@ function RegisterCoach() {
         })
       )
 
+      const formattedOpeningHours = Object.entries(openingHours).map(([day, data]) => {
+        if (data.isOpen === null) return null
+        if (data.isOpen === false) return `${day}: closed`
+        return `${day}: ${data.openTime}-${data.closeTime}`
+      }).filter(Boolean).join('; ')
+
       const formData = {
         facilityType: 'coach',
         name,
         phone,
         email,
-        contactPerson,
+        contactPerson: contactPerson || null,
         city,
         county: county || newCityCounty || null,
         location: locationNotSpecified ? null : location,
         locationNotSpecified,
         mapCoordinates: mapCoordinates ? JSON.stringify(mapCoordinates) : null,
-        description,
-        logoUrl: logoBase64,
-        website,
+        description: description || null,
+        logoUrl: logoBase64 || null,
+        website: website || null,
         socialMedia: JSON.stringify(socialMedia),
         gallery: JSON.stringify(galleryBase64),
-        openingHours: JSON.stringify(openingHours),
+        openingHours: formattedOpeningHours || null,
         sport,
         specialization,
         experienceYears: experienceYears ? parseInt(experienceYears) : null,
         pricePerLesson: pricePerLesson ? parseFloat(pricePerLesson) : null,
-        certifications,
-        languages
+        certifications: certifications || null,
+        languages: languages || null
       }
 
       const response = await fetch(`${API_BASE_URL}/register`, {
