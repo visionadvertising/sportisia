@@ -219,6 +219,24 @@ async function initDatabase() {
       )
     `)
 
+    // Create facility_sports_fields table for multiple fields per sports base
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS facility_sports_fields (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        facility_id INT NOT NULL,
+        sport_type VARCHAR(100) NOT NULL,
+        field_name VARCHAR(255),
+        price_per_hour DECIMAL(10, 2),
+        description TEXT,
+        features JSON,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (facility_id) REFERENCES facilities(id) ON DELETE CASCADE,
+        INDEX idx_facility_id (facility_id),
+        INDEX idx_sport_type (sport_type)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
     // Create admin users table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admin_users (
@@ -619,6 +637,8 @@ app.post('/api/register', async (req, res) => {
       logoFile, socialMedia, gallery,
       // Field specific (sport is also used for equipment shops - can be 'general' or specific sport)
       sport, pricePerHour, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
+      // New: sportsFields array for multiple fields per sports base
+      sportsFields,
       // Coach specific
       specialization, experienceYears, pricePerLesson, certifications, languages,
       // Repair shop specific
@@ -638,12 +658,39 @@ app.post('/api/register', async (req, res) => {
     }
 
     // Validate facility type specific fields
-    // For fields, check if sport is provided and if pricingDetails has at least one entry
-    if (facilityType === 'field' && (!sport || (pricingDetails && pricingDetails.length === 0 && !pricePerHour))) {
-      return res.status(400).json({
-        success: false,
-        error: 'Pentru terenuri, sport și cel puțin un preț sunt obligatorii'
-      })
+    // For fields, check if sport is provided OR if sportsFields array is provided
+    let parsedSportsFields = null
+    if (facilityType === 'field') {
+      if (sportsFields) {
+        try {
+          parsedSportsFields = typeof sportsFields === 'string' ? JSON.parse(sportsFields) : sportsFields
+          if (!Array.isArray(parsedSportsFields) || parsedSportsFields.length === 0) {
+            return res.status(400).json({
+              success: false,
+              error: 'Pentru baze sportive, cel puțin un teren este obligatoriu'
+            })
+          }
+          // Validate each field
+          for (const field of parsedSportsFields) {
+            if (!field.fieldName || !field.sportType || !field.pricePerHour || field.pricePerHour <= 0) {
+              return res.status(400).json({
+                success: false,
+                error: 'Fiecare teren trebuie să aibă nume, tip sport și preț valid'
+              })
+            }
+          }
+        } catch (e) {
+          return res.status(400).json({
+            success: false,
+            error: 'Format invalid pentru terenuri'
+          })
+        }
+      } else if (!sport || (pricingDetails && pricingDetails.length === 0 && !pricePerHour)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Pentru terenuri, sport și cel puțin un preț sunt obligatorii'
+        })
+      }
     }
 
     // For coaches, check specialization and pricing
@@ -746,6 +793,26 @@ app.post('/api/register', async (req, res) => {
       const facilityId = facilityResult.insertId
       console.log(`[REGISTER] Facility inserted with ID: ${facilityId}`)
 
+      // Insert sports fields if provided (for sports bases with multiple fields)
+      if (facilityType === 'field' && parsedSportsFields && parsedSportsFields.length > 0) {
+        console.log(`[REGISTER] Inserting ${parsedSportsFields.length} sports fields for facility ${facilityId}`)
+        for (const field of parsedSportsFields) {
+          await connection.query(
+            `INSERT INTO facility_sports_fields (facility_id, sport_type, field_name, price_per_hour, description, features)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              facilityId,
+              field.sportType,
+              field.fieldName || null,
+              field.pricePerHour ? parseFloat(field.pricePerHour) : null,
+              field.description || null,
+              JSON.stringify(field.features || {})
+            ]
+          )
+        }
+        console.log(`[REGISTER] Successfully inserted ${parsedSportsFields.length} sports fields`)
+      }
+
       // Check if city is new (not in ROMANIAN_CITIES list) and add to pending_cities if needed
       if (city) {
         // Check if city exists in pending_cities
@@ -764,20 +831,32 @@ app.post('/api/register', async (req, res) => {
         }
       }
 
-      // Check if sport is new and add to pending_sports if needed
-      if (sport) {
-        const sportLower = sport.trim().toLowerCase()
-        // Check if sport exists in pending_sports
+      // Check if sport(s) is/are new and add to pending_sports if needed
+      const sportsToCheck = []
+      if (facilityType === 'field' && parsedSportsFields && parsedSportsFields.length > 0) {
+        // Extract unique sports from sportsFields
+        parsedSportsFields.forEach(field => {
+          if (field.sportType) {
+            sportsToCheck.push(field.sportType.trim().toLowerCase())
+          }
+        })
+      } else if (sport) {
+        sportsToCheck.push(sport.trim().toLowerCase())
+      }
+      
+      // Add unique sports to pending_sports if they don't exist
+      const uniqueSports = [...new Set(sportsToCheck)]
+      for (const sportToCheck of uniqueSports) {
         const [existingSport] = await connection.query(
           'SELECT * FROM pending_sports WHERE sport = ?',
-          [sportLower]
+          [sportToCheck]
         )
         
         if (existingSport.length === 0) {
           // Add as pending
           await connection.query(
             'INSERT INTO pending_sports (sport, status) VALUES (?, ?)',
-            [sportLower, 'pending']
+            [sportToCheck, 'pending']
           )
         }
       }
@@ -1141,7 +1220,18 @@ app.get('/api/facilities/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Facilitatea nu a fost găsită' })
     }
 
-    res.json({ success: true, data: rows[0] })
+    const facility = rows[0]
+
+    // If it's a sports base, fetch associated sports fields
+    if (facility.facility_type === 'field') {
+      const [sportsFields] = await pool.query(
+        'SELECT * FROM facility_sports_fields WHERE facility_id = ? ORDER BY created_at ASC',
+        [facilityId]
+      )
+      facility.sportsFields = sportsFields
+    }
+
+    res.json({ success: true, data: facility })
   } catch (error) {
     console.error('Error fetching facility:', error)
     res.status(500).json({ success: false, error: error.message })
@@ -1157,36 +1247,68 @@ app.get('/api/facilities', async (req, res) => {
 
     const { type, city, sport, status = 'active', repairCategory } = req.query
 
-    let query = 'SELECT * FROM facilities WHERE 1=1'
+    // For sports bases (field type), we need to check both the sport column and facility_sports_fields table
+    let query = ''
     const params = []
 
-    if (type) {
-      query += ' AND facility_type = ?'
-      params.push(type)
-    }
+    if (sport && type === 'field') {
+      // For sports bases, include facilities that have the sport in the sport column OR have fields with that sport type
+      query = `SELECT DISTINCT f.* FROM facilities f
+               LEFT JOIN facility_sports_fields fsf ON f.id = fsf.facility_id
+               WHERE 1=1`
+      
+      if (type) {
+        query += ' AND f.facility_type = ?'
+        params.push(type)
+      }
 
-    if (city) {
-      query += ' AND city = ?'
-      params.push(city)
-    }
+      if (city) {
+        query += ' AND f.city = ?'
+        params.push(city)
+      }
 
-    if (sport) {
-      query += ' AND sport = ?'
-      params.push(sport)
-    }
+      // Sport filter: either in sport column OR in facility_sports_fields
+      query += ' AND (f.sport = ? OR fsf.sport_type = ?)'
+      params.push(sport, sport)
 
-    if (status) {
-      query += ' AND status = ?'
-      params.push(status)
-    }
+      if (status) {
+        query += ' AND f.status = ?'
+        params.push(status)
+      }
 
-    // Filter by repair category for repair shops
-    if (repairCategory && type === 'repair_shop') {
-      query += ' AND JSON_CONTAINS(repair_categories, ?)'
-      params.push(JSON.stringify(repairCategory))
-    }
+      query += ' ORDER BY f.created_at DESC'
+    } else {
+      // For other types, use the original query
+      query = 'SELECT * FROM facilities WHERE 1=1'
 
-    query += ' ORDER BY created_at DESC'
+      if (type) {
+        query += ' AND facility_type = ?'
+        params.push(type)
+      }
+
+      if (city) {
+        query += ' AND city = ?'
+        params.push(city)
+      }
+
+      if (sport) {
+        query += ' AND sport = ?'
+        params.push(sport)
+      }
+
+      if (status) {
+        query += ' AND status = ?'
+        params.push(status)
+      }
+
+      // Filter by repair category for repair shops
+      if (repairCategory && type === 'repair_shop') {
+        query += ' AND JSON_CONTAINS(repair_categories, ?)'
+        params.push(JSON.stringify(repairCategory))
+      }
+
+      query += ' ORDER BY created_at DESC'
+    }
 
     console.log('[API /facilities] Query:', query)
     console.log('[API /facilities] Params:', params)

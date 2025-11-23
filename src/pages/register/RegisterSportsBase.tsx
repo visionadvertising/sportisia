@@ -11,6 +11,20 @@ interface PricingDetail {
   price: number
 }
 
+interface SportsField {
+  fieldName: string
+  sportType: string
+  pricePerHour: number | null
+  description: string
+  features: {
+    hasParking: boolean
+    hasShower: boolean
+    hasChangingRoom: boolean
+    hasAirConditioning: boolean
+    hasLighting: boolean
+  }
+}
+
 function RegisterSportsBase() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -81,13 +95,30 @@ function RegisterSportsBase() {
     sunday: { isOpen: null, openTime: '09:00', closeTime: '18:00' }
   })
   
-  // Sports Base specific
-  const [sport, setSport] = useState(searchParams.get('sport') || '')
-  const [showAddSportInput, setShowAddSportInput] = useState(false)
+  // Sports Base specific - Multiple fields
+  const [sportsFields, setSportsFields] = useState<SportsField[]>([{
+    fieldName: '',
+    sportType: searchParams.get('sport') || '',
+    pricePerHour: null,
+    description: '',
+    features: {
+      hasParking: false,
+      hasShower: false,
+      hasChangingRoom: false,
+      hasAirConditioning: false,
+      hasLighting: false
+    }
+  }])
+  const [showAddSportInput, setShowAddSportInput] = useState<number | null>(null)
   const [newSport, setNewSport] = useState('')
   const [customSports, setCustomSports] = useState<string[]>([])
   const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string | null}>>(ROMANIAN_CITIES)
   const [availableSports, setAvailableSports] = useState<string[]>([])
+  const [sportSearch, setSportSearch] = useState<Record<number, string>>({})
+  const [showSportDropdown, setShowSportDropdown] = useState<Record<number, boolean>>({})
+  
+  // Legacy fields for backward compatibility (will be removed)
+  const [sport, setSport] = useState('')
   const [pricingDetails, setPricingDetails] = useState<PricingDetail[]>([])
   const [hasParking, setHasParking] = useState(false)
   const [hasShower, setHasShower] = useState(false)
@@ -201,6 +232,54 @@ function RegisterSportsBase() {
     })
   }
 
+  // Functions for managing multiple sports fields
+  const addSportsField = () => {
+    setSportsFields([...sportsFields, {
+      fieldName: '',
+      sportType: '',
+      pricePerHour: null,
+      description: '',
+      features: {
+        hasParking: false,
+        hasShower: false,
+        hasChangingRoom: false,
+        hasAirConditioning: false,
+        hasLighting: false
+      }
+    }])
+  }
+
+  const removeSportsField = (index: number) => {
+    if (sportsFields.length > 1) {
+      setSportsFields(sportsFields.filter((_, i) => i !== index))
+      // Clean up search state
+      const newSearch = { ...sportSearch }
+      delete newSearch[index]
+      setSportSearch(newSearch)
+      const newDropdown = { ...showSportDropdown }
+      delete newDropdown[index]
+      setShowSportDropdown(newDropdown)
+    }
+  }
+
+  const updateSportsField = (index: number, field: keyof SportsField, value: any) => {
+    const updated = [...sportsFields]
+    updated[index] = { ...updated[index], [field]: value }
+    setSportsFields(updated)
+  }
+
+  const updateSportsFieldFeature = (index: number, feature: keyof SportsField['features'], value: boolean) => {
+    const updated = [...sportsFields]
+    updated[index] = {
+      ...updated[index],
+      features: {
+        ...updated[index].features,
+        [feature]: value
+      }
+    }
+    setSportsFields(updated)
+  }
+
   const addPricingDetail = () => {
     setPricingDetails([...pricingDetails, { title: '', description: '', price: 0 }])
   }
@@ -235,8 +314,15 @@ function RegisterSportsBase() {
         }
         break
       case 4:
-        if (!sport) {
-          setError('Te rugăm să selectezi un sport')
+        // Validate that at least one field is complete
+        const validFields = sportsFields.filter(field => 
+          field.fieldName.trim() && 
+          field.sportType.trim() && 
+          field.pricePerHour !== null && 
+          field.pricePerHour > 0
+        )
+        if (validFields.length === 0) {
+          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și preț)')
           return false
         }
         break
@@ -268,8 +354,16 @@ function RegisterSportsBase() {
     const validPhones = phones.filter(p => p.trim() !== '')
     const validEmails = emails.filter(e => e.trim() !== '')
     
-    if (!name || validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified) || !sport) {
-      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon și un email)')
+    // Validate that at least one sports field is complete
+    const validFields = sportsFields.filter(field => 
+      field.fieldName.trim() && 
+      field.sportType.trim() && 
+      field.pricePerHour !== null && 
+      field.pricePerHour > 0
+    )
+    
+    if (!name || validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified) || validFields.length === 0) {
+      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon, un email și un teren complet)')
       return
     }
 
@@ -327,14 +421,23 @@ function RegisterSportsBase() {
         socialMedia: JSON.stringify(socialMedia),
         gallery: JSON.stringify(galleryBase64),
         openingHours: formattedOpeningHours || null,
-        sport,
-        pricePerHour: pricingDetails.length > 0 ? pricingDetails[0].price : null,
+        // Legacy fields for backward compatibility (use first field's sport)
+        sport: validFields.length > 0 ? validFields[0].sportType : '',
+        pricePerHour: validFields.length > 0 ? validFields[0].pricePerHour : null,
         pricingDetails: JSON.stringify(pricingDetails),
-        hasParking,
-        hasShower,
-        hasChangingRoom,
-        hasAirConditioning,
-        hasLighting
+        hasParking: validFields.some(f => f.features.hasParking),
+        hasShower: validFields.some(f => f.features.hasShower),
+        hasChangingRoom: validFields.some(f => f.features.hasChangingRoom),
+        hasAirConditioning: validFields.some(f => f.features.hasAirConditioning),
+        hasLighting: validFields.some(f => f.features.hasLighting),
+        // New field: sports fields array
+        sportsFields: JSON.stringify(validFields.map(field => ({
+          fieldName: field.fieldName,
+          sportType: field.sportType,
+          pricePerHour: field.pricePerHour,
+          description: field.description || null,
+          features: field.features
+        })))
       }
 
       console.log('Submitting form data:', { ...formData, logoUrl: logoBase64 ? '[BASE64]' : null, gallery: galleryBase64.length > 0 ? `[${galleryBase64.length} images]` : null })
@@ -1923,7 +2026,7 @@ function RegisterSportsBase() {
             </div>
           )}
 
-          {/* Step 4: Sport and Pricing */}
+          {/* Step 4: Sports Fields */}
           {currentStep === 4 && (
             <div>
               <h2 style={{ 
@@ -1934,11 +2037,571 @@ function RegisterSportsBase() {
                 letterSpacing: '-0.02em',
                 lineHeight: '1.3'
               }}>
-                Sport și prețuri
+                Terenuri
               </h2>
+              <p style={{
+                color: '#64748b',
+                fontSize: '0.875rem',
+                marginBottom: isMobile ? '1.5rem' : '2rem',
+                lineHeight: '1.6'
+              }}>
+                Adaugă toate terenurile disponibile în baza ta sportivă. Fiecare teren poate fi de un tip diferit (fotbal, tenis, etc.) și poate avea propriile prețuri și facilități.
+              </p>
               
-              {/* Sport Selection */}
-              <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem', position: 'relative' }}>
+              {/* Sports Fields List */}
+              <div style={{ marginBottom: isMobile ? '1.5rem' : '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <label style={{ 
+                    color: '#0f172a', 
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Terenuri adăugate ({sportsFields.length})</label>
+                  <button
+                    type="button"
+                    onClick={addSportsField}
+                    style={{
+                      padding: isMobile ? '0.75rem 1.25rem' : '0.625rem 1.5rem',
+                      background: '#10b981',
+                      color: 'white',
+                      border: '1.5px solid #10b981',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                      touchAction: 'manipulation'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isMobile) {
+                        e.currentTarget.style.background = '#059669'
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isMobile) {
+                        e.currentTarget.style.background = '#10b981'
+                        e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      }
+                    }}
+                  >
+                    + Adaugă teren
+                  </button>
+                </div>
+                
+                {sportsFields.map((field, index) => (
+                  <div key={index} style={{
+                    padding: isMobile ? '1.25rem' : '1.5rem',
+                    marginBottom: '1.5rem',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    background: '#ffffff',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
+                      <span style={{ 
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        color: '#0f172a',
+                        letterSpacing: '0.01em'
+                      }}>Teren #{index + 1}</span>
+                      {sportsFields.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeSportsField(index)}
+                          style={{
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: '1.5px solid #fee2e2',
+                            borderRadius: '6px',
+                            padding: '0.5rem 1rem',
+                            cursor: 'pointer',
+                            fontSize: '0.8125rem',
+                            fontWeight: '600',
+                            transition: 'all 0.2s',
+                            touchAction: 'manipulation'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isMobile) {
+                              e.currentTarget.style.background = '#fecaca'
+                              e.currentTarget.style.borderColor = '#fecaca'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isMobile) {
+                              e.currentTarget.style.background = '#fee2e2'
+                              e.currentTarget.style.borderColor = '#fee2e2'
+                            }
+                          }}
+                        >
+                          Șterge
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Field Name */}
+                    <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.75rem',
+                        color: '#0f172a',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.01em'
+                      }}>Nume teren *</label>
+                      <input
+                        type="text"
+                        placeholder="ex: Teren Central, Teren 1, Teren de Tenis A"
+                        value={field.fieldName}
+                        onChange={(e) => updateSportsField(index, 'fieldName', e.target.value)}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#10b981'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Sport Type */}
+                    <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem', position: 'relative' }}>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.75rem',
+                        color: '#0f172a',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.01em'
+                      }}>Tip sport *</label>
+                      {showAddSportInput !== index ? (
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            type="text"
+                            value={field.sportType || sportSearch[index] || ''}
+                            onChange={(e) => {
+                              const newSearch = { ...sportSearch }
+                              newSearch[index] = e.target.value
+                              setSportSearch(newSearch)
+                              setShowSportDropdown({ ...showSportDropdown, [index]: true })
+                              if (!e.target.value) {
+                                updateSportsField(index, 'sportType', '')
+                              }
+                            }}
+                            onClick={() => setShowSportDropdown({ ...showSportDropdown, [index]: true })}
+                            onFocus={() => setShowSportDropdown({ ...showSportDropdown, [index]: true })}
+                            placeholder="Caută sau selectează sport"
+                            required={!field.sportType}
+                            style={{
+                              width: '100%',
+                              padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                              paddingRight: isMobile ? '2.25rem' : '2.5rem',
+                              border: '1.5px solid #e2e8f0',
+                              borderRadius: '8px',
+                              fontSize: isMobile ? '16px' : '1rem',
+                              outline: 'none',
+                              background: '#ffffff',
+                              color: '#0f172a',
+                              transition: 'all 0.2s ease',
+                              fontWeight: '400',
+                              lineHeight: '1.5',
+                              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                              WebkitAppearance: 'none',
+                              touchAction: 'manipulation'
+                            }}
+                            onBlur={(e) => {
+                              setTimeout(() => {
+                                const newDropdown = { ...showSportDropdown }
+                                delete newDropdown[index]
+                                setShowSportDropdown(newDropdown)
+                              }, 250)
+                            }}
+                          />
+                          <div style={{
+                            position: 'absolute',
+                            right: '0.75rem',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            pointerEvents: 'none'
+                          }}>
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                              <path d="M5 7.5l5 5 5-5"/>
+                            </svg>
+                          </div>
+                          {showSportDropdown[index] && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '100%',
+                              left: 0,
+                              right: 0,
+                              marginTop: '0.25rem',
+                              background: '#ffffff',
+                              border: '1.5px solid #e2e8f0',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                              maxHeight: isMobile ? '250px' : '300px',
+                              overflowY: 'auto',
+                              zIndex: 1000,
+                              WebkitOverflowScrolling: 'touch'
+                            }}>
+                              {[...availableSports, ...customSports.filter(s => !availableSports.includes(s))]
+                                .filter(sportOption => 
+                                  !sportSearch[index] || 
+                                  sportOption.toLowerCase().includes(sportSearch[index]?.toLowerCase() || '')
+                                )
+                                .map(sportOption => (
+                                  <div
+                                    key={sportOption}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault()
+                                      updateSportsField(index, 'sportType', sportOption)
+                                      const newSearch = { ...sportSearch }
+                                      delete newSearch[index]
+                                      setSportSearch(newSearch)
+                                      const newDropdown = { ...showSportDropdown }
+                                      delete newDropdown[index]
+                                      setShowSportDropdown(newDropdown)
+                                    }}
+                                    style={{
+                                      padding: '0.75rem 1rem',
+                                      cursor: 'pointer',
+                                      borderBottom: '1px solid #f1f5f9',
+                                      color: '#0f172a',
+                                      fontSize: '0.9375rem',
+                                      fontWeight: '500',
+                                      transition: 'background 0.15s'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background = '#f0fdf4'
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background = '#ffffff'
+                                    }}
+                                  >
+                                    {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
+                                  </div>
+                                ))}
+                              <div
+                                onMouseDown={(e) => {
+                                  e.preventDefault()
+                                  setShowAddSportInput(index)
+                                  const newDropdown = { ...showSportDropdown }
+                                  delete newDropdown[index]
+                                  setShowSportDropdown(newDropdown)
+                                  const newSearch = { ...sportSearch }
+                                  delete newSearch[index]
+                                  setSportSearch(newSearch)
+                                }}
+                                style={{
+                                  padding: '0.75rem 1rem',
+                                  cursor: 'pointer',
+                                  color: '#0f172a',
+                                  fontSize: '0.9375rem',
+                                  fontWeight: '600',
+                                  borderTop: '1.5px solid #f1f5f9',
+                                  background: '#f8fafc',
+                                  transition: 'background 0.15s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#f1f5f9'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = '#f8fafc'
+                                }}
+                              >
+                                + Adaugă sport nou
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: isMobile ? 'column' : 'row',
+                          gap: isMobile ? '0.75rem' : '1rem' 
+                        }}>
+                          <input
+                            type="text"
+                            value={newSport}
+                            onChange={(e) => setNewSport(e.target.value)}
+                            placeholder="Introdu numele sportului"
+                            required
+                            style={{
+                              flex: 1,
+                              padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                              border: '1.5px solid #e2e8f0',
+                              borderRadius: '8px',
+                              fontSize: isMobile ? '16px' : '1rem',
+                              outline: 'none',
+                              background: '#ffffff',
+                              color: '#0f172a',
+                              transition: 'all 0.2s ease',
+                              fontWeight: '400',
+                              lineHeight: '1.5',
+                              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                              WebkitAppearance: 'none',
+                              touchAction: 'manipulation'
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderColor = '#10b981'
+                              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderColor = '#e2e8f0'
+                              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (newSport.trim()) {
+                                const sportName = newSport.trim().toLowerCase()
+                                const standardSports = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash']
+                                if (!customSports.includes(sportName) && !standardSports.includes(sportName)) {
+                                  setCustomSports([...customSports, sportName])
+                                }
+                                updateSportsField(index, 'sportType', sportName)
+                                setNewSport('')
+                                setShowAddSportInput(null)
+                              }
+                            }}
+                            style={{
+                              padding: isMobile ? '0.875rem 1.5rem' : '0.875rem 2rem',
+                              background: '#10b981',
+                              color: 'white',
+                              border: '1.5px solid #10b981',
+                              borderRadius: '8px',
+                              fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                              width: isMobile ? '100%' : 'auto',
+                              touchAction: 'manipulation',
+                              minHeight: isMobile ? '48px' : 'auto'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.background = '#059669'
+                                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.background = '#10b981'
+                                e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                              }
+                            }}
+                          >
+                            Adaugă
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddSportInput(null)
+                              setNewSport('')
+                            }}
+                            style={{
+                              padding: isMobile ? '0.875rem 1.5rem' : '0.875rem 2rem',
+                              background: '#ffffff',
+                              color: '#0f172a',
+                              border: '1.5px solid #e2e8f0',
+                              borderRadius: '8px',
+                              fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                              width: isMobile ? '100%' : 'auto',
+                              touchAction: 'manipulation',
+                              minHeight: isMobile ? '48px' : 'auto'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.borderColor = '#0f172a'
+                                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.borderColor = '#e2e8f0'
+                                e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                              }
+                            }}
+                          >
+                            Anulează
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Price Per Hour */}
+                    <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.75rem',
+                        color: '#0f172a',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.01em'
+                      }}>Preț pe oră (RON) *</label>
+                      <input
+                        type="number"
+                        placeholder="ex: 100"
+                        value={field.pricePerHour || ''}
+                        onChange={(e) => updateSportsField(index, 'pricePerHour', e.target.value ? parseFloat(e.target.value) : null)}
+                        min="0"
+                        step="0.01"
+                        required={field.pricePerHour === null}
+                        style={{
+                          width: '100%',
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#10b981'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Description */}
+                    <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.75rem',
+                        color: '#0f172a',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.01em'
+                      }}>Descriere (opțional)</label>
+                      <textarea
+                        placeholder="Descrie terenul (ex: Teren sintetic, iluminat, cu vestiar)"
+                        value={field.description}
+                        onChange={(e) => updateSportsField(index, 'description', e.target.value)}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          fontFamily: 'inherit',
+                          resize: 'vertical',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#10b981'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Features */}
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '0.75rem',
+                        color: '#0f172a',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.01em'
+                      }}>Facilități</label>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                        gap: '0.75rem'
+                      }}>
+                        {[
+                          { key: 'hasParking', label: 'Parcare' },
+                          { key: 'hasShower', label: 'Duș' },
+                          { key: 'hasChangingRoom', label: 'Vestiar' },
+                          { key: 'hasAirConditioning', label: 'Aer condiționat' },
+                          { key: 'hasLighting', label: 'Iluminat' }
+                        ].map(feature => (
+                          <label key={feature.key} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            border: '1.5px solid #e2e8f0',
+                            background: field.features[feature.key as keyof SportsField['features']] ? '#f0fdf4' : '#ffffff',
+                            transition: 'all 0.2s ease'
+                          }}>
+                            <input
+                              type="checkbox"
+                              checked={field.features[feature.key as keyof SportsField['features']]}
+                              onChange={(e) => updateSportsFieldFeature(index, feature.key as keyof SportsField['features'], e.target.checked)}
+                              style={{
+                                width: '20px',
+                                height: '20px',
+                                marginRight: '0.75rem',
+                                cursor: 'pointer',
+                                accentColor: '#10b981'
+                              }}
+                            />
+                            <span style={{
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                              color: '#0f172a'
+                            }}>{feature.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Old Sport Selection - REMOVED */}
+              <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem', position: 'relative', display: 'none' }}>
                 <label style={{
                   display: 'block',
                   marginBottom: '0.75rem',

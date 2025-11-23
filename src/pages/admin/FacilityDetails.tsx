@@ -43,6 +43,16 @@ interface Facility {
   products_categories?: string
   brands_available?: string
   delivery_available?: boolean
+  // Sports fields (for sports bases with multiple fields)
+  sportsFields?: Array<{
+    id: number
+    facility_id: number
+    sport_type: string
+    field_name: string
+    price_per_hour: number
+    description?: string
+    features?: any
+  }>
 }
 
 const KNOWN_SPORTS = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans']
@@ -624,6 +634,72 @@ function FacilityDetails() {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sports Fields (Multiple Fields per Sports Base) */}
+      {facility.facility_type === 'field' && facility.sportsFields && facility.sportsFields.length > 0 && (
+        <div style={{
+          background: 'white',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          marginBottom: '1.5rem'
+        }}>
+          <h2 style={{ marginTop: 0, marginBottom: '1rem', color: '#333' }}>Terenuri ({facility.sportsFields.length})</h2>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {facility.sportsFields.map((field, index) => (
+              <div key={field.id || index} style={{
+                padding: '1rem',
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                background: '#f9fafb'
+              }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#666', fontWeight: '500' }}>
+                      Nume teren
+                    </label>
+                    <p style={{ margin: 0, color: '#333', fontWeight: '600' }}>{field.field_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#666', fontWeight: '500' }}>
+                      Tip sport
+                    </label>
+                    <p style={{ margin: 0, color: '#333' }}>{field.sport_type ? field.sport_type.charAt(0).toUpperCase() + field.sport_type.slice(1) : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#666', fontWeight: '500' }}>
+                      Preț pe oră (RON)
+                    </label>
+                    <p style={{ margin: 0, color: '#333' }}>{field.price_per_hour ? `${field.price_per_hour} RON` : 'N/A'}</p>
+                  </div>
+                  {field.description && (
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#666', fontWeight: '500' }}>
+                        Descriere
+                      </label>
+                      <p style={{ margin: 0, color: '#333' }}>{field.description}</p>
+                    </div>
+                  )}
+                  {field.features && (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#666', fontWeight: '500' }}>
+                        Facilități
+                      </label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {field.features.hasParking && <span style={{ padding: '0.25rem 0.75rem', background: '#d1fae5', borderRadius: '4px', fontSize: '0.875rem' }}>Parcare</span>}
+                        {field.features.hasShower && <span style={{ padding: '0.25rem 0.75rem', background: '#d1fae5', borderRadius: '4px', fontSize: '0.875rem' }}>Duș</span>}
+                        {field.features.hasChangingRoom && <span style={{ padding: '0.25rem 0.75rem', background: '#d1fae5', borderRadius: '4px', fontSize: '0.875rem' }}>Vestiar</span>}
+                        {field.features.hasAirConditioning && <span style={{ padding: '0.25rem 0.75rem', background: '#d1fae5', borderRadius: '4px', fontSize: '0.875rem' }}>Aer condiționat</span>}
+                        {field.features.hasLighting && <span style={{ padding: '0.25rem 0.75rem', background: '#d1fae5', borderRadius: '4px', fontSize: '0.875rem' }}>Iluminat</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
