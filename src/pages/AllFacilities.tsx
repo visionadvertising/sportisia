@@ -586,7 +586,7 @@ function AllFacilities() {
                 </div>
               </Link>
               <Link
-                to="/register"
+                to={`/register${facilityType ? `?type=${facilityType}` : ''}${city ? `${facilityType ? '&' : '?'}city=${encodeURIComponent(city)}` : ''}${sport ? `&sport=${encodeURIComponent(sport)}` : ''}`}
                 style={{
                   padding: isMobile ? '1.5rem 1.75rem' : '2rem 2.5rem',
                   background: '#10b981',

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES } from '../../data/romanian-cities'
 import { ROMANIAN_COUNTIES } from '../../data/romanian-counties'
@@ -9,6 +9,7 @@ const KNOWN_SPORTS = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badmint
 
 function RegisterCoach() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null)
@@ -27,7 +28,7 @@ function RegisterCoach() {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [contactPerson, setContactPerson] = useState('')
-  const [city, setCity] = useState('')
+  const [city, setCity] = useState(searchParams.get('city') || '')
   const [county, setCounty] = useState('')
   const [location, setLocation] = useState('')
   const [locationNotSpecified, setLocationNotSpecified] = useState(false)
@@ -60,7 +61,7 @@ function RegisterCoach() {
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
 
   // Step 4: Sport Selection
-  const [sport, setSport] = useState('')
+  const [sport, setSport] = useState(searchParams.get('sport') || '')
   const [sportSearch, setSportSearch] = useState('')
   const [showSportDropdown, setShowSportDropdown] = useState(false)
   const [showAddSportInput, setShowAddSportInput] = useState(false)
@@ -107,7 +108,16 @@ function RegisterCoach() {
               cityMap.set(c.city, c)
             }
           })
-          setAvailableCities(Array.from(cityMap.values()).sort((a, b) => a.city.localeCompare(b.city)))
+          const allCities = Array.from(cityMap.values()).sort((a, b) => a.city.localeCompare(b.city))
+          setAvailableCities(allCities)
+          
+          // Set county if city is pre-selected from query params
+          if (city && !county) {
+            const cityData = allCities.find(c => c.city === city)
+            if (cityData && cityData.county) {
+              setCounty(cityData.county)
+            }
+          }
         }
       } catch (err) {
         console.error('Error loading cities:', err)
@@ -115,6 +125,16 @@ function RegisterCoach() {
     }
     loadCities()
   }, [])
+  
+  // Set county when city is pre-selected from query params (after cities are loaded)
+  useEffect(() => {
+    if (city && !county && availableCities.length > 0) {
+      const cityData = availableCities.find(c => c.city === city)
+      if (cityData && cityData.county) {
+        setCounty(cityData.county)
+      }
+    }
+  }, [city, county, availableCities])
 
   useEffect(() => {
     const loadSports = async () => {

@@ -1,8 +1,38 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 
 function RegisterTypeSelector() {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  
+  // Check if type is pre-selected from query params
+  useEffect(() => {
+    const type = searchParams.get('type')
+    if (type) {
+      // Map type values to route slugs
+      const typeMap: Record<string, string> = {
+        'field': 'baze-sportive',
+        'coach': 'antrenori',
+        'repair_shop': 'magazine-reparatii',
+        'equipment_shop': 'magazine-articole'
+      }
+      const slug = typeMap[type]
+      if (slug) {
+        // Redirect to the specific registration form with all params
+        const city = searchParams.get('city')
+        const sport = searchParams.get('sport')
+        let redirectUrl = `/register/${slug}`
+        const params = new URLSearchParams()
+        if (city) params.append('city', city)
+        if (sport) params.append('sport', sport)
+        if (params.toString()) {
+          redirectUrl += `?${params.toString()}`
+        }
+        navigate(redirectUrl, { replace: true })
+      }
+    }
+  }, [searchParams, navigate])
 
   useEffect(() => {
     const handleResize = () => {

@@ -263,7 +263,7 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
                   </div>
                 </Link>
                 <Link
-                  to="/register"
+                  to={`/register?type=${type}${selectedCity ? `&city=${encodeURIComponent(selectedCity)}` : ''}${selectedSport ? `&sport=${encodeURIComponent(selectedSport)}` : ''}`}
                   style={{
                     padding: isMobile ? '1.5rem 1.75rem' : '2rem 2.5rem',
                     background: '#10b981',
