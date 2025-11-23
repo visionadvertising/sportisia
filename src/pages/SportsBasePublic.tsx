@@ -118,11 +118,18 @@ function SportsBasePublic() {
       
       console.log(`[Frontend] Response:`, data)
       
+      let facilityData = null
+      
       if (data.success && data.data) {
         // Backend returns data in data.data
-        const facilityData = data.data
+        facilityData = data.data
+      } else if (data.success && data.facility) {
+        // Backend returns data in data.facility (backward compatibility)
+        facilityData = data.facility
+      }
+      
+      if (facilityData) {
         // Parse JSON fields
-        const facilityData = data.facility
         if (facilityData.phones && typeof facilityData.phones === 'string') {
           try {
             facilityData.phones = JSON.parse(facilityData.phones)
