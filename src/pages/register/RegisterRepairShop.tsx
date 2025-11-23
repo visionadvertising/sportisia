@@ -37,9 +37,9 @@ function RegisterRepairShop() {
 
   // Step 1: Contact Details
   const [contactPerson, setContactPerson] = useState('')
-  const [phone, setPhone] = useState('')
-  const [whatsapp, setWhatsapp] = useState('')
-  const [email, setEmail] = useState('')
+  const [phones, setPhones] = useState<string[]>([''])
+  const [whatsapps, setWhatsapps] = useState<string[]>([''])
+  const [emails, setEmails] = useState<string[]>([''])
   const [city, setCity] = useState(searchParams.get('city') || '')
   const [county, setCounty] = useState('')
   const [location, setLocation] = useState('')
@@ -180,8 +180,10 @@ function RegisterRepairShop() {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        if (!phone || !email || !city || (!location && !locationNotSpecified)) {
-          setError('Te rugăm să completezi toate câmpurile obligatorii')
+        const validPhones = phones.filter(p => p.trim() !== '')
+        const validEmails = emails.filter(e => e.trim() !== '')
+        if (validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified)) {
+          setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon și un email)')
           return false
         }
         break
@@ -216,8 +218,12 @@ function RegisterRepairShop() {
   const handleSubmit = async () => {
     setError('')
     
-    if (!name || !phone || !email || !city || (!location && !locationNotSpecified) || selectedCategories.length === 0) {
-      setError('Te rugăm să completezi toate câmpurile obligatorii')
+    // Validate required fields
+    const validPhones = phones.filter(p => p.trim() !== '')
+    const validEmails = emails.filter(e => e.trim() !== '')
+    
+    if (!name || validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified) || selectedCategories.length === 0) {
+      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon și un email)')
       return
     }
 
@@ -245,13 +251,21 @@ function RegisterRepairShop() {
         })
       )
 
+      // Filter out empty values
+      const validPhones = phones.filter(p => p.trim() !== '')
+      const validWhatsapps = whatsapps.filter(w => w.trim() !== '')
+      const validEmails = emails.filter(e => e.trim() !== '')
+
       const formData = {
         facilityType: 'repair_shop',
         name,
         contactPerson: contactPerson || null,
-        phone,
-        whatsapp: whatsapp || null,
-        email,
+        phone: validPhones.length > 0 ? validPhones[0] : '', // First phone as primary
+        phones: JSON.stringify(validPhones), // All phones as JSON
+        whatsapp: validWhatsapps.length > 0 ? validWhatsapps[0] : null, // First WhatsApp as primary
+        whatsapps: JSON.stringify(validWhatsapps), // All WhatsApps as JSON
+        email: validEmails.length > 0 ? validEmails[0] : '', // First email as primary
+        emails: JSON.stringify(validEmails), // All emails as JSON
         city,
         county: county || newCityCounty || null,
         location: locationNotSpecified ? null : location,
@@ -408,13 +422,30 @@ function RegisterRepairShop() {
           )}
         </div>
 
-        <h1 style={{
-          fontSize: isMobile ? '1.75rem' : '2.5rem',
-          fontWeight: '600',
-          color: '#0f172a',
-          marginBottom: '0.5rem',
-          textAlign: 'center'
-        }}>Înregistrare Magazin Reparații</h1>
+        <div style={{
+          textAlign: 'center',
+          marginBottom: isMobile ? '2rem' : '3rem',
+          paddingBottom: isMobile ? '1.5rem' : '2rem',
+          borderBottom: '1px solid #e2e8f0'
+        }}>
+          <h1 style={{
+            fontSize: isMobile ? '1.875rem' : '2.75rem',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg, #0f172a 0%, #10b981 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            marginBottom: '0.5rem',
+            letterSpacing: '-0.02em',
+            lineHeight: '1.2'
+          }}>Înregistrare Magazin Reparații</h1>
+          <p style={{
+            fontSize: isMobile ? '0.875rem' : '1rem',
+            color: '#64748b',
+            marginTop: '0.75rem',
+            fontWeight: '400'
+          }}>Completează formularul pentru a-ți înregistra magazinul de reparații</p>
+        </div>
 
         {error && (
           <div style={{
@@ -512,125 +543,346 @@ function RegisterRepairShop() {
                     }}
                   />
                 </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.75rem',
-                    color: '#0f172a',
-                    fontWeight: '600',
-                    fontSize: '0.875rem',
-                    letterSpacing: '0.01em'
-                  }}>Telefon *</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: isMobile ? '16px' : '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
+
+                {/* Dynamic Phones */}
+                <div style={{ gridColumn: isMobile ? '1' : 'span 2' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <label style={{
+                      display: 'block',
                       color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                      WebkitAppearance: 'none',
-                      touchAction: 'manipulation'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#0f172a'
-                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e2e8f0'
-                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
-                  />
+                      fontWeight: '600',
+                      fontSize: '0.875rem',
+                      letterSpacing: '0.01em'
+                    }}>Telefoane *</label>
+                    <button
+                      type="button"
+                      onClick={() => setPhones([...phones, ''])}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: '#f0fdf4',
+                        color: '#10b981',
+                        border: '1.5px solid #10b981',
+                        borderRadius: '6px',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#10b981'
+                        e.currentTarget.style.color = 'white'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f0fdf4'
+                        e.currentTarget.style.color = '#10b981'
+                      }}
+                    >
+                      + Adaugă telefon
+                    </button>
+                  </div>
+                  {phones.map((phone, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', alignItems: 'flex-start' }}>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => {
+                          const updated = [...phones]
+                          updated[index] = e.target.value
+                          setPhones(updated)
+                        }}
+                        placeholder={index === 0 ? "Ex: 0768057046 *" : `Telefon ${index + 1}`}
+                        required={index === 0}
+                        style={{
+                          flex: 1,
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                      {phones.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = phones.filter((_, i) => i !== index)
+                            setPhones(updated.length > 0 ? updated : [''])
+                          }}
+                          style={{
+                            padding: '0.875rem 1rem',
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: '1.5px solid #dc2626',
+                            borderRadius: '8px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            minWidth: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#dc2626'
+                            e.currentTarget.style.color = 'white'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#fee2e2'
+                            e.currentTarget.style.color = '#dc2626'
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.75rem',
-                    color: '#0f172a',
-                    fontWeight: '600',
-                    fontSize: '0.875rem',
-                    letterSpacing: '0.01em'
-                  }}>WhatsApp</label>
-                  <input
-                    type="tel"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="Ex: +40712345678"
-                    style={{
-                      width: '100%',
-                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: isMobile ? '16px' : '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
+
+                {/* Dynamic WhatsApps */}
+                <div style={{ gridColumn: isMobile ? '1' : 'span 2' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <label style={{
+                      display: 'block',
                       color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                      WebkitAppearance: 'none',
-                      touchAction: 'manipulation'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#0f172a'
-                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e2e8f0'
-                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
-                  />
+                      fontWeight: '600',
+                      fontSize: '0.875rem',
+                      letterSpacing: '0.01em'
+                    }}>WhatsApp</label>
+                    <button
+                      type="button"
+                      onClick={() => setWhatsapps([...whatsapps, ''])}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: '#f0fdf4',
+                        color: '#10b981',
+                        border: '1.5px solid #10b981',
+                        borderRadius: '6px',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#10b981'
+                        e.currentTarget.style.color = 'white'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f0fdf4'
+                        e.currentTarget.style.color = '#10b981'
+                      }}
+                    >
+                      + Adaugă WhatsApp
+                    </button>
+                  </div>
+                  {whatsapps.map((whatsapp, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', alignItems: 'flex-start' }}>
+                      <input
+                        type="tel"
+                        value={whatsapp}
+                        onChange={(e) => {
+                          const updated = [...whatsapps]
+                          updated[index] = e.target.value
+                          setWhatsapps(updated)
+                        }}
+                        placeholder={index === 0 ? "Ex: +40712345678" : `WhatsApp ${index + 1}`}
+                        style={{
+                          flex: 1,
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                      {whatsapps.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = whatsapps.filter((_, i) => i !== index)
+                            setWhatsapps(updated.length > 0 ? updated : [''])
+                          }}
+                          style={{
+                            padding: '0.875rem 1rem',
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: '1.5px solid #dc2626',
+                            borderRadius: '8px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            minWidth: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#dc2626'
+                            e.currentTarget.style.color = 'white'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#fee2e2'
+                            e.currentTarget.style.color = '#dc2626'
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '0.75rem',
-                    color: '#0f172a',
-                    fontWeight: '600',
-                    fontSize: '0.875rem',
-                    letterSpacing: '0.01em'
-                  }}>Email *</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
-                      border: '1.5px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: isMobile ? '16px' : '1rem',
-                      outline: 'none',
-                      background: '#ffffff',
+
+                {/* Dynamic Emails */}
+                <div style={{ gridColumn: isMobile ? '1' : 'span 2' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <label style={{
+                      display: 'block',
                       color: '#0f172a',
-                      transition: 'all 0.2s ease',
-                      fontWeight: '400',
-                      lineHeight: '1.5',
-                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                      WebkitAppearance: 'none',
-                      touchAction: 'manipulation'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#0f172a'
-                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = '#e2e8f0'
-                      e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                    }}
-                  />
+                      fontWeight: '600',
+                      fontSize: '0.875rem',
+                      letterSpacing: '0.01em'
+                    }}>Email-uri *</label>
+                    <button
+                      type="button"
+                      onClick={() => setEmails([...emails, ''])}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: '#f0fdf4',
+                        color: '#10b981',
+                        border: '1.5px solid #10b981',
+                        borderRadius: '6px',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#10b981'
+                        e.currentTarget.style.color = 'white'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f0fdf4'
+                        e.currentTarget.style.color = '#10b981'
+                      }}
+                    >
+                      + Adaugă email
+                    </button>
+                  </div>
+                  {emails.map((email, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', alignItems: 'flex-start' }}>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => {
+                          const updated = [...emails]
+                          updated[index] = e.target.value
+                          setEmails(updated)
+                        }}
+                        placeholder={index === 0 ? "Ex: contact@example.com *" : `Email ${index + 1}`}
+                        required={index === 0}
+                        style={{
+                          flex: 1,
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                      {emails.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = emails.filter((_, i) => i !== index)
+                            setEmails(updated.length > 0 ? updated : [''])
+                          }}
+                          style={{
+                            padding: '0.875rem 1rem',
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: '1.5px solid #dc2626',
+                            borderRadius: '8px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            minWidth: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#dc2626'
+                            e.currentTarget.style.color = 'white'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#fee2e2'
+                            e.currentTarget.style.color = '#dc2626'
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
                 </div>
               </div>

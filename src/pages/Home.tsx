@@ -180,23 +180,34 @@ function Home() {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        <h1 style={{
-          margin: 0,
-          fontSize: isMobile ? '2rem' : '3.5rem',
-          fontWeight: '700',
-          marginBottom: isMobile ? '0.75rem' : '1rem',
-          lineHeight: '1.2',
-          padding: isMobile ? '0 0.5rem' : '0',
-          letterSpacing: '-0.02em'
-        }}>Găsește facilități sportive</h1>
-        <p style={{
-          margin: 0,
-          fontSize: isMobile ? '1rem' : '1.25rem',
-          opacity: 0.9,
+        <div style={{
+          textAlign: 'center',
           marginBottom: isMobile ? '2rem' : '3rem',
-          padding: isMobile ? '0 0.5rem' : '0',
-          fontWeight: '400'
-        }}>Caută terenuri, antrenori și servicii sportive</p>
+          paddingBottom: isMobile ? '1.5rem' : '2rem'
+        }}>
+          <h1 style={{
+            margin: 0,
+            fontSize: isMobile ? '2rem' : '3.5rem',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg, #ffffff 0%, #10b981 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            marginBottom: '0.5rem',
+            lineHeight: '1.2',
+            padding: isMobile ? '0 0.5rem' : '0',
+            letterSpacing: '-0.02em'
+          }}>Găsește facilități sportive</h1>
+          <p style={{
+            margin: 0,
+            fontSize: isMobile ? '1rem' : '1.25rem',
+            opacity: 0.9,
+            marginTop: '0.75rem',
+            padding: isMobile ? '0 0.5rem' : '0',
+            fontWeight: '400',
+            color: 'rgba(255, 255, 255, 0.9)'
+          }}>Caută terenuri, antrenori și servicii sportive</p>
+        </div>
 
         {/* Search Bar */}
         <div style={{
