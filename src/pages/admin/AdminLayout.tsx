@@ -1,12 +1,8 @@
-import { ReactNode, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import AdminSidebar from '../../components/admin/AdminSidebar'
 
-interface AdminLayoutProps {
-  children: ReactNode
-}
-
-function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -50,15 +46,9 @@ function AdminLayout({ children }: AdminLayoutProps) {
         position: 'relative',
         zIndex: 1
       }}>
-        {children ? (
-          <div style={{ width: '100%', minHeight: '100%' }}>
-            {children}
-          </div>
-        ) : (
-          <div style={{ padding: '2rem' }}>
-            <p>Loading...</p>
-          </div>
-        )}
+        <div style={{ width: '100%', minHeight: '100%' }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   )
