@@ -3174,35 +3174,84 @@ function RegisterSportsBase() {
                 <h2 style={{
                   color: 'white',
                   fontSize: isMobile ? '1.5rem' : '2rem',
-                  marginBottom: '1rem',
+                  marginBottom: '1.5rem',
                   fontWeight: '600',
                   margin: 0
                 }}>Cererea a fost înregistrată cu succes!</h2>
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.95)',
-                  marginBottom: '1rem',
-                  fontSize: '1rem',
-                  lineHeight: '1.6',
-                  margin: 0
+                
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  borderRadius: '8px',
+                  padding: '1.5rem',
+                  marginBottom: '1.5rem',
+                  textAlign: 'left'
                 }}>
-                  Baza ta sportivă a fost înregistrată și este în așteptarea aprobării de către administrator.
-                </p>
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  fontSize: '0.9375rem',
-                  lineHeight: '1.6',
-                  margin: 0
+                  <p style={{
+                    color: 'rgba(255, 255, 255, 0.95)',
+                    marginBottom: '1rem',
+                    fontSize: '1rem',
+                    lineHeight: '1.6',
+                    margin: '0 0 1rem 0',
+                    fontWeight: '500'
+                  }}>
+                    Ce urmează?
+                  </p>
+                  <ul style={{
+                    color: 'rgba(255, 255, 255, 0.95)',
+                    fontSize: '0.9375rem',
+                    lineHeight: '1.8',
+                    margin: 0,
+                    paddingLeft: '1.5rem'
+                  }}>
+                    <li style={{ marginBottom: '0.75rem' }}>
+                      <strong>Vei primi un email</strong> cu datele de conectare (username și parolă) la adresa de email furnizată
+                    </li>
+                    <li style={{ marginBottom: '0.75rem' }}>
+                      <strong>Cererea ta este în așteptarea aprobării</strong> de către administrator
+                    </li>
+                    <li style={{ marginBottom: '0.75rem' }}>
+                      <strong>După aprobare</strong>, baza ta sportivă va deveni publică pe platformă și vei primi o notificare pe email
+                    </li>
+                    <li>
+                      Poți accesa contul tău folosind datele de conectare primite pe email
+                    </li>
+                  </ul>
+                </div>
+                
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  border: '1px solid rgba(255, 255, 255, 0.3)'
                 }}>
-                  După aprobare, baza ta sportivă va deveni publică pe platformă și vei primi o notificare pe email.
-                </p>
+                  <p style={{
+                    color: 'rgba(255, 255, 255, 0.95)',
+                    fontSize: '0.875rem',
+                    lineHeight: '1.6',
+                    margin: 0
+                  }}>
+                    <strong>Important:</strong> Verifică inbox-ul (și spam-ul) pentru email-ul cu datele de conectare. Dacă nu primești email-ul în câteva minute, verifică că adresa de email este corectă.
+                  </p>
+                </div>
               </div>
               
-              <p style={{
-                color: '#64748b',
+              <div style={{
+                background: '#f8fafc',
+                padding: '1.5rem',
+                borderRadius: '12px',
                 marginBottom: '2rem',
-                fontSize: '0.9375rem',
-                lineHeight: '1.6'
-              }}>Contul tău a fost creat cu următoarele credențiale (acestea au fost trimise și pe email):</p>
+                border: '1px solid #e2e8f0',
+                textAlign: 'left'
+              }}>
+                <p style={{
+                  color: '#64748b',
+                  marginBottom: '1rem',
+                  fontSize: '0.9375rem',
+                  lineHeight: '1.6',
+                  fontWeight: '500'
+                }}>
+                  Datele de conectare (au fost trimise și pe email):
+                </p>
               
               <div style={{
                 background: '#f8fafc',
@@ -3240,19 +3289,20 @@ function RegisterSportsBase() {
               </div>
 
               <div style={{
-                background: '#fef3c7',
-                border: '1px solid #fbbf24',
+                background: '#eff6ff',
+                border: '1px solid #3b82f6',
                 borderRadius: '8px',
                 padding: '1rem',
-                marginBottom: '2rem'
+                marginBottom: '2rem',
+                textAlign: 'left'
               }}>
                 <p style={{
                   margin: 0,
-                  color: '#92400e',
+                  color: '#1e40af',
                   fontSize: '0.875rem',
                   lineHeight: '1.6'
                 }}>
-                  ⚠️ <strong>Important:</strong> Salvează aceste credențiale! Vei avea nevoie de ele pentru a accesa și edita detaliile bazei tale sportive.
+                  <strong>Notă:</strong> Aceste credențiale au fost trimise și pe email. Salvează-le într-un loc sigur - vei avea nevoie de ele pentru a accesa și edita detaliile bazei tale sportive după aprobare.
                 </p>
               </div>
 
