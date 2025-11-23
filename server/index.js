@@ -413,8 +413,8 @@ async function getSMTPConfig() {
       'SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE "smtp_%"'
     )
     
-    const config: any = {}
-    rows.forEach((row: any) => {
+    const config = {}
+    rows.forEach((row) => {
       const key = row.setting_key.replace('smtp_', '')
       config[key] = row.setting_value
     })
@@ -464,7 +464,7 @@ async function sendEmail(to: string, subject: string, html: string) {
     
     console.log('✅ Email sent:', info.messageId)
     return { success: true, messageId: info.messageId }
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Error sending email:', error)
     return { success: false, error: error.message }
   }
@@ -1551,12 +1551,12 @@ app.put('/api/admin/smtp-config', async (req, res) => {
 
     // Save SMTP settings
     const settings = [
-      { key: 'smtp_host', value: host },
-      { key: 'smtp_port', value: port.toString() },
+      { key: 'smtp_host', value: String(host) },
+      { key: 'smtp_port', value: String(port) },
       { key: 'smtp_secure', value: secure ? 'true' : 'false' },
-      { key: 'smtp_user', value: user },
-      { key: 'smtp_password', value: password },
-      { key: 'smtp_from', value: from || user }
+      { key: 'smtp_user', value: String(user) },
+      { key: 'smtp_password', value: String(password) },
+      { key: 'smtp_from', value: String(from || user) }
     ]
 
     for (const setting of settings) {
