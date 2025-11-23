@@ -377,6 +377,22 @@ async function addMissingColumns() {
       await pool.query(`ALTER TABLE facilities MODIFY COLUMN location VARCHAR(255)`)
       console.log('✅ Modified location column to allow NULL')
     }
+
+    // Add columns for multiple phones, whatsapps, and emails
+    if (!existingColumns.includes('phones')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN phones JSON AFTER phone`)
+      console.log('✅ Added phones column')
+    }
+
+    if (!existingColumns.includes('whatsapps')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN whatsapps JSON AFTER whatsapp`)
+      console.log('✅ Added whatsapps column')
+    }
+
+    if (!existingColumns.includes('emails')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN emails JSON AFTER email`)
+      console.log('✅ Added emails column')
+    }
     
     // Add repair_categories for repair shops
     if (!existingColumns.includes('repair_categories')) {
@@ -598,7 +614,7 @@ app.post('/api/register', async (req, res) => {
 
     const {
       facilityType, // 'field', 'coach', 'repair_shop', 'equipment_shop'
-      name, city, county, location, locationNotSpecified, mapCoordinates, contactPerson, phone, whatsapp, email, description, imageUrl,
+      name, city, county, location, locationNotSpecified, mapCoordinates, contactPerson, phone, phones, whatsapp, whatsapps, email, emails, description, imageUrl,
       // New common fields
       logoFile, socialMedia, gallery,
       // Field specific (sport is also used for equipment shops - can be 'general' or specific sport)
@@ -678,7 +694,7 @@ app.post('/api/register', async (req, res) => {
         locationNotSpecified ? null : (location || null), 
         locationNotSpecified || false,
         mapCoordinates ? JSON.stringify(mapCoordinates) : null,
-        phone, whatsapp || null, email || null, contactPerson || null, 
+        phone, phones || null, whatsapp || null, whatsapps || null, email || null, emails || null, contactPerson || null, 
         description || null, imageUrl || null,
         logoUrlFinal || null, 
         socialMedia ? JSON.stringify(socialMedia) : null,
@@ -698,24 +714,24 @@ app.post('/api/register', async (req, res) => {
         'pending' // status
       ]
 
-      // Verify values count - MUST BE 39 (39 columns in INSERT)
-      if (values.length !== 39) {
-        const errorMsg = `Values array must have 39 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
+      // Verify values count - MUST BE 42 (42 columns in INSERT)
+      if (values.length !== 42) {
+        const errorMsg = `Values array must have 42 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
         console.error(`[REGISTER ERROR] ${errorMsg}`)
         throw new Error(errorMsg)
       }
 
       // Debug: log values count
       console.log(`[REGISTER] Inserting facility: ${name}`)
-      console.log(`[REGISTER] Values count: ${values.length}, expected: 39`)
-      console.log(`[REGISTER] Last value (status): ${values[38]}`)
+      console.log(`[REGISTER] Values count: ${values.length}, expected: 42`)
+      console.log(`[REGISTER] Last value (status): ${values[41]}`)
 
       // Insert facility
       // Note: sport is used for both fields and equipment shops
       // For fields: specific sport, for equipment shops: 'general' or specific sport
       const [facilityResult] = await connection.query(
         `INSERT INTO facilities (
-          facility_type, name, city, county, location, location_not_specified, map_coordinates, phone, whatsapp, email, contact_person, description, image_url,
+          facility_type, name, city, county, location, location_not_specified, map_coordinates, phone, phones, whatsapp, whatsapps, email, emails, contact_person, description, image_url,
           logo_url, social_media, gallery,
           sport, price_per_hour, pricing_details, has_parking, has_shower, has_changing_room, 
           has_air_conditioning, has_lighting,
@@ -723,7 +739,7 @@ app.post('/api/register', async (req, res) => {
           services_offered, brands_serviced, average_repair_time, repair_categories,
           products_categories, brands_available, delivery_available,
           website, opening_hours, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         values
       )
 
