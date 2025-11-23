@@ -1005,6 +1005,49 @@ app.post('/api/register', async (req, res) => {
 
       console.log(`✅ Facility registered successfully: ID=${facilityId}, Name=${name}, Type=${facilityType}, Status=pending`)
 
+      // Send email with credentials
+      try {
+        const emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #10b981; margin-bottom: 20px;">Înregistrare reușită - ${name}</h2>
+            <p>Bună ziua,</p>
+            <p>Baza ta sportivă <strong>${name}</strong> a fost înregistrată cu succes pe platforma Sportisia.</p>
+            <p>Contul tău a fost creat cu următoarele credențiale:</p>
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+              <p style="margin: 10px 0;"><strong>Username:</strong> <code style="background: white; padding: 5px 10px; border-radius: 4px; font-family: monospace;">${username}</code></p>
+              <p style="margin: 10px 0;"><strong>Parolă:</strong> <code style="background: white; padding: 5px 10px; border-radius: 4px; font-family: monospace;">${password}</code></p>
+            </div>
+            <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 15px; margin: 20px 0;">
+              <p style="margin: 0; color: #92400e;"><strong>Important:</strong> Salvează aceste credențiale! Vei avea nevoie de ele pentru a accesa și edita detaliile bazei tale sportive.</p>
+            </div>
+            <p><strong>Următorii pași:</strong></p>
+            <ul>
+              <li>Cererea ta este în așteptarea aprobării de către administrator</li>
+              <li>După aprobare, baza ta sportivă va deveni publică pe platformă</li>
+              <li>Vei primi o notificare când cererea va fi aprobată</li>
+            </ul>
+            <p>Poți accesa contul tău la: <a href="${process.env.FRONTEND_URL || 'https://sportisia.ro'}/login">${process.env.FRONTEND_URL || 'https://sportisia.ro'}/login</a></p>
+            <p>Îți mulțumim pentru înregistrare!</p>
+            <p style="margin-top: 30px; color: #64748b; font-size: 14px;">Echipa Sportisia</p>
+          </div>
+        `
+        
+        const emailResult = await sendEmail(
+          email,
+          `Înregistrare reușită - ${name}`,
+          emailHtml
+        )
+        
+        if (emailResult.success) {
+          console.log(`✅ Email sent successfully to ${email}`)
+        } else {
+          console.warn(`⚠️ Failed to send email to ${email}:`, emailResult.error)
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending email:', emailError)
+        // Don't fail the registration if email fails
+      }
+
       res.json({
         success: true,
         message: 'Facilitatea a fost înregistrată cu succes',

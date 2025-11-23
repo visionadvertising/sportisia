@@ -3163,18 +3163,46 @@ function RegisterSportsBase() {
               textAlign: 'center',
               padding: isMobile ? '2rem 1rem' : '3rem'
             }}>
-              <h2 style={{
-                color: '#10b981',
-                fontSize: isMobile ? '1.5rem' : '2rem',
-                marginBottom: '1rem',
-                fontWeight: '600'
-              }}>✅ Înregistrare reușită!</h2>
+              <div style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                padding: isMobile ? '2rem 1.5rem' : '3rem',
+                borderRadius: '12px',
+                marginBottom: '2rem',
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+              }}>
+                <h2 style={{
+                  color: 'white',
+                  fontSize: isMobile ? '1.5rem' : '2rem',
+                  marginBottom: '1rem',
+                  fontWeight: '600',
+                  margin: 0
+                }}>Cererea a fost înregistrată cu succes!</h2>
+                <p style={{
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  marginBottom: '1rem',
+                  fontSize: '1rem',
+                  lineHeight: '1.6',
+                  margin: 0
+                }}>
+                  Baza ta sportivă a fost înregistrată și este în așteptarea aprobării de către administrator.
+                </p>
+                <p style={{
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '0.9375rem',
+                  lineHeight: '1.6',
+                  margin: 0
+                }}>
+                  După aprobare, baza ta sportivă va deveni publică pe platformă și vei primi o notificare pe email.
+                </p>
+              </div>
+              
               <p style={{
                 color: '#64748b',
                 marginBottom: '2rem',
                 fontSize: '0.9375rem',
                 lineHeight: '1.6'
-              }}>Baza ta sportivă a fost înregistrată. Contul tău a fost creat cu următoarele credențiale:</p>
+              }}>Contul tău a fost creat cu următoarele credențiale (acestea au fost trimise și pe email):</p>
               
               <div style={{
                 background: '#f8fafc',

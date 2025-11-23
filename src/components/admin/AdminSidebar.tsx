@@ -19,67 +19,67 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
     { 
       path: '/admin/pending-sports-bases', 
       label: 'Baze Sportive (Pending)', 
-      icon: '🏟️',
+      icon: '',
       category: 'sports-bases'
     },
     { 
       path: '/admin/approved-sports-bases', 
       label: 'Baze Sportive (Aprobate)', 
-      icon: '✅',
+      icon: '',
       category: 'sports-bases'
     },
     { 
       path: '/admin/pending-coaches', 
       label: 'Antrenori (Pending)', 
-      icon: '👨‍🏫',
+      icon: '',
       category: 'coaches'
     },
     { 
       path: '/admin/approved-coaches', 
       label: 'Antrenori (Aprobați)', 
-      icon: '✅',
+      icon: '',
       category: 'coaches'
     },
     { 
       path: '/admin/pending-repair-shops', 
       label: 'Magazine Reparații (Pending)', 
-      icon: '🔧',
+      icon: '',
       category: 'repair-shops'
     },
     { 
       path: '/admin/approved-repair-shops', 
       label: 'Magazine Reparații (Aprobate)', 
-      icon: '✅',
+      icon: '',
       category: 'repair-shops'
     },
     { 
       path: '/admin/pending-equipment-shops', 
       label: 'Magazine Articole (Pending)', 
-      icon: '🛍️',
+      icon: '',
       category: 'equipment-shops'
     },
     { 
       path: '/admin/approved-equipment-shops', 
       label: 'Magazine Articole (Aprobate)', 
-      icon: '✅',
+      icon: '',
       category: 'equipment-shops'
     },
-    { path: '/admin/suggestions', label: 'Sugestii', icon: '💡' },
+    { path: '/admin/suggestions', label: 'Sugestii', icon: '' },
     { 
       path: '/admin/seo-pages', 
       label: 'Pagini SEO', 
-      icon: '🔍',
+      icon: '',
       submenu: [
-        { path: '/admin/seo-pages?category=field', label: 'SEO - Baze Sportive', icon: '🏟️' },
-        { path: '/admin/seo-pages?category=coach', label: 'SEO - Antrenori', icon: '👨‍🏫' },
-        { path: '/admin/seo-pages?category=repair_shop', label: 'SEO - Magazine Reparații', icon: '🔧' },
-        { path: '/admin/seo-pages?category=equipment_shop', label: 'SEO - Magazine Articole', icon: '🛍️' },
-        { path: '/admin/seo-pages', label: 'SEO - Toate', icon: '📄' }
+        { path: '/admin/seo-pages?category=field', label: 'SEO - Baze Sportive', icon: '' },
+        { path: '/admin/seo-pages?category=coach', label: 'SEO - Antrenori', icon: '' },
+        { path: '/admin/seo-pages?category=repair_shop', label: 'SEO - Magazine Reparații', icon: '' },
+        { path: '/admin/seo-pages?category=equipment_shop', label: 'SEO - Magazine Articole', icon: '' },
+        { path: '/admin/seo-pages', label: 'SEO - Toate', icon: '' }
       ]
     },
-    { path: '/admin/users', label: 'Utilizatori', icon: '👥' },
-    { path: '/admin/settings', label: 'Setări Site', icon: '⚙️' },
-    { path: '/admin/smtp-config', label: 'Configurare SMTP', icon: '📧' }
+    { path: '/admin/users', label: 'Utilizatori', icon: '' },
+    { path: '/admin/settings', label: 'Setări Site', icon: '' },
+    { path: '/admin/smtp-config', label: 'Configurare SMTP', icon: '' }
   ]
 
   const isActive = (path: string) => {
@@ -155,7 +155,7 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
                 }
               }}
             >
-              <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
+              {item.icon && <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>}
               <span>{item.label}</span>
             </Link>
             {item.submenu && (location.pathname === '/admin/seo-pages' || location.pathname.startsWith('/admin/seo-pages/')) && (
@@ -188,7 +188,7 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
                       }
                     }}
                   >
-                    <span style={{ fontSize: '1rem' }}>{subItem.icon}</span>
+                    {subItem.icon && <span style={{ fontSize: '1rem' }}>{subItem.icon}</span>}
                     <span>{subItem.label}</span>
                   </Link>
                 ))}
