@@ -300,8 +300,10 @@ function RegisterSportsBase() {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        if (!phone || !email || !city || (!location && !locationNotSpecified)) {
-          setError('Te rugăm să completezi toate câmpurile obligatorii')
+        const validPhones = phones.filter(p => p.trim() !== '')
+        const validEmails = emails.filter(e => e.trim() !== '')
+        if (validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified)) {
+          setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon și un email)')
           return false
         }
         break
