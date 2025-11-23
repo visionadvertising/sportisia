@@ -14,9 +14,11 @@ function AdminLayout({ children }: AdminLayoutProps) {
     // Check if admin is logged in
     const storedAdmin = localStorage.getItem('admin')
     if (!storedAdmin) {
-      navigate('/admin/login')
+      console.log('AdminLayout: No admin token, redirecting to login')
+      navigate('/admin/login', { replace: true })
       return
     }
+    console.log('AdminLayout: Admin token found, rendering content')
   }, [navigate])
 
   const handleLogout = () => {
@@ -35,16 +37,29 @@ function AdminLayout({ children }: AdminLayoutProps) {
     <div style={{
       minHeight: '100vh',
       background: '#f9fafb',
-      display: 'flex'
+      display: 'flex',
+      width: '100%'
     }}>
       <AdminSidebar onLogout={handleLogout} />
-      <div style={{
+      <main style={{
         marginLeft: '250px',
         flex: 1,
-        minHeight: '100vh'
+        minHeight: '100vh',
+        width: 'calc(100% - 250px)',
+        overflow: 'auto',
+        position: 'relative',
+        zIndex: 1
       }}>
-        {children}
-      </div>
+        {children ? (
+          <div style={{ width: '100%', minHeight: '100%' }}>
+            {children}
+          </div>
+        ) : (
+          <div style={{ padding: '2rem' }}>
+            <p>Loading...</p>
+          </div>
+        )}
+      </main>
     </div>
   )
 }
