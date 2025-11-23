@@ -27,6 +27,7 @@ import SEOPageEdit from './pages/admin/SEOPageEdit'
 import Suggestions from './pages/admin/Suggestions'
 import Users from './pages/admin/Users'
 import SiteSettings from './pages/admin/SiteSettings'
+import SMTPConfig from './pages/admin/SMTPConfig'
 import AdminLayout from './pages/admin/AdminLayout'
 import FacilitiesList from './pages/FacilitiesList'
 import AllFacilities from './pages/AllFacilities'
@@ -335,6 +336,7 @@ function AppContent() {
           <Route path="seo-pages/:id" element={<SEOPageEdit />} />
           <Route path="users" element={<Users />} />
           <Route path="settings" element={<SiteSettings />} />
+          <Route path="smtp-config" element={<SMTPConfig />} />
         </Route>
       </Routes>
     </div>

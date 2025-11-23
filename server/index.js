@@ -6,6 +6,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { existsSync, readFileSync } from 'fs'
 import crypto from 'crypto'
+import nodemailer from 'nodemailer'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -400,6 +401,72 @@ async function addMissingColumns() {
   } catch (error) {
     console.error('❌ Error adding missing columns:', error)
     // Don't throw, just log the error
+  }
+}
+
+// Email configuration and sending functions
+async function getSMTPConfig() {
+  try {
+    if (!pool) return null
+    
+    const [rows] = await pool.query(
+      'SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE "smtp_%"'
+    )
+    
+    const config: any = {}
+    rows.forEach((row: any) => {
+      const key = row.setting_key.replace('smtp_', '')
+      config[key] = row.setting_value
+    })
+    
+    // Return null if SMTP is not configured
+    if (!config.host || !config.port || !config.user || !config.password) {
+      return null
+    }
+    
+    return {
+      host: config.host,
+      port: parseInt(config.port) || 587,
+      secure: config.secure === 'true' || config.port === '465',
+      auth: {
+        user: config.user,
+        pass: config.password
+      }
+    }
+  } catch (error) {
+    console.error('Error getting SMTP config:', error)
+    return null
+  }
+}
+
+async function sendEmail(to: string, subject: string, html: string) {
+  try {
+    const smtpConfig = await getSMTPConfig()
+    if (!smtpConfig) {
+      console.log('⚠️ SMTP not configured, skipping email send')
+      return { success: false, error: 'SMTP not configured' }
+    }
+    
+    const transporter = nodemailer.createTransport(smtpConfig)
+    
+    const [fromRow] = await pool.query(
+      'SELECT setting_value FROM site_settings WHERE setting_key = ?',
+      ['smtp_from']
+    )
+    const fromEmail = fromRow.length > 0 ? fromRow[0].setting_value : smtpConfig.auth.user
+    
+    const info = await transporter.sendMail({
+      from: `"Sportisia" <${fromEmail}>`,
+      to,
+      subject,
+      html
+    })
+    
+    console.log('✅ Email sent:', info.messageId)
+    return { success: true, messageId: info.messageId }
+  } catch (error: any) {
+    console.error('❌ Error sending email:', error)
+    return { success: false, error: error.message }
   }
 }
 
@@ -1426,6 +1493,139 @@ app.put('/api/admin/site-settings/:key', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating site setting:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// GET SMTP configuration
+app.get('/api/admin/smtp-config', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Neautorizat' })
+    }
+
+    const [rows] = await pool.query(
+      'SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE "smtp_%"'
+    )
+    
+    const config: any = {}
+    rows.forEach((row: any) => {
+      const key = row.setting_key.replace('smtp_', '')
+      config[key] = row.setting_value || ''
+    })
+    
+    res.json({ success: true, data: config })
+  } catch (error) {
+    console.error('Error fetching SMTP config:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// PUT update SMTP configuration
+app.put('/api/admin/smtp-config', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Neautorizat' })
+    }
+
+    const { host, port, secure, user, password, from } = req.body
+
+    if (!host || !port || !user || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Host, port, user și password sunt obligatorii'
+      })
+    }
+
+    // Save SMTP settings
+    const settings = [
+      { key: 'smtp_host', value: host },
+      { key: 'smtp_port', value: port.toString() },
+      { key: 'smtp_secure', value: secure ? 'true' : 'false' },
+      { key: 'smtp_user', value: user },
+      { key: 'smtp_password', value: password },
+      { key: 'smtp_from', value: from || user }
+    ]
+
+    for (const setting of settings) {
+      await pool.query(
+        `INSERT INTO site_settings (setting_key, setting_value) 
+         VALUES (?, ?) 
+         ON DUPLICATE KEY UPDATE setting_value = ?, updated_at = CURRENT_TIMESTAMP`,
+        [setting.key, setting.value, setting.value]
+      )
+    }
+
+    res.json({
+      success: true,
+      message: 'Configurația SMTP a fost salvată cu succes'
+    })
+  } catch (error) {
+    console.error('Error updating SMTP config:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// POST test SMTP configuration
+app.post('/api/admin/smtp-test', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Neautorizat' })
+    }
+
+    const { testEmail } = req.body
+    if (!testEmail) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email-ul de test este obligatoriu'
+      })
+    }
+
+    const smtpConfig = await getSMTPConfig()
+    if (!smtpConfig) {
+      return res.status(400).json({
+        success: false,
+        error: 'SMTP nu este configurat'
+      })
+    }
+
+    const result = await sendEmail(
+      testEmail,
+      'Test Email - Sportisia',
+      '<h2>Test Email</h2><p>Acesta este un email de test pentru configurația SMTP.</p><p>Dacă primești acest email, configurația SMTP funcționează corect!</p>'
+    )
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Email de test trimis cu succes! Verifică inbox-ul.'
+      })
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error || 'Eroare la trimiterea email-ului de test'
+      })
+    }
+  } catch (error) {
+    console.error('Error testing SMTP:', error)
     res.status(500).json({ success: false, error: error.message })
   }
 })

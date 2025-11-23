@@ -78,7 +78,8 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
       ]
     },
     { path: '/admin/users', label: 'Utilizatori', icon: '👥' },
-    { path: '/admin/settings', label: 'Setări Site', icon: '⚙️' }
+    { path: '/admin/settings', label: 'Setări Site', icon: '⚙️' },
+    { path: '/admin/smtp-config', label: 'Configurare SMTP', icon: '📧' }
   ]
 
   const isActive = (path: string) => {
