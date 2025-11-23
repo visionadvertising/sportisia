@@ -444,7 +444,7 @@ function Suggestions() {
           )}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   )
 }
 
