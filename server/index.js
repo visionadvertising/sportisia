@@ -694,6 +694,8 @@ app.post('/api/register', async (req, res) => {
       await connection.commit()
       connection.release()
 
+      console.log(`✅ Facility registered successfully: ID=${facilityId}, Name=${name}, Type=${facilityType}, Status=pending`)
+
       res.json({
         success: true,
         message: 'Facilitatea a fost înregistrată cu succes',
@@ -1156,17 +1158,35 @@ app.get('/api/admin/pending-facilities', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const [rows] = await pool.query(
-      `SELECT f.*, u.username, u.email as user_email
+    // Check admin authentication
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, error: 'Neautorizat' })
+    }
+
+    const type = req.query.type // Optional filter by facility type
+
+    let query = `SELECT f.*, u.username, u.email as user_email
        FROM facilities f
        LEFT JOIN users u ON f.id = u.facility_id AND f.facility_type = u.facility_type
-       WHERE f.status = 'pending'
-       ORDER BY f.created_at DESC`
-    )
+       WHERE f.status = 'pending'`
+    
+    const params = []
+    
+    if (type) {
+      query += ' AND f.facility_type = ?'
+      params.push(type)
+    }
+    
+    query += ' ORDER BY f.created_at DESC'
+
+    console.log(`[ADMIN] Fetching pending facilities${type ? ` (type: ${type})` : ''}`)
+    const [rows] = await pool.query(query, params)
+    console.log(`[ADMIN] Found ${rows.length} pending facilities`)
 
     res.json({ success: true, data: rows })
   } catch (error) {
-    console.error('Error fetching pending facilities:', error)
+    console.error('❌ Error fetching pending facilities:', error)
     res.status(500).json({ success: false, error: error.message })
   }
 })
