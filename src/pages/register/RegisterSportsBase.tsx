@@ -87,6 +87,12 @@ function RegisterSportsBase() {
   // Step 4: Gallery
   const [galleryFiles, setGalleryFiles] = useState<File[]>([])
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
+  
+  // State for bulk selection mode
+  const [bulkSelectionMode, setBulkSelectionMode] = useState<Record<number, boolean>>({})
+  const [selectedSlotsForBulk, setSelectedSlotsForBulk] = useState<Record<number, Set<string>>>({}) // fieldIndex -> Set of "day:startTime"
+  const [showBulkModal, setShowBulkModal] = useState<Record<number, boolean>>({})
+  const [bulkSettings, setBulkSettings] = useState<Record<number, { status: 'open' | 'closed' | 'not_specified', price: number | null }>>({})
 
   // Step 5: Specific Details
   const [openingHours, setOpeningHours] = useState<Record<string, {
@@ -323,39 +329,105 @@ function RegisterSportsBase() {
   }
 
   // Toggle slot selection in grid
-  const toggleSlotSelection = (fieldIndex: number, day: string, startTime: string) => {
+  const toggleSlotSelection = (fieldIndex: number, day: string, startTime: string, isBulkMode: boolean = false) => {
+    if (isBulkMode && bulkSelectionMode[fieldIndex]) {
+      // Bulk selection mode: add/remove from bulk selection set
+      const slotKey = `${day}:${startTime}`
+      const updated = { ...selectedSlotsForBulk }
+      if (!updated[fieldIndex]) {
+        updated[fieldIndex] = new Set()
+      }
+      const slotSet = new Set(updated[fieldIndex])
+      
+      if (slotSet.has(slotKey)) {
+        slotSet.delete(slotKey)
+      } else {
+        slotSet.add(slotKey)
+      }
+      
+      updated[fieldIndex] = slotSet
+      setSelectedSlotsForBulk(updated)
+    } else {
+      // Normal mode: toggle individual slot
+      const updated = [...sportsFields]
+      const field = updated[fieldIndex]
+      const endTime = getEndTime(startTime, field.slotSize)
+      
+      // Check if slot already exists
+      const existingIndex = field.timeSlots.findIndex(
+        slot => slot.day === day && slot.startTime === startTime
+      )
+
+      if (existingIndex >= 0) {
+        // Remove slot if it exists
+        updated[fieldIndex] = {
+          ...field,
+          timeSlots: field.timeSlots.filter((_, i) => i !== existingIndex)
+        }
+      } else {
+        // Add new slot with default status
+        updated[fieldIndex] = {
+          ...field,
+          timeSlots: [
+            ...field.timeSlots,
+            {
+              day,
+              startTime,
+              endTime,
+              status: 'not_specified',
+              price: null
+            }
+          ]
+        }
+      }
+      setSportsFields(updated)
+    }
+  }
+
+  // Apply bulk settings to all selected slots
+  const applyBulkSettings = (fieldIndex: number, status: 'open' | 'closed' | 'not_specified', price: number | null) => {
     const updated = [...sportsFields]
     const field = updated[fieldIndex]
-    const endTime = getEndTime(startTime, field.slotSize)
+    const slotSet = selectedSlotsForBulk[fieldIndex] || new Set()
     
-    // Check if slot already exists
-    const existingIndex = field.timeSlots.findIndex(
-      slot => slot.day === day && slot.startTime === startTime
-    )
-
-    if (existingIndex >= 0) {
-      // Remove slot if it exists
-      updated[fieldIndex] = {
-        ...field,
-        timeSlots: field.timeSlots.filter((_, i) => i !== existingIndex)
+    // Remove existing slots that match selected ones
+    const filteredSlots = field.timeSlots.filter(slot => {
+      const slotKey = `${slot.day}:${slot.startTime}`
+      return !slotSet.has(slotKey)
+    })
+    
+    // Add new slots with bulk settings
+    const newSlots: TimeSlot[] = Array.from(slotSet).map(slotKey => {
+      const [day, startTime] = slotKey.split(':')
+      const endTime = getEndTime(startTime, field.slotSize)
+      return {
+        day,
+        startTime,
+        endTime,
+        status,
+        price: status === 'open' ? price : null
       }
-    } else {
-      // Add new slot with default status
-      updated[fieldIndex] = {
-        ...field,
-        timeSlots: [
-          ...field.timeSlots,
-          {
-            day,
-            startTime,
-            endTime,
-            status: 'not_specified',
-            price: null
-          }
-        ]
-      }
+    })
+    
+    updated[fieldIndex] = {
+      ...field,
+      timeSlots: [...filteredSlots, ...newSlots]
     }
+    
     setSportsFields(updated)
+    
+    // Clear bulk selection
+    const updatedBulk = { ...selectedSlotsForBulk }
+    delete updatedBulk[fieldIndex]
+    setSelectedSlotsForBulk(updatedBulk)
+    setBulkSelectionMode({ ...bulkSelectionMode, [fieldIndex]: false })
+  }
+
+  // Check if slot is in bulk selection
+  const isSlotInBulkSelection = (fieldIndex: number, day: string, startTime: string): boolean => {
+    if (!bulkSelectionMode[fieldIndex]) return false
+    const slotKey = `${day}:${startTime}`
+    return selectedSlotsForBulk[fieldIndex]?.has(slotKey) || false
   }
 
   // Update slot status and price
@@ -2614,26 +2686,93 @@ function RegisterSportsBase() {
 
                     {/* Time Slots Grid */}
                     <div style={{ marginBottom: isMobile ? '1.25rem' : '1.5rem' }}>
-                      <label style={{
-                        display: 'block',
-                        marginBottom: '0.75rem',
-                        color: '#0f172a',
-                        fontWeight: '600',
-                        fontSize: '0.875rem',
-                        letterSpacing: '0.01em'
-                      }}>Selectează sloturile și configurează prețurile *</label>
-                      
-                      {/* Days Grid */}
                       <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(7, 1fr)',
-                        gap: '0.5rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '0.75rem',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem'
+                      }}>
+                        <label style={{
+                          color: '#0f172a',
+                          fontWeight: '600',
+                          fontSize: '0.875rem',
+                          letterSpacing: '0.01em'
+                        }}>Selectează sloturile și configurează prețurile *</label>
+                        
+                        {/* Bulk Selection Toggle */}
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBulkSelectionMode({ ...bulkSelectionMode, [index]: !bulkSelectionMode[index] })
+                              if (bulkSelectionMode[index]) {
+                                // Clear bulk selection when disabling
+                                const updated = { ...selectedSlotsForBulk }
+                                delete updated[index]
+                                setSelectedSlotsForBulk(updated)
+                              }
+                            }}
+                            style={{
+                              padding: isMobile ? '0.625rem 1rem' : '0.5rem 1rem',
+                              background: bulkSelectionMode[index] ? '#10b981' : '#ffffff',
+                              color: bulkSelectionMode[index] ? 'white' : '#0f172a',
+                              border: `1.5px solid ${bulkSelectionMode[index] ? '#10b981' : '#e2e8f0'}`,
+                              borderRadius: '6px',
+                              fontSize: '0.8125rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              touchAction: 'manipulation',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {bulkSelectionMode[index] ? '✓ Selecție multiplă' : 'Selecție multiplă'}
+                          </button>
+                          
+                          {/* Bulk Settings Button */}
+                          {bulkSelectionMode[index] && selectedSlotsForBulk[index] && selectedSlotsForBulk[index].size > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowBulkModal({ ...showBulkModal, [index]: true })
+                                setBulkSettings({ ...bulkSettings, [index]: { status: 'not_specified', price: null } })
+                              }}
+                              style={{
+                                padding: isMobile ? '0.625rem 1rem' : '0.5rem 1rem',
+                                background: '#3b82f6',
+                                color: 'white',
+                                border: '1.5px solid #3b82f6',
+                                borderRadius: '6px',
+                                fontSize: '0.8125rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                touchAction: 'manipulation',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              Setează ({selectedSlotsForBulk[index]?.size || 0})
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Days Grid - Horizontal scroll on mobile */}
+                      <div style={{
+                        display: 'flex',
+                        gap: '0.75rem',
                         marginBottom: '1rem',
                         padding: '1rem',
-                        background: '#f9fafb',
-                        borderRadius: '8px',
+                        background: '#ffffff',
+                        borderRadius: '12px',
                         border: '1.5px solid #e2e8f0',
-                        overflowX: isMobile ? 'auto' : 'visible'
+                        overflowX: 'auto',
+                        overflowY: 'hidden',
+                        WebkitOverflowScrolling: 'touch',
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: '#cbd5e1 #f1f5f9'
                       }}>
                         {[
                           { key: 'monday', label: 'Luni' },
@@ -2645,22 +2784,28 @@ function RegisterSportsBase() {
                           { key: 'sunday', label: 'Duminică' }
                         ].map((day) => {
                           const timeSlots = generateTimeSlots(field.slotSize || 60)
-                          const selectedSlots = field.timeSlots.filter(slot => slot.day === day.key)
+                          const isBulkMode = bulkSelectionMode[index]
+                          const bulkSelected = isSlotInBulkSelection(index, day.key, '')
                           
                           return (
                             <div key={day.key} style={{
-                              minWidth: isMobile ? '200px' : 'auto'
+                              minWidth: isMobile ? '140px' : '120px',
+                              flexShrink: 0
                             }}>
+                              {/* Day Header */}
                               <div style={{
                                 fontWeight: '600',
-                                fontSize: '0.875rem',
+                                fontSize: '0.8125rem',
                                 color: '#0f172a',
                                 marginBottom: '0.75rem',
                                 textAlign: 'center',
-                                padding: '0.5rem',
-                                background: '#ffffff',
-                                borderRadius: '6px',
-                                border: '1.5px solid #e2e8f0'
+                                padding: '0.625rem 0.5rem',
+                                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                                borderRadius: '8px',
+                                border: '1px solid #e2e8f0',
+                                position: 'sticky',
+                                top: 0,
+                                zIndex: 10
                               }}>
                                 {day.label}
                               </div>
@@ -2669,61 +2814,103 @@ function RegisterSportsBase() {
                               <div style={{
                                 display: 'flex',
                                 flexDirection: 'column',
-                                gap: '0.25rem',
-                                maxHeight: isMobile ? '300px' : '400px',
+                                gap: '0.375rem',
+                                maxHeight: isMobile ? '350px' : '450px',
                                 overflowY: 'auto',
-                                padding: '0.25rem'
+                                overflowX: 'hidden',
+                                padding: '0.25rem',
+                                paddingRight: '0.5rem'
                               }}>
                                 {timeSlots.map((startTime) => {
                                   const isSelected = isSlotSelected(index, day.key, startTime)
+                                  const isBulkSelected = isSlotInBulkSelection(index, day.key, startTime) || false
                                   const slotData = getSlotData(index, day.key, startTime)
                                   const endTime = getEndTime(startTime, field.slotSize || 60)
+                                  
+                                  // Determine visual state
+                                  let bgColor = '#ffffff'
+                                  let borderColor = '#e2e8f0'
+                                  let textColor = '#64748b'
+                                  
+                                  if (isBulkMode && isBulkSelected) {
+                                    bgColor = '#dbeafe'
+                                    borderColor = '#3b82f6'
+                                    textColor = '#1e40af'
+                                  } else if (isSelected && slotData) {
+                                    if (slotData.status === 'open') {
+                                      bgColor = '#f0fdf4'
+                                      borderColor = '#10b981'
+                                      textColor = '#059669'
+                                    } else if (slotData.status === 'closed') {
+                                      bgColor = '#fef2f2'
+                                      borderColor = '#ef4444'
+                                      textColor = '#dc2626'
+                                    } else {
+                                      bgColor = '#fefce8'
+                                      borderColor = '#eab308'
+                                      textColor = '#ca8a04'
+                                    }
+                                  }
                                   
                                   return (
                                     <div key={startTime}>
                                       <button
                                         type="button"
-                                        onClick={() => toggleSlotSelection(index, day.key, startTime)}
+                                        onClick={() => toggleSlotSelection(index, day.key, startTime, isBulkMode)}
                                         style={{
                                           width: '100%',
-                                          padding: '0.5rem',
-                                          border: isSelected ? '2px solid #10b981' : '1.5px solid #e2e8f0',
-                                          borderRadius: '6px',
-                                          background: isSelected ? '#f0fdf4' : '#ffffff',
-                                          color: '#0f172a',
-                                          fontSize: '0.75rem',
-                                          fontWeight: '500',
+                                          padding: isMobile ? '0.625rem 0.5rem' : '0.5rem',
+                                          border: `2px solid ${borderColor}`,
+                                          borderRadius: '8px',
+                                          background: bgColor,
+                                          color: textColor,
+                                          fontSize: isMobile ? '0.8125rem' : '0.75rem',
+                                          fontWeight: '600',
                                           cursor: 'pointer',
-                                          transition: 'all 0.2s ease',
-                                          textAlign: 'center'
+                                          transition: 'all 0.15s ease',
+                                          textAlign: 'center',
+                                          position: 'relative',
+                                          boxShadow: isSelected || isBulkSelected ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
                                         }}
                                         onMouseEnter={(e) => {
                                           if (!isMobile) {
-                                            e.currentTarget.style.borderColor = isSelected ? '#10b981' : '#cbd5e1'
-                                            e.currentTarget.style.background = isSelected ? '#f0fdf4' : '#f9fafb'
+                                            e.currentTarget.style.transform = 'scale(1.02)'
+                                            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)'
                                           }
                                         }}
                                         onMouseLeave={(e) => {
                                           if (!isMobile) {
-                                            e.currentTarget.style.borderColor = isSelected ? '#10b981' : '#e2e8f0'
-                                            e.currentTarget.style.background = isSelected ? '#f0fdf4' : '#ffffff'
+                                            e.currentTarget.style.transform = 'scale(1)'
+                                            e.currentTarget.style.boxShadow = isSelected || isBulkSelected ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none'
                                           }
                                         }}
                                       >
                                         {startTime}
+                                        {isSelected && slotData && (
+                                          <span style={{
+                                            position: 'absolute',
+                                            top: '2px',
+                                            right: '4px',
+                                            fontSize: '0.625rem',
+                                            opacity: 0.7
+                                          }}>
+                                            {slotData.status === 'open' && slotData.price ? `💰` : slotData.status === 'closed' ? `🚫` : `⏸️`}
+                                          </span>
+                                        )}
                                       </button>
                                       
-                                      {/* Configuration panel for selected slot */}
-                                      {isSelected && slotData && (
+                                      {/* Configuration panel for selected slot (only in normal mode) */}
+                                      {isSelected && slotData && !isBulkMode && (
                                         <div style={{
                                           marginTop: '0.5rem',
                                           padding: '0.75rem',
                                           background: '#ffffff',
-                                          border: '1.5px solid #10b981',
-                                          borderRadius: '6px',
-                                          fontSize: '0.75rem'
+                                          border: `1.5px solid ${borderColor}`,
+                                          borderRadius: '8px',
+                                          fontSize: '0.75rem',
+                                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
                                         }}>
-                                          <div style={{ marginBottom: '0.5rem', fontWeight: '600', color: '#0f172a' }}>
+                                          <div style={{ marginBottom: '0.5rem', fontWeight: '600', color: '#0f172a', fontSize: '0.8125rem' }}>
                                             {startTime} - {endTime}
                                           </div>
                                           
@@ -2737,10 +2924,11 @@ function RegisterSportsBase() {
                                               width: '100%',
                                               padding: '0.5rem',
                                               border: '1.5px solid #e2e8f0',
-                                              borderRadius: '4px',
+                                              borderRadius: '6px',
                                               fontSize: '0.75rem',
                                               marginBottom: '0.5rem',
-                                              cursor: 'pointer'
+                                              cursor: 'pointer',
+                                              background: '#ffffff'
                                             }}
                                           >
                                             <option value="not_specified">Nespecificat</option>
@@ -2763,8 +2951,9 @@ function RegisterSportsBase() {
                                                 width: '100%',
                                                 padding: '0.5rem',
                                                 border: '1.5px solid #e2e8f0',
-                                                borderRadius: '4px',
-                                                fontSize: '0.75rem'
+                                                borderRadius: '6px',
+                                                fontSize: '0.75rem',
+                                                background: '#ffffff'
                                               }}
                                             />
                                           )}
