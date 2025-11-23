@@ -325,11 +325,27 @@ function RegisterSportsBase() {
         hasLighting
       }
 
+      console.log('Submitting form data:', { ...formData, logoUrl: logoBase64 ? '[BASE64]' : null, gallery: galleryBase64.length > 0 ? `[${galleryBase64.length} images]` : null })
+      
       const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
+
+      console.log('Response status:', response.status, response.statusText)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Registration failed - HTTP error:', response.status, errorText)
+        try {
+          const errorData = JSON.parse(errorText)
+          setError(errorData.error || `Eroare la înregistrare (${response.status})`)
+        } catch {
+          setError(`Eroare la înregistrare: ${errorText || response.statusText}`)
+        }
+        return
+      }
 
       const data = await response.json()
       console.log('Registration response:', data)
@@ -342,6 +358,8 @@ function RegisterSportsBase() {
         if (username && password) {
           setCredentials({ username, password })
           setCurrentStep(6)
+          // Scroll to top to show success message
+          window.scrollTo({ top: 0, behavior: 'smooth' })
         } else {
           console.error('Missing credentials in response:', data)
           setError('Înregistrarea a reușit, dar credențialele nu au fost returnate. Te rugăm să contactezi administratorul.')
