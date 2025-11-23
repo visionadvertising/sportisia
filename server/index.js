@@ -647,6 +647,7 @@ app.post('/api/register', async (req, res) => {
       )
 
       const facilityId = facilityResult.insertId
+      console.log(`[REGISTER] Facility inserted with ID: ${facilityId}`)
 
       // Check if city is new (not in ROMANIAN_CITIES list) and add to pending_cities if needed
       if (city) {
@@ -709,11 +710,13 @@ app.post('/api/register', async (req, res) => {
     } catch (error) {
       await connection.rollback()
       connection.release()
+      console.error('❌ Transaction rolled back:', error)
       throw error
     }
   } catch (error) {
     console.error('❌ Error registering facility:', error)
     console.error('❌ Error message:', error.message)
+    console.error('❌ Error stack:', error.stack)
     console.error('❌ Error stack:', error.stack)
     console.error('❌ Request body:', JSON.stringify(req.body, null, 2))
     res.status(500).json({ 
