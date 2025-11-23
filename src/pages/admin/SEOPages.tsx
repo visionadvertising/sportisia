@@ -64,7 +64,10 @@ function SEOPages() {
   useEffect(() => {
     if (availableCities.length > 0) {
       generateAllCombinations()
-      fetchSEOPages()
+      // Only fetch SEO pages if we don't have them yet
+      if (Object.keys(seoPagesMap).length === 0) {
+        fetchSEOPages()
+      }
     }
   }, [availableCities, selectedCategory])
 
@@ -193,12 +196,18 @@ function SEOPages() {
 
   const fetchSEOPages = async () => {
     try {
-      setLoading(true)
+      // Don't set loading to true if we already have pages displayed
+      const wasLoading = allPages.length === 0
+      if (wasLoading) {
+        setLoading(true)
+      }
       setError('')
       const adminToken = localStorage.getItem('admin')
       if (!adminToken) {
         setError('Nu sunteți autentificat')
-        setLoading(false)
+        if (wasLoading) {
+          setLoading(false)
+        }
         return
       }
 
@@ -225,7 +234,10 @@ function SEOPages() {
       console.error('Error fetching SEO pages:', err)
       setError(err.message || 'Eroare la încărcarea paginilor SEO')
     } finally {
-      setLoading(false)
+      // Only set loading to false if we set it to true
+      if (allPages.length === 0) {
+        setLoading(false)
+      }
     }
   }
 
