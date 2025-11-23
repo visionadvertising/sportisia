@@ -3157,198 +3157,8 @@ function RegisterSportsBase() {
             </div>
           )}
 
-          {/* Success Step - Outside form since it doesn't need form submission */}
-          {currentStep === 5 && credentials && (
-            <div style={{
-              textAlign: 'center',
-              padding: isMobile ? '2rem 1rem' : '3rem'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: 'white',
-                padding: isMobile ? '2rem 1.5rem' : '3rem',
-                borderRadius: '12px',
-                marginBottom: '2rem',
-                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-              }}>
-                <h2 style={{
-                  color: 'white',
-                  fontSize: isMobile ? '1.5rem' : '2rem',
-                  marginBottom: '1.5rem',
-                  fontWeight: '600',
-                  margin: 0
-                }}>Cererea a fost înregistrată cu succes!</h2>
-                
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  borderRadius: '8px',
-                  padding: '1.5rem',
-                  marginBottom: '1.5rem',
-                  textAlign: 'left'
-                }}>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.95)',
-                    marginBottom: '1rem',
-                    fontSize: '1rem',
-                    lineHeight: '1.6',
-                    margin: '0 0 1rem 0',
-                    fontWeight: '500'
-                  }}>
-                    Ce urmează?
-                  </p>
-                  <ul style={{
-                    color: 'rgba(255, 255, 255, 0.95)',
-                    fontSize: '0.9375rem',
-                    lineHeight: '1.8',
-                    margin: 0,
-                    paddingLeft: '1.5rem'
-                  }}>
-                    <li style={{ marginBottom: '0.75rem' }}>
-                      <strong>Vei primi un email</strong> cu datele de conectare (username și parolă) la adresa de email furnizată
-                    </li>
-                    <li style={{ marginBottom: '0.75rem' }}>
-                      <strong>Cererea ta este în așteptarea aprobării</strong> de către administrator
-                    </li>
-                    <li style={{ marginBottom: '0.75rem' }}>
-                      <strong>După aprobare</strong>, baza ta sportivă va deveni publică pe platformă și vei primi o notificare pe email
-                    </li>
-                    <li>
-                      Poți accesa contul tău folosind datele de conectare primite pe email
-                    </li>
-                  </ul>
-                </div>
-                
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  padding: '1rem',
-                  border: '1px solid rgba(255, 255, 255, 0.3)'
-                }}>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.95)',
-                    fontSize: '0.875rem',
-                    lineHeight: '1.6',
-                    margin: 0
-                  }}>
-                    <strong>Important:</strong> Verifică inbox-ul (și spam-ul) pentru email-ul cu datele de conectare. Dacă nu primești email-ul în câteva minute, verifică că adresa de email este corectă.
-                  </p>
-                </div>
-              </div>
-              
-              <div style={{
-                background: '#f8fafc',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                marginBottom: '2rem',
-                border: '1px solid #e2e8f0',
-                textAlign: 'left'
-              }}>
-                <p style={{
-                  color: '#64748b',
-                  marginBottom: '1rem',
-                  fontSize: '0.9375rem',
-                  lineHeight: '1.6',
-                  fontWeight: '500'
-                }}>
-                  Datele de conectare (au fost trimise și pe email):
-                </p>
-                
-                <div style={{ marginBottom: '1rem' }}>
-                  <strong style={{ color: '#0f172a', fontSize: '0.875rem' }}>Username:</strong>
-                  <div style={{
-                    background: 'white',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    marginTop: '0.5rem',
-                    fontFamily: 'monospace',
-                    fontSize: '1rem',
-                    color: '#0f172a',
-                    border: '1px solid #e2e8f0'
-                  }}>{credentials.username}</div>
-                </div>
-                <div>
-                  <strong style={{ color: '#0f172a', fontSize: '0.875rem' }}>Parolă:</strong>
-                  <div style={{
-                    background: 'white',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    marginTop: '0.5rem',
-                    fontFamily: 'monospace',
-                    fontSize: '1rem',
-                    color: '#0f172a',
-                    border: '1px solid #e2e8f0'
-                  }}>{credentials.password}</div>
-                </div>
-              </div>
-
-              <div style={{
-                background: '#eff6ff',
-                border: '1px solid #3b82f6',
-                borderRadius: '8px',
-                padding: '1rem',
-                marginBottom: '2rem',
-                textAlign: 'left'
-              }}>
-                <p style={{
-                  margin: 0,
-                  color: '#1e40af',
-                  fontSize: '0.875rem',
-                  lineHeight: '1.6'
-                }}>
-                  <strong>Notă:</strong> Aceste credențiale au fost trimise și pe email. Salvează-le într-un loc sigur - vei avea nevoie de ele pentru a accesa și edita detaliile bazei tale sportive după aprobare.
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center' }}>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`Username: ${credentials.username}\nParolă: ${credentials.password}`)
-                    alert('Credențiale copiate în clipboard!')
-                  }}
-                  style={{
-                    padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
-                    background: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: isMobile ? '1rem' : '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
-                    width: isMobile ? '100%' : 'auto',
-                    touchAction: 'manipulation',
-                    minHeight: isMobile ? '48px' : 'auto'
-                  }}
-                >
-                  Copiază credențiale
-                </button>
-                <button
-                  onClick={() => navigate('/login')}
-                  style={{
-                    padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
-                    background: '#0f172a',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: isMobile ? '1rem' : '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)',
-                    width: isMobile ? '100%' : 'auto',
-                    touchAction: 'manipulation',
-                    minHeight: isMobile ? '48px' : 'auto'
-                  }}
-                >
-                  Mergi la Login
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Navigation Buttons - Same as RegisterRepairShop */}
-          {currentStep < 6 && (
+          {currentStep < 5 && (
             <div style={{ 
               display: 'flex', 
               flexDirection: isMobile ? 'column-reverse' : 'row',
@@ -3427,6 +3237,196 @@ function RegisterSportsBase() {
             </div>
           )}
         </form>
+
+        {/* Success Step - Outside form since it doesn't need form submission */}
+        {currentStep === 5 && credentials && (
+          <div style={{
+            textAlign: 'center',
+            padding: isMobile ? '2rem 1rem' : '3rem'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white',
+              padding: isMobile ? '2rem 1.5rem' : '3rem',
+              borderRadius: '12px',
+              marginBottom: '2rem',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+            }}>
+              <h2 style={{
+                color: 'white',
+                fontSize: isMobile ? '1.5rem' : '2rem',
+                marginBottom: '1.5rem',
+                fontWeight: '600',
+                margin: 0
+              }}>Cererea a fost înregistrată cu succes!</h2>
+              
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderRadius: '8px',
+                padding: '1.5rem',
+                marginBottom: '1.5rem',
+                textAlign: 'left'
+              }}>
+                <p style={{
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  marginBottom: '1rem',
+                  fontSize: '1rem',
+                  lineHeight: '1.6',
+                  margin: '0 0 1rem 0',
+                  fontWeight: '500'
+                }}>
+                  Ce urmează?
+                </p>
+                <ul style={{
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  fontSize: '0.9375rem',
+                  lineHeight: '1.8',
+                  margin: 0,
+                  paddingLeft: '1.5rem'
+                }}>
+                  <li style={{ marginBottom: '0.75rem' }}>
+                    <strong>Vei primi un email</strong> cu datele de conectare (username și parolă) la adresa de email furnizată
+                  </li>
+                  <li style={{ marginBottom: '0.75rem' }}>
+                    <strong>Cererea ta este în așteptarea aprobării</strong> de către administrator
+                  </li>
+                  <li style={{ marginBottom: '0.75rem' }}>
+                    <strong>După aprobare</strong>, baza ta sportivă va deveni publică pe platformă și vei primi o notificare pe email
+                  </li>
+                  <li>
+                    Poți accesa contul tău folosind datele de conectare primite pe email
+                  </li>
+                </ul>
+              </div>
+              
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                padding: '1rem',
+                border: '1px solid rgba(255, 255, 255, 0.3)'
+              }}>
+                <p style={{
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  fontSize: '0.875rem',
+                  lineHeight: '1.6',
+                  margin: 0
+                }}>
+                  <strong>Important:</strong> Verifică inbox-ul (și spam-ul) pentru email-ul cu datele de conectare. Dacă nu primești email-ul în câteva minute, verifică că adresa de email este corectă.
+                </p>
+              </div>
+            </div>
+            
+            <div style={{
+              background: '#f8fafc',
+              padding: '1.5rem',
+              borderRadius: '12px',
+              marginBottom: '2rem',
+              border: '1px solid #e2e8f0',
+              textAlign: 'left'
+            }}>
+              <p style={{
+                color: '#64748b',
+                marginBottom: '1rem',
+                fontSize: '0.9375rem',
+                lineHeight: '1.6',
+                fontWeight: '500'
+              }}>
+                Datele de conectare (au fost trimise și pe email):
+              </p>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#0f172a', fontSize: '0.875rem' }}>Username:</strong>
+                <div style={{
+                  background: 'white',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  marginTop: '0.5rem',
+                  fontFamily: 'monospace',
+                  fontSize: '1rem',
+                  color: '#0f172a',
+                  border: '1px solid #e2e8f0'
+                }}>{credentials.username}</div>
+              </div>
+              <div>
+                <strong style={{ color: '#0f172a', fontSize: '0.875rem' }}>Parolă:</strong>
+                <div style={{
+                  background: 'white',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  marginTop: '0.5rem',
+                  fontFamily: 'monospace',
+                  fontSize: '1rem',
+                  color: '#0f172a',
+                  border: '1px solid #e2e8f0'
+                }}>{credentials.password}</div>
+              </div>
+            </div>
+
+            <div style={{
+              background: '#eff6ff',
+              border: '1px solid #3b82f6',
+              borderRadius: '8px',
+              padding: '1rem',
+              marginBottom: '2rem',
+              textAlign: 'left'
+            }}>
+              <p style={{
+                margin: 0,
+                color: '#1e40af',
+                fontSize: '0.875rem',
+                lineHeight: '1.6'
+              }}>
+                <strong>Notă:</strong> Aceste credențiale au fost trimise și pe email. Salvează-le într-un loc sigur - vei avea nevoie de ele pentru a accesa și edita detaliile bazei tale sportive după aprobare.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`Username: ${credentials.username}\nParolă: ${credentials.password}`)
+                  alert('Credențiale copiate în clipboard!')
+                }}
+                style={{
+                  padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: isMobile ? '1rem' : '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
+                  width: isMobile ? '100%' : 'auto',
+                  touchAction: 'manipulation',
+                  minHeight: isMobile ? '48px' : 'auto'
+                }}
+              >
+                Copiază credențiale
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                style={{
+                  padding: isMobile ? '1rem 1.5rem' : '0.875rem 2rem',
+                  background: '#0f172a',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: isMobile ? '1rem' : '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)',
+                  width: isMobile ? '100%' : 'auto',
+                  touchAction: 'manipulation',
+                  minHeight: isMobile ? '48px' : 'auto'
+                }}
+              >
+                Mergi la Login
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
