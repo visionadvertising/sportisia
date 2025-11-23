@@ -33,12 +33,26 @@ function PendingRepairShops() {
 
   const loadFacilities = async () => {
     setLoading(true)
+    setError('')
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/pending-facilities`)
+      const adminToken = localStorage.getItem('admin')
+      if (!adminToken) {
+        setError('Nu sunteți autentificat')
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`${API_BASE_URL}/admin/pending-facilities?type=repair_shop`, {
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
+      })
       const data = await response.json()
       if (data.success) {
         const repairShops = data.data.filter((f: Facility) => f.facility_type === 'repair_shop')
         setFacilities(repairShops)
+      } else {
+        setError(data.error || 'Eroare la încărcarea cererilor')
       }
     } catch (err) {
       console.error('Error loading pending repair shops:', err)
@@ -54,7 +68,7 @@ function PendingRepairShops() {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${localStorage.getItem('admin')}`
         },
         body: JSON.stringify({ status: 'active' })
       })
@@ -80,7 +94,7 @@ function PendingRepairShops() {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${localStorage.getItem('admin')}`
         },
         body: JSON.stringify({ status: 'inactive' })
       })
