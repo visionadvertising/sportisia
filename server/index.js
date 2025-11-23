@@ -550,7 +550,6 @@ initDatabase()
     // Don't exit, but log the error - server will still start but endpoints will return 503
   })
 
-// Health check endpoint
 // Geocoding endpoints - proxy pentru Nominatim (evită CORS)
 app.get('/api/geocode', async (req, res) => {
   try {
