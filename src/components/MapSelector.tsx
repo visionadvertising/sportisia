@@ -168,9 +168,15 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
       const response = await fetch(
         `/api/geocode?q=${encodeURIComponent(location)}`
       )
+      
+      if (!response.ok) {
+        throw new Error(`Geocoding failed: ${response.status}`)
+      }
+      
       const data = await response.json()
       
-      if (data.length > 0) {
+      // Handle both array response and error object
+      if (Array.isArray(data) && data.length > 0) {
         const { lat, lon } = data[0]
         const coords = { lat: parseFloat(lat), lng: parseFloat(lon) }
         onCoordinatesChange(coords)
@@ -181,6 +187,8 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
           markerRef.current = L.marker([coords.lat, coords.lng]).addTo(mapInstanceRef.current)
         }
         mapInstanceRef.current.setView([coords.lat, coords.lng], 15)
+      } else if (data.error) {
+        console.error('Geocoding error:', data.error, data.details)
       }
     } catch (error) {
       console.error('Geocoding error:', error)
