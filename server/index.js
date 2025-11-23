@@ -1197,8 +1197,19 @@ app.get('/api/sports', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    // Get sports from active facilities
+    // Get sports from facility_sports_fields (new structure)
     const [facilitySports] = await pool.query(`
+      SELECT 
+        fsf.sport_type as sport,
+        COUNT(DISTINCT fsf.facility_id) as facility_count
+      FROM facility_sports_fields fsf
+      INNER JOIN facilities f ON fsf.facility_id = f.id
+      WHERE fsf.sport_type IS NOT NULL AND fsf.sport_type != '' AND f.status = 'active'
+      GROUP BY fsf.sport_type
+    `)
+
+    // Also get sports from old facilities table (for backward compatibility)
+    const [legacyFacilitySports] = await pool.query(`
       SELECT 
         sport,
         COUNT(*) as facility_count
@@ -1219,6 +1230,13 @@ app.get('/api/sports', async (req, res) => {
     
     facilitySports.forEach((row) => {
       sportMap.set(row.sport, row.facility_count)
+    })
+    
+    // Add legacy sports
+    legacyFacilitySports.forEach((row) => {
+      if (!sportMap.has(row.sport)) {
+        sportMap.set(row.sport, row.facility_count)
+      }
     })
     
     approvedSports.forEach((row) => {
