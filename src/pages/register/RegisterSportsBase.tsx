@@ -2326,12 +2326,13 @@ function RegisterSportsBase() {
                               zIndex: 1000,
                               WebkitOverflowScrolling: 'touch'
                             }}>
-                              {[...availableSports, ...customSports.filter(s => !availableSports.includes(s))]
-                                .filter(sportOption => 
-                                  !sportSearch[index] || 
-                                  sportOption.toLowerCase().includes(sportSearch[index]?.toLowerCase() || '')
-                                )
-                                .map(sportOption => (
+                              {(availableSports.length > 0 || customSports.length > 0) ? (
+                                [...availableSports, ...customSports.filter(s => !availableSports.includes(s))]
+                                  .filter(sportOption => 
+                                    !sportSearch[index] || 
+                                    sportOption.toLowerCase().includes(sportSearch[index]?.toLowerCase() || '')
+                                  )
+                                  .map(sportOption => (
                                   <div
                                     key={sportOption}
                                     onMouseDown={(e) => {
@@ -2362,7 +2363,17 @@ function RegisterSportsBase() {
                                   >
                                     {sportOption.charAt(0).toUpperCase() + sportOption.slice(1)}
                                   </div>
-                                ))}
+                                  ))
+                              ) : (
+                                <div style={{
+                                  padding: '0.75rem 1rem',
+                                  color: '#64748b',
+                                  fontSize: '0.875rem',
+                                  textAlign: 'center'
+                                }}>
+                                  Se încarcă sporturile...
+                                </div>
+                              )}
                               <div
                                 onMouseDown={(e) => {
                                   e.preventDefault()
