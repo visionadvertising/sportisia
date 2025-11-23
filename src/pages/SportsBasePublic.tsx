@@ -112,10 +112,15 @@ function SportsBasePublic() {
 
   const fetchFacility = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/facilities/${slug}`)
+      console.log(`[Frontend] Fetching facility with slug: "${slug}"`)
+      const response = await fetch(`${API_BASE_URL}/facilities/${encodeURIComponent(slug)}`)
       const data = await response.json()
       
-      if (data.success && data.facility) {
+      console.log(`[Frontend] Response:`, data)
+      
+      if (data.success && data.data) {
+        // Backend returns data in data.data
+        const facilityData = data.data
         // Parse JSON fields
         const facilityData = data.facility
         if (facilityData.phones && typeof facilityData.phones === 'string') {
@@ -162,8 +167,56 @@ function SportsBasePublic() {
         }
         
         setFacility(facilityData)
+      } else if (data.success && data.facility) {
+        // Backend returns data in data.facility (backward compatibility)
+        const facilityData = data.facility
+        // Parse JSON fields
+        if (facilityData.phones && typeof facilityData.phones === 'string') {
+          try {
+            facilityData.phones = JSON.parse(facilityData.phones)
+          } catch (e) {
+            facilityData.phones = [facilityData.phones]
+          }
+        }
+        if (facilityData.whatsapps && typeof facilityData.whatsapps === 'string') {
+          try {
+            facilityData.whatsapps = JSON.parse(facilityData.whatsapps)
+          } catch (e) {
+            facilityData.whatsapps = [facilityData.whatsapps]
+          }
+        }
+        if (facilityData.emails && typeof facilityData.emails === 'string') {
+          try {
+            facilityData.emails = JSON.parse(facilityData.emails)
+          } catch (e) {
+            facilityData.emails = [facilityData.emails]
+          }
+        }
+        if (facilityData.social_media && typeof facilityData.social_media === 'string') {
+          try {
+            facilityData.social_media = JSON.parse(facilityData.social_media)
+          } catch (e) {
+            facilityData.social_media = {}
+          }
+        }
+        if (facilityData.gallery && typeof facilityData.gallery === 'string') {
+          try {
+            facilityData.gallery = JSON.parse(facilityData.gallery)
+          } catch (e) {
+            facilityData.gallery = []
+          }
+        }
+        if (facilityData.map_coordinates && typeof facilityData.map_coordinates === 'string') {
+          try {
+            facilityData.map_coordinates = JSON.parse(facilityData.map_coordinates)
+          } catch (e) {
+            facilityData.map_coordinates = null
+          }
+        }
+        setFacility(facilityData)
       } else {
-        setError('Baza sportivă nu a fost găsită')
+        console.error(`[Frontend] Facility not found. Response:`, data)
+        setError(data.error || 'Baza sportivă nu a fost găsită')
       }
     } catch (err) {
       setError('Eroare la încărcarea datelor')

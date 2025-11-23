@@ -301,17 +301,17 @@ function AppContent() {
         <Route path="/sugereaza" element={<SuggestFacility />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        {/* Specific routes - must be before generic routes */}
         <Route path="/baza-sportiva/:slug" element={<SportsBasePublic />} />
-        <Route path="/toate" element={<AllFacilities />} />
-        {/* Generic route for all listings - handles all combinations */}
-        <Route path="/:param1/:param2/:param3" element={<AllFacilities />} />
-        <Route path="/:param1/:param2" element={<AllFacilities />} />
-        <Route path="/:param1" element={<AllFacilities />} />
-        {/* Simple routes (fallback) */}
         <Route path="/terenuri" element={<FacilitiesList type="field" title="Terenuri Sportive" />} />
         <Route path="/antrenori" element={<FacilitiesList type="coach" title="Antrenori" />} />
         <Route path="/magazine-reparatii" element={<FacilitiesList type="repair_shop" title="Magazine Reparații Articole Sportive" />} />
         <Route path="/magazine-articole" element={<FacilitiesList type="equipment_shop" title="Magazine Articole Sportive" />} />
+        <Route path="/toate" element={<AllFacilities />} />
+        {/* Generic route for all listings - handles all combinations - MUST BE LAST */}
+        <Route path="/:param1/:param2/:param3" element={<AllFacilities />} />
+        <Route path="/:param1/:param2" element={<AllFacilities />} />
+        <Route path="/:param1" element={<AllFacilities />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/*" element={<AdminLayout />}>
           <Route index element={<PendingSportsBases />} /> {/* Default admin route */}
