@@ -22,6 +22,8 @@ interface Facility {
 const ITEMS_PER_PAGE = 20
 
 function ApprovedSportsBases() {
+  console.log('ApprovedSportsBases: Component rendered')
+  
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
