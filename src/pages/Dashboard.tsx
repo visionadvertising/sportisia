@@ -388,38 +388,51 @@ function Dashboard() {
             }}>{facility.name}</p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            {facility.status === 'active' && (
-              <Link
-                to={`/baza-sportiva/${facility.id}`}
-                target="_blank"
-                style={{
-                  padding: '0.625rem 1.25rem',
-                  background: '#10b981',
-                  color: 'white',
-                  textDecoration: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '500',
-                  fontSize: '0.875rem',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#059669'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#10b981'
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                  <polyline points="15 3 21 3 21 9"></polyline>
-                  <line x1="10" y1="14" x2="21" y2="3"></line>
-                </svg>
-                Vezi pagina publică
-              </Link>
-            )}
+            {facility.status === 'active' && (() => {
+              // Create SEO-friendly slug
+              const createSlug = (name: string, city: string): string => {
+                const text = `${name} ${city}`
+                return text
+                  .toLowerCase()
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+                  .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+                  .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+              }
+              const slug = createSlug(facility.name || '', facility.city || '')
+              return (
+                <Link
+                  to={`/baza-sportiva/${slug}`}
+                  target="_blank"
+                  style={{
+                    padding: '0.625rem 1.25rem',
+                    background: '#10b981',
+                    color: 'white',
+                    textDecoration: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#059669'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#10b981'
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                  Vezi pagina publică
+                </Link>
+              )
+            })()}
             <Link
               to="/"
               style={{

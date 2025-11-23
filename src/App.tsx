@@ -301,7 +301,7 @@ function AppContent() {
         <Route path="/sugereaza" element={<SuggestFacility />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/baza-sportiva/:id" element={<SportsBasePublic />} />
+        <Route path="/baza-sportiva/:slug" element={<SportsBasePublic />} />
         <Route path="/toate" element={<AllFacilities />} />
         {/* Generic route for all listings - handles all combinations */}
         <Route path="/:param1/:param2/:param3" element={<AllFacilities />} />

@@ -1449,20 +1449,54 @@ app.get('/api/cities', async (req, res) => {
 })
 
 // GET single facility by ID
-app.get('/api/facilities/:id', async (req, res) => {
+// Helper function to create SEO-friendly slug
+function createSlug(name, city) {
+  const text = `${name} ${city}`
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+}
+
+app.get('/api/facilities/:slug', async (req, res) => {
   try {
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const facilityId = req.params.id
-    const [rows] = await pool.query('SELECT * FROM facilities WHERE id = ?', [facilityId])
-
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, error: 'Facilitatea nu a fost găsită' })
+    const slug = req.params.slug
+    
+    // Try to find by slug first (if it's a slug format: name-city)
+    // Otherwise, treat it as ID for backward compatibility
+    let facility = null
+    let facilityId = null
+    
+    // Check if it's a numeric ID (backward compatibility)
+    if (/^\d+$/.test(slug)) {
+      const [rowsById] = await pool.query('SELECT * FROM facilities WHERE id = ?', [slug])
+      if (rowsById.length > 0) {
+        facility = rowsById[0]
+        facilityId = facility.id
+      }
+    } else {
+      // It's a slug, search by matching name and city
+      const [allFacilities] = await pool.query('SELECT * FROM facilities WHERE status = ?', ['active'])
+      
+      for (const f of allFacilities) {
+        const facilitySlug = createSlug(f.name || '', f.city || '')
+        if (facilitySlug === slug) {
+          facility = f
+          facilityId = f.id
+          break
+        }
+      }
     }
 
-    const facility = rows[0]
+    if (!facility) {
+      return res.status(404).json({ success: false, error: 'Baza sportivă nu a fost găsită' })
+    }
 
     // If it's a sports base, fetch associated sports fields
     if (facility.facility_type === 'field') {

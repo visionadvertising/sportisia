@@ -78,8 +78,19 @@ const DAYS_OF_WEEK = [
   { key: 'sunday', label: 'Duminică' }
 ]
 
+// Helper function to create SEO-friendly slug
+function createSlug(name: string, city: string): string {
+  const text = `${name} ${city}`
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+}
+
 function SportsBasePublic() {
-  const { id } = useParams<{ id: string }>()
+  const { slug } = useParams<{ slug: string }>()
   const [facility, setFacility] = useState<Facility | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -94,14 +105,14 @@ function SportsBasePublic() {
   }, [])
 
   useEffect(() => {
-    if (id) {
+    if (slug) {
       fetchFacility()
     }
-  }, [id])
+  }, [slug])
 
   const fetchFacility = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/facilities/${id}`)
+      const response = await fetch(`${API_BASE_URL}/facilities/${slug}`)
       const data = await response.json()
       
       if (data.success && data.facility) {
