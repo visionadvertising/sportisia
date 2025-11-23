@@ -200,12 +200,22 @@ function RegisterSportsBase() {
         const data = await response.json()
         if (data.success && data.data) {
           const backendSports = data.data.map((item: any) => item.sport)
-          const standardSports = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash']
+          const standardSports = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'paddle', 'tenis de masă', 'ping-pong', 'rugby', 'hochei', 'golf', 'bowling', 'dans', 'fitness', 'yoga', 'pilates', 'box', 'karate', 'judo', 'taekwondo', 'swimming', 'înot', 'atletism', 'ciclism', 'alpinism', 'schi', 'snowboard']
           const allSports = [...new Set([...standardSports, ...backendSports])].sort()
           setAvailableSports(allSports)
+          console.log('Loaded sports:', allSports.length, allSports)
+        } else {
+          // Fallback: use standard sports if API fails
+          const standardSports = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'paddle', 'tenis de masă', 'ping-pong', 'rugby', 'hochei', 'golf', 'bowling', 'dans', 'fitness', 'yoga', 'pilates', 'box', 'karate', 'judo', 'taekwondo', 'swimming', 'înot', 'atletism', 'ciclism', 'alpinism', 'schi', 'snowboard']
+          setAvailableSports(standardSports)
+          console.log('Using fallback sports:', standardSports.length)
         }
       } catch (err) {
         console.error('Error loading sports:', err)
+        // Fallback: use standard sports if API fails
+        const standardSports = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'paddle', 'tenis de masă', 'ping-pong', 'rugby', 'hochei', 'golf', 'bowling', 'dans', 'fitness', 'yoga', 'pilates', 'box', 'karate', 'judo', 'taekwondo', 'swimming', 'înot', 'atletism', 'ciclism', 'alpinism', 'schi', 'snowboard']
+        setAvailableSports(standardSports)
+        console.log('Using fallback sports after error:', standardSports.length)
       }
     }
 
