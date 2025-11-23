@@ -1622,7 +1622,29 @@ app.get('/api/facilities', async (req, res) => {
       console.log('[API /facilities] First result facility_type:', rows[0].facility_type)
     }
 
-    res.json({ success: true, data: rows })
+    // For sports bases, fetch associated sports fields and parse gallery
+    const facilitiesWithDetails = await Promise.all(rows.map(async (facility) => {
+      if (facility.facility_type === 'field') {
+        const [sportsFields] = await pool.query(
+          'SELECT * FROM facility_sports_fields WHERE facility_id = ? ORDER BY created_at ASC',
+          [facility.id]
+        )
+        facility.sportsFields = sportsFields
+      }
+      
+      // Parse gallery if it's a string
+      if (facility.gallery && typeof facility.gallery === 'string') {
+        try {
+          facility.gallery = JSON.parse(facility.gallery)
+        } catch (e) {
+          facility.gallery = []
+        }
+      }
+      
+      return facility
+    }))
+
+    res.json({ success: true, data: facilitiesWithDetails })
   } catch (error) {
     console.error('Error fetching facilities:', error)
     res.status(500).json({ success: false, error: error.message })
