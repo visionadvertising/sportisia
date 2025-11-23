@@ -558,6 +558,8 @@ app.get('/api/geocode', async (req, res) => {
       return res.status(400).json({ error: 'Query parameter "q" is required' })
     }
 
+    console.log('Geocoding request for:', q)
+
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`,
       {
@@ -568,11 +570,15 @@ app.get('/api/geocode', async (req, res) => {
     )
 
     if (!response.ok) {
+      console.error('Nominatim API error:', response.status, response.statusText)
       throw new Error(`Nominatim API error: ${response.status}`)
     }
 
     const data = await response.json()
-    res.json(data)
+    console.log('Geocoding result:', data.length, 'results')
+    
+    // Return array even if empty
+    res.json(Array.isArray(data) ? data : [])
   } catch (error) {
     console.error('Geocoding error:', error)
     res.status(500).json({ error: 'Geocoding failed', details: error.message })
@@ -586,6 +592,8 @@ app.get('/api/reverse-geocode', async (req, res) => {
       return res.status(400).json({ error: 'Query parameters "lat" and "lon" are required' })
     }
 
+    console.log('Reverse geocoding request for:', lat, lon)
+
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
       {
@@ -596,10 +604,13 @@ app.get('/api/reverse-geocode', async (req, res) => {
     )
 
     if (!response.ok) {
+      console.error('Nominatim API error:', response.status, response.statusText)
       throw new Error(`Nominatim API error: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log('Reverse geocoding result:', data.display_name || 'No display name')
+    
     res.json(data)
   } catch (error) {
     console.error('Reverse geocoding error:', error)
