@@ -258,6 +258,63 @@ function SportsBasePublic() {
             facilityData.sportsFields = []
           }
         }
+        
+        // Ensure sportsFields is an array
+        if (!facilityData.sportsFields) {
+          facilityData.sportsFields = []
+        }
+        
+        // Parse timeSlots and features for each field if they're strings
+        if (facilityData.sportsFields && Array.isArray(facilityData.sportsFields)) {
+          facilityData.sportsFields = facilityData.sportsFields.map((field: any) => {
+            // Map snake_case to camelCase if needed
+            const mappedField = {
+              id: field.id,
+              fieldName: field.fieldName || field.field_name,
+              sportType: field.sportType || field.sport_type,
+              description: field.description || '',
+              slotSize: field.slotSize || field.slot_size || 60,
+              features: field.features || {},
+              timeSlots: field.timeSlots || field.time_slots || []
+            }
+            
+            // Parse features if it's a string
+            if (typeof mappedField.features === 'string') {
+              try {
+                mappedField.features = JSON.parse(mappedField.features)
+              } catch (e) {
+                console.error('Error parsing features for field:', e)
+                mappedField.features = {}
+              }
+            }
+            
+            // Parse timeSlots if it's a string
+            if (typeof mappedField.timeSlots === 'string') {
+              try {
+                mappedField.timeSlots = JSON.parse(mappedField.timeSlots)
+              } catch (e) {
+                console.error('Error parsing timeSlots for field:', e)
+                mappedField.timeSlots = []
+              }
+            }
+            
+            // Ensure timeSlots is an array
+            if (!Array.isArray(mappedField.timeSlots)) {
+              mappedField.timeSlots = []
+            }
+            
+            console.log(`[Frontend] Parsed field:`, {
+              fieldName: mappedField.fieldName,
+              sportType: mappedField.sportType,
+              timeSlotsCount: mappedField.timeSlots.length,
+              hasFeatures: Object.keys(mappedField.features).length > 0
+            })
+            
+            return mappedField
+          })
+        }
+        
+        console.log(`[Frontend] Final facility.sportsFields:`, facilityData.sportsFields)
         setFacility(facilityData)
       } else {
         console.error(`[Frontend] Facility not found. Response:`, data)
