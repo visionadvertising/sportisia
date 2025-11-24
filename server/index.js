@@ -1615,6 +1615,7 @@ app.get('/api/facilities/:slug', async (req, res) => {
     } else {
       // It's a slug, search by matching name and city
       // First try active facilities, then all facilities (for debugging/private access)
+      // Explicitly select all columns including logo_url and gallery
       const [activeFacilities] = await pool.query('SELECT * FROM facilities WHERE status = ?', ['active'])
       
       for (const f of activeFacilities) {
@@ -1629,6 +1630,7 @@ app.get('/api/facilities/:slug', async (req, res) => {
       
       // If not found in active, try all facilities (for private access or pending facilities)
       if (!facility) {
+        // Explicitly select all columns including logo_url and gallery
         const [allFacilities] = await pool.query('SELECT * FROM facilities')
         for (const f of allFacilities) {
           const facilitySlug = createSlug(f.name || '', f.city || '')
