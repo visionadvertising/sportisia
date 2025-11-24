@@ -234,7 +234,7 @@ function RegisterSportsBase() {
     }
   }, [city, county, availableCities])
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -248,15 +248,81 @@ function RegisterSportsBase() {
       return
     }
 
-    setLogoFile(file)
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setLogoPreview(reader.result as string)
+    try {
+      // Optimize logo before setting it
+      const optimizedFile = await optimizeImage(file)
+      setLogoFile(optimizedFile)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(optimizedFile)
+    } catch (error) {
+      console.error('Error optimizing logo:', error)
+      setError('Eroare la optimizarea logo-ului. Te rugăm să încerci din nou.')
     }
-    reader.readAsDataURL(file)
   }
 
-  const processGalleryFiles = (files: File[]) => {
+  // Optimize image: resize and compress
+  const optimizeImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'))
+            return
+          }
+
+          // Calculate new dimensions (max 1920x1920, maintain aspect ratio)
+          const maxWidth = 1920
+          const maxHeight = 1920
+          let width = img.width
+          let height = img.height
+
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = (height * maxWidth) / width
+              width = maxWidth
+            } else {
+              width = (width * maxHeight) / height
+              height = maxHeight
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+          ctx.drawImage(img, 0, 0, width, height)
+
+          // Convert to blob with compression (quality 0.85)
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const optimizedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                })
+                resolve(optimizedFile)
+              } else {
+                reject(new Error('Failed to create blob'))
+              }
+            },
+            'image/jpeg',
+            0.85
+          )
+        }
+        img.onerror = () => reject(new Error('Failed to load image'))
+        img.src = e.target?.result as string
+      }
+      reader.onerror = () => reject(new Error('Failed to read file'))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const processGalleryFiles = async (files: File[]) => {
     if (galleryFiles.length + files.length > 10) {
       setError('Poți încărca maxim 10 imagini în galerie')
       return
@@ -273,14 +339,22 @@ function RegisterSportsBase() {
       }
     }
 
-    setGalleryFiles([...galleryFiles, ...files])
-    files.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setGalleryPreviews(prev => [...prev, reader.result as string])
-      }
-      reader.readAsDataURL(file)
-    })
+    // Optimize images before adding them
+    try {
+      const optimizedFiles = await Promise.all(files.map(file => optimizeImage(file)))
+      setGalleryFiles([...galleryFiles, ...optimizedFiles])
+      
+      optimizedFiles.forEach(file => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setGalleryPreviews(prev => [...prev, reader.result as string])
+        }
+        reader.readAsDataURL(file)
+      })
+    } catch (error) {
+      console.error('Error optimizing images:', error)
+      setError('Eroare la optimizarea imaginilor. Te rugăm să încerci din nou.')
+    }
   }
 
   const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
