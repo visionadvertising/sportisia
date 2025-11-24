@@ -649,20 +649,47 @@ function AllFacilities() {
             <div>
               {Object.entries(facilitiesByType).map(([type, typeFacilities]) => (
               <div key={type} style={{ marginBottom: isMobile ? '3rem' : '4rem' }}>
-                <h2 style={{
-                  fontSize: isMobile ? '1.5rem' : '2rem',
-                  color: '#0f172a',
-                  marginBottom: isMobile ? '1.5rem' : '2rem',
+                <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.75rem',
-                  fontWeight: '700',
-                  flexWrap: 'wrap',
-                  letterSpacing: '-0.02em'
+                  justifyContent: 'space-between',
+                  marginBottom: isMobile ? '1.5rem' : '2rem',
+                  paddingBottom: '1rem',
+                  borderBottom: '2px solid #f1f5f9'
                 }}>
-                  <span style={{ fontSize: isMobile ? '1.25rem' : '1.5rem' }}>{FACILITY_TYPE_ICONS[type]}</span>
-                  <span>{FACILITY_TYPE_LABELS[type]} <span style={{ color: '#64748b', fontWeight: '500', fontSize: isMobile ? '1.125rem' : '1.375rem' }}>({typeFacilities.length})</span></span>
-                </h2>
+                  <h2 style={{
+                    fontSize: isMobile ? '1.375rem' : '1.75rem',
+                    color: '#0f172a',
+                    margin: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.875rem',
+                    fontWeight: '700',
+                    flexWrap: 'wrap',
+                    letterSpacing: '-0.02em'
+                  }}>
+                    <span style={{ 
+                      fontSize: isMobile ? '1.5rem' : '1.875rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: isMobile ? '40px' : '48px',
+                      height: isMobile ? '40px' : '48px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                      border: '1px solid rgba(16, 185, 129, 0.2)'
+                    }}>{FACILITY_TYPE_ICONS[type]}</span>
+                    <span>
+                      {FACILITY_TYPE_LABELS[type]}
+                      <span style={{ 
+                        color: '#64748b', 
+                        fontWeight: '500', 
+                        fontSize: isMobile ? '1rem' : '1.125rem',
+                        marginLeft: '0.5rem'
+                      }}>({typeFacilities.length})</span>
+                    </span>
+                  </h2>
+                </div>
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: isMobile 
