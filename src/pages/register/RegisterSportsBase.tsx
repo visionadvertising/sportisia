@@ -551,7 +551,8 @@ function RegisterSportsBase() {
         
         if (username && password) {
           setCredentials({ username, password })
-          setCurrentStep(6)
+          setCurrentStep(5)
+          setError('')
           // Scroll to top to show success message
           window.scrollTo({ top: 0, behavior: 'smooth' })
         } else {
