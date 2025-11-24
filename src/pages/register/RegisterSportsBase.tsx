@@ -621,78 +621,79 @@ function RegisterSportsBase() {
     setLoading(true)
 
     try {
-      let logoBase64 = ''
-      if (logoFile) {
-        const reader = new FileReader()
-        logoBase64 = await new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string)
-          reader.readAsDataURL(logoFile)
-        })
-      }
-
-      const galleryBase64 = await Promise.all(
-        galleryFiles.map(file => {
-          return new Promise<string>((resolve) => {
-            const reader = new FileReader()
-            reader.onloadend = () => resolve(reader.result as string)
-            reader.readAsDataURL(file)
-          })
-        })
-      )
-
       // Filter out empty values
       const validPhones = phones.filter(p => p.trim() !== '')
       const validWhatsapps = whatsapps.filter(w => w.trim() !== '')
       const validEmails = emails.filter(e => e.trim() !== '')
 
-      const formData = {
-        facilityType: 'field',
-        name,
-        contactPerson: contactPerson || null,
-        phone: validPhones.length > 0 ? validPhones[0] : '', // First phone as primary
-        phones: JSON.stringify(validPhones), // All phones as JSON
-        whatsapp: validWhatsapps.length > 0 ? validWhatsapps[0] : null, // First WhatsApp as primary
-        whatsapps: JSON.stringify(validWhatsapps), // All WhatsApps as JSON
-        email: validEmails.length > 0 ? validEmails[0] : '', // First email as primary
-        emails: JSON.stringify(validEmails), // All emails as JSON
-        city,
-        county: county || newCityCounty || null,
-        location: locationNotSpecified ? null : location,
-        locationNotSpecified,
-        mapCoordinates: mapCoordinates ? JSON.stringify(mapCoordinates) : null,
-        description: description || null,
-        logoUrl: logoBase64 || null,
-        website: website || null,
-        socialMedia: JSON.stringify(socialMedia),
-        gallery: JSON.stringify(galleryBase64),
-        openingHours: null, // No longer used at facility level, each field has its own schedule
-        // Legacy fields for backward compatibility (use first field's sport and first time slot price)
-        sport: validFields.length > 0 ? validFields[0].sportType : '',
-        pricePerHour: validFields.length > 0 && validFields[0].timeSlots && validFields[0].timeSlots.length > 0 
-          ? validFields[0].timeSlots.find(s => s.status === 'open' && s.price)?.price || null : null,
-        pricingDetails: JSON.stringify(pricingDetails),
-        hasParking: validFields.some(f => f.features.hasParking),
-        hasShower: validFields.some(f => f.features.hasShower),
-        hasChangingRoom: validFields.some(f => f.features.hasChangingRoom),
-        hasAirConditioning: validFields.some(f => f.features.hasAirConditioning),
-        hasLighting: validFields.some(f => f.features.hasLighting),
-        // New field: sports fields array with extensible pricing system
-        sportsFields: JSON.stringify(validFields.map(field => ({
-          fieldName: field.fieldName,
-          sportType: field.sportType,
-          description: field.description || null,
-          features: field.features,
-          slotSize: field.slotSize || 60, // Default 60 minutes
-          timeSlots: field.timeSlots || []
-        })))
-      }
-
-      console.log('Submitting form data:', { ...formData, logoUrl: logoBase64 ? '[BASE64]' : null, gallery: galleryBase64.length > 0 ? `[${galleryBase64.length} images]` : null })
+      // Create FormData for file uploads
+      const formData = new FormData()
       
-      const response = await fetch(`${API_BASE_URL}/register`, {
+      // Add logo file if exists
+      if (logoFile) {
+        formData.append('logo', logoFile)
+      }
+      
+      // Add gallery files
+      galleryFiles.forEach(file => {
+        formData.append('gallery', file)
+      })
+      
+      // Add all other form fields
+      formData.append('facilityType', 'field')
+      formData.append('name', name)
+      if (contactPerson) formData.append('contactPerson', contactPerson)
+      formData.append('phone', validPhones.length > 0 ? validPhones[0] : '')
+      formData.append('phones', JSON.stringify(validPhones))
+      if (validWhatsapps.length > 0) {
+        formData.append('whatsapp', validWhatsapps[0])
+        formData.append('whatsapps', JSON.stringify(validWhatsapps))
+      }
+      formData.append('email', validEmails.length > 0 ? validEmails[0] : '')
+      formData.append('emails', JSON.stringify(validEmails))
+      formData.append('city', city)
+      if (county || newCityCounty) formData.append('county', county || newCityCounty || '')
+      if (!locationNotSpecified && location) formData.append('location', location)
+      formData.append('locationNotSpecified', locationNotSpecified ? 'true' : 'false')
+      if (mapCoordinates) formData.append('mapCoordinates', JSON.stringify(mapCoordinates))
+      if (description) formData.append('description', description)
+      if (website) formData.append('website', website)
+      formData.append('socialMedia', JSON.stringify(socialMedia))
+      formData.append('openingHours', 'null')
+      
+      // Legacy fields for backward compatibility
+      if (validFields.length > 0) {
+        formData.append('sport', validFields[0].sportType)
+        const firstPrice = validFields[0].timeSlots && validFields[0].timeSlots.length > 0 
+          ? validFields[0].timeSlots.find(s => s.status === 'open' && s.price)?.price || null : null
+        if (firstPrice) formData.append('pricePerHour', firstPrice.toString())
+      }
+      formData.append('pricingDetails', JSON.stringify(pricingDetails))
+      formData.append('hasParking', validFields.some(f => f.features.hasParking) ? 'true' : 'false')
+      formData.append('hasShower', validFields.some(f => f.features.hasShower) ? 'true' : 'false')
+      formData.append('hasChangingRoom', validFields.some(f => f.features.hasChangingRoom) ? 'true' : 'false')
+      formData.append('hasAirConditioning', validFields.some(f => f.features.hasAirConditioning) ? 'true' : 'false')
+      formData.append('hasLighting', validFields.some(f => f.features.hasLighting) ? 'true' : 'false')
+      
+      // Sports fields array
+      formData.append('sportsFields', JSON.stringify(validFields.map(field => ({
+        fieldName: field.fieldName,
+        sportType: field.sportType,
+        description: field.description || null,
+        features: field.features,
+        slotSize: field.slotSize || 60,
+        timeSlots: field.timeSlots || []
+      }))))
+
+      console.log('Submitting form data with files:', { 
+        logo: logoFile ? logoFile.name : null, 
+        gallery: galleryFiles.length > 0 ? `${galleryFiles.length} files` : null 
+      })
+      
+      const response = await fetch('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: formData
+        // Don't set Content-Type header - browser will set it automatically with boundary for FormData
       })
 
       console.log('Response status:', response.status, response.statusText)

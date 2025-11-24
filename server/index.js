@@ -4,9 +4,10 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { existsSync, readFileSync } from 'fs'
+import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
+import multer from 'multer'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -54,8 +55,56 @@ app.use(cors({
   credentials: true
 }))
 
+// Parse JSON and URL-encoded bodies (for non-file fields in FormData)
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, 'uploads')
+    const logoDir = path.join(uploadDir, 'logos')
+    const galleryDir = path.join(uploadDir, 'gallery')
+    
+    // Create directories if they don't exist
+    if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true })
+    if (!existsSync(logoDir)) mkdirSync(logoDir, { recursive: true })
+    if (!existsSync(galleryDir)) mkdirSync(galleryDir, { recursive: true })
+    
+    // Determine destination based on field name
+    if (file.fieldname === 'logo') {
+      cb(null, logoDir)
+    } else if (file.fieldname === 'gallery') {
+      cb(null, galleryDir)
+    } else {
+      cb(null, uploadDir)
+    }
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename: timestamp-randomhash.extension
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
+    const ext = path.extname(file.originalname) || '.jpg'
+    cb(null, uniqueSuffix + ext)
+  }
+})
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB per file
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept only images
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true)
+    } else {
+      cb(new Error('Only image files are allowed'))
+    }
+  }
+})
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 // Database connection
 let pool
@@ -730,22 +779,36 @@ function generateUsername(facilityName, facilityType) {
   return `${base}${random}`
 }
 
-// POST register facility
-app.post('/api/register', async (req, res) => {
+// POST register facility with file uploads
+app.post('/api/register', upload.fields([
+  { name: 'logo', maxCount: 1 },
+  { name: 'gallery', maxCount: 10 }
+]), async (req, res) => {
   try {
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
+    // Parse FormData fields (multer puts files in req.files, text fields in req.body)
+    // Some fields come as JSON strings from FormData, need to parse them
+    let phones, whatsapps, emails, socialMedia, pricingDetails, sportsFields, mapCoordinates
+    try {
+      phones = typeof req.body.phones === 'string' ? JSON.parse(req.body.phones) : req.body.phones
+      whatsapps = typeof req.body.whatsapps === 'string' ? JSON.parse(req.body.whatsapps) : req.body.whatsapps
+      emails = typeof req.body.emails === 'string' ? JSON.parse(req.body.emails) : req.body.emails
+      socialMedia = typeof req.body.socialMedia === 'string' ? JSON.parse(req.body.socialMedia) : req.body.socialMedia
+      pricingDetails = typeof req.body.pricingDetails === 'string' ? JSON.parse(req.body.pricingDetails) : req.body.pricingDetails
+      sportsFields = typeof req.body.sportsFields === 'string' ? JSON.parse(req.body.sportsFields) : req.body.sportsFields
+      mapCoordinates = typeof req.body.mapCoordinates === 'string' ? JSON.parse(req.body.mapCoordinates) : req.body.mapCoordinates
+    } catch (e) {
+      console.error('Error parsing JSON fields from FormData:', e)
+    }
+    
     const {
       facilityType, // 'field', 'coach', 'repair_shop', 'equipment_shop'
-      name, city, county, location, locationNotSpecified, mapCoordinates, contactPerson, phone, phones, whatsapp, whatsapps, email, emails, description, imageUrl,
-      // New common fields
-      logoFile, socialMedia, gallery,
+      name, city, county, location, contactPerson, phone, whatsapp, email, description, imageUrl,
       // Field specific (sport is also used for equipment shops - can be 'general' or specific sport)
-      sport, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
-      // New: sportsFields array for multiple fields per sports base
-      sportsFields,
+      sport, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
       // Coach specific
       specialization, experienceYears, certifications, languages,
       // Repair shop specific
@@ -756,12 +819,23 @@ app.post('/api/register', async (req, res) => {
       website, openingHours
     } = req.body
     
-    // Extract pricePerHour and pricePerLesson separately to allow modification
-    let pricePerHour = req.body.pricePerHour
-    let pricePerLesson = req.body.pricePerLesson
+    // Parse boolean and location fields
+    const locationNotSpecified = req.body.locationNotSpecified === 'true' || req.body.locationNotSpecified === true
+    const hasParkingBool = req.body.hasParking === 'true' || req.body.hasParking === true
+    const hasShowerBool = req.body.hasShower === 'true' || req.body.hasShower === true
+    const hasChangingRoomBool = req.body.hasChangingRoom === 'true' || req.body.hasChangingRoom === true
+    const hasAirConditioningBool = req.body.hasAirConditioning === 'true' || req.body.hasAirConditioning === true
+    const hasLightingBool = req.body.hasLighting === 'true' || req.body.hasLighting === true
+    
+    // Extract pricePerHour separately
+    let pricePerHour = req.body.pricePerHour ? parseFloat(req.body.pricePerHour) : null
+    let pricePerLesson = req.body.pricePerLesson ? parseFloat(req.body.pricePerLesson) : null
 
     // Validate required fields
-    if (!facilityType || !name || !city || (!location && !locationNotSpecified) || !phone || !email) {
+    const primaryPhone = phone || (phones && Array.isArray(phones) && phones.length > 0 ? phones[0] : null)
+    const primaryEmail = email || (emails && Array.isArray(emails) && emails.length > 0 ? emails[0] : null)
+    
+    if (!facilityType || !name || !city || (!location && !locationNotSpecified) || !primaryPhone || !primaryEmail) {
       return res.status(400).json({
         success: false,
         error: 'Lipsește informație obligatorie'
@@ -770,11 +844,11 @@ app.post('/api/register', async (req, res) => {
 
     // Validate facility type specific fields
     // For fields, check if sport is provided OR if sportsFields array is provided
-    let parsedSportsFields = null
+    let parsedSportsFields = sportsFields
     if (facilityType === 'field') {
       if (sportsFields) {
         try {
-          parsedSportsFields = typeof sportsFields === 'string' ? JSON.parse(sportsFields) : sportsFields
+          parsedSportsFields = sportsFields // Already parsed above
           if (!Array.isArray(parsedSportsFields) || parsedSportsFields.length === 0) {
             return res.status(400).json({
               success: false,
@@ -846,18 +920,43 @@ app.post('/api/register', async (req, res) => {
       pricePerLesson = pricingDetails[0].price
     }
 
-    // Process logo file (base64 to URL or save)
+    // Process logo file (from uploaded file)
     let logoUrlFinal = null
-    if (logoFile) {
-      // For now, save as base64 data URL. Later can be uploaded to storage
-      logoUrlFinal = logoFile
+    if (req.files && req.files.logo && req.files.logo.length > 0) {
+      const uploadedLogo = req.files.logo[0]
+      logoUrlFinal = `/uploads/logos/${uploadedLogo.filename}`
+    } else if (logoFile && typeof logoFile === 'string' && logoFile.startsWith('data:image')) {
+      // Fallback: if base64 is still sent, save it as file
+      const base64Data = logoFile.replace(/^data:image\/\w+;base64,/, '')
+      const buffer = Buffer.from(base64Data, 'base64')
+      const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
+      const filename = `${uniqueSuffix}.jpg`
+      const logoDir = path.join(__dirname, 'uploads', 'logos')
+      if (!existsSync(logoDir)) mkdirSync(logoDir, { recursive: true })
+      writeFileSync(path.join(logoDir, filename), buffer)
+      logoUrlFinal = `/uploads/logos/${filename}`
     }
 
-    // Process gallery files (base64 to array)
+    // Process gallery files (from uploaded files)
     let galleryFinal = null
-    if (gallery && Array.isArray(gallery) && gallery.length > 0) {
-      // For now, save as base64 data URLs. Later can be uploaded to storage
-      galleryFinal = gallery
+    if (req.files && req.files.gallery && req.files.gallery.length > 0) {
+      galleryFinal = req.files.gallery.map(file => `/uploads/gallery/${file.filename}`)
+    } else if (gallery && Array.isArray(gallery) && gallery.length > 0) {
+      // Fallback: if base64 is still sent, save them as files
+      galleryFinal = []
+      const galleryDir = path.join(__dirname, 'uploads', 'gallery')
+      if (!existsSync(galleryDir)) mkdirSync(galleryDir, { recursive: true })
+      
+      for (const base64Image of gallery) {
+        if (typeof base64Image === 'string' && base64Image.startsWith('data:image')) {
+          const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '')
+          const buffer = Buffer.from(base64Data, 'base64')
+          const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
+          const filename = `${uniqueSuffix}.jpg`
+          writeFileSync(path.join(galleryDir, filename), buffer)
+          galleryFinal.push(`/uploads/gallery/${filename}`)
+        }
+      }
     }
 
     // Generate username and password
@@ -874,19 +973,19 @@ app.post('/api/register', async (req, res) => {
       const values = [
         facilityType, name, city, county || null, 
         locationNotSpecified ? null : (location || null), 
-        locationNotSpecified || false,
+        locationNotSpecified,
         mapCoordinates ? JSON.stringify(mapCoordinates) : null,
-        phone, phones || null, whatsapp || null, whatsapps || null, email || null, emails || null, contactPerson || null, 
+        primaryPhone, phones ? JSON.stringify(phones) : null, whatsapp || null, whatsapps ? JSON.stringify(whatsapps) : null, primaryEmail, emails ? JSON.stringify(emails) : null, contactPerson || null, 
         description || null, imageUrl || null,
         logoUrlFinal || null, 
         socialMedia ? JSON.stringify(socialMedia) : null,
         galleryFinal ? JSON.stringify(galleryFinal) : null,
         // sport: for fields use sport, for equipment shops use sport (can be 'general'), for others null
         (facilityType === 'field' || facilityType === 'equipment_shop') ? (sport || null) : null,
-        pricePerHour ? parseFloat(pricePerHour) : null,
+        pricePerHour,
         pricingDetails ? JSON.stringify(pricingDetails) : null,
-        hasParking || false, hasShower || false, hasChangingRoom || false,
-        hasAirConditioning || false, hasLighting || false,
+        hasParkingBool || false, hasShowerBool || false, hasChangingRoomBool || false,
+        hasAirConditioningBool || false, hasLightingBool || false,
         specialization || null, experienceYears || null, pricePerLesson ? parseFloat(pricePerLesson) : null,
         certifications || null, languages || null,
         servicesOffered || null, brandsServiced || null, averageRepairTime || null,
