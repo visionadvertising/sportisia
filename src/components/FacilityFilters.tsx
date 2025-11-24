@@ -322,15 +322,138 @@ function FacilityFilters({
         gridTemplateColumns: isMobile 
           ? '1fr' 
           : (showRepairCategoryFilter 
-              ? 'repeat(2, 1fr)' // City + Repair Category
+              ? 'repeat(2, 1fr)' // Type + City + Repair Category (when type is selected)
               : showTypeFilterConditional 
-                ? 'repeat(3, 1fr)' // City + Sport + Type
+                ? 'repeat(3, 1fr)' // Type + City + Sport
                 : showSportFilter 
-                  ? 'repeat(2, 1fr)' // City + Sport
+                  ? 'repeat(2, 1fr)' // City + Sport (when type is selected)
                   : '1fr'), // City only
         gap: isMobile ? '1.25rem' : '1.5rem'
       }}>
-        {/* City Searchable Dropdown */}
+        {/* Type Searchable Dropdown - FIRST (Only show when no specific type is selected) */}
+        {showTypeFilterConditional && (
+          <div style={{ position: 'relative' }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.75rem',
+              color: '#0f172a',
+              fontWeight: '600',
+              fontSize: '0.875rem'
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+              </svg>
+              <span>Tip serviciu</span>
+            </label>
+            <input
+              type="text"
+              value={getTypeDisplayValue()}
+              onChange={(e) => {
+                setTypeSearch(e.target.value)
+                setShowTypeDropdown(true)
+                if (!e.target.value) {
+                  setType('')
+                  setTypeSearch('')
+                }
+              }}
+              onClick={() => setShowTypeDropdown(true)}
+              onFocus={(e) => {
+                setShowTypeDropdown(true)
+                e.target.style.borderColor = '#10b981'
+                e.target.style.background = '#ffffff'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0'
+                e.target.style.background = '#fafafa'
+                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                setTimeout(() => setShowTypeDropdown(false), 250)
+              }}
+              placeholder="Caută sau selectează tip"
+              style={{
+                width: '100%',
+                padding: '0.875rem 1rem',
+                paddingRight: '2.5rem',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '10px',
+                fontSize: '0.9375rem',
+                outline: 'none',
+                background: '#fafafa',
+                color: '#0f172a',
+                transition: 'all 0.2s ease',
+                fontWeight: '400',
+                lineHeight: '1.5',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              right: '0.75rem',
+              top: '2.75rem',
+              pointerEvents: 'none'
+            }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                <path d="M5 7.5l5 5 5-5"/>
+              </svg>
+            </div>
+            {showTypeDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: '0.5rem',
+                background: '#ffffff',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '12px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                zIndex: 1000
+              }}>
+                {FACILITY_TYPES
+                  .filter(typeOption => 
+                    !typeSearch || 
+                    typeOption.label.toLowerCase().includes(typeSearch.toLowerCase())
+                  )
+                  .map(typeOption => (
+                    <div
+                      key={typeOption.value}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        handleTypeChange(typeOption.value)
+                      }}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f1f5f9',
+                        color: '#0f172a',
+                        fontSize: '0.9375rem',
+                        fontWeight: '500',
+                        transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f0fdf4'
+                        e.currentTarget.style.color = '#059669'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#ffffff'
+                        e.currentTarget.style.color = '#0f172a'
+                      }}
+                    >
+                      {typeOption.label}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* City Searchable Dropdown - SECOND */}
         <div style={{ position: 'relative' }}>
           <label style={{
             display: 'flex',
@@ -762,127 +885,6 @@ function FacilityFilters({
                       }}
                     >
                       {categoryOption.label}
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Type Searchable Dropdown - Only show when no specific type is selected */}
-        {showTypeFilterConditional && (
-          <div style={{ position: 'relative' }}>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '0.75rem',
-              color: '#0f172a',
-              fontWeight: '600',
-              fontSize: '0.875rem'
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <line x1="3" y1="9" x2="21" y2="9"/>
-                <line x1="9" y1="21" x2="9" y2="9"/>
-              </svg>
-              <span>Tip serviciu</span>
-            </label>
-            <input
-              type="text"
-              value={getTypeDisplayValue()}
-              onChange={(e) => {
-                setTypeSearch(e.target.value)
-                setShowTypeDropdown(true)
-                if (!e.target.value) {
-                  setType('')
-                  setTypeSearch('')
-                }
-              }}
-              onClick={() => setShowTypeDropdown(true)}
-              onFocus={(e) => {
-                setShowTypeDropdown(true)
-                e.target.style.borderColor = '#10b981'
-                e.target.style.background = '#ffffff'
-                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0'
-                e.target.style.background = '#fafafa'
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                setTimeout(() => setShowTypeDropdown(false), 250)
-              }}
-              placeholder="Caută sau selectează tip"
-              style={{
-                width: '100%',
-                padding: '0.875rem 1rem',
-                paddingRight: '2.5rem',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none',
-                background: '#ffffff',
-                color: '#0f172a',
-                transition: 'all 0.2s ease',
-                fontWeight: '400',
-                lineHeight: '1.5',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-              }}
-            />
-            <div style={{
-              position: 'absolute',
-              right: '0.75rem',
-              top: '2.75rem',
-              pointerEvents: 'none'
-            }}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
-                <path d="M5 7.5l5 5 5-5"/>
-              </svg>
-            </div>
-            {showTypeDropdown && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                marginTop: '0.25rem',
-                background: '#ffffff',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                maxHeight: '300px',
-                overflowY: 'auto',
-                zIndex: 1000
-              }}>
-                {FACILITY_TYPES
-                  .filter(typeOption => 
-                    !typeSearch || 
-                    typeOption.label.toLowerCase().includes(typeSearch.toLowerCase())
-                  )
-                  .map(typeOption => (
-                    <div
-                      key={typeOption.value}
-                      onMouseDown={(e) => {
-                        e.preventDefault()
-                        handleTypeChange(typeOption.value)
-                      }}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #f1f5f9',
-                        color: '#0f172a',
-                        fontSize: '0.9375rem',
-                        fontWeight: '500',
-                        transition: 'background 0.15s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#f0fdf4'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#ffffff'
-                      }}
-                    >
-                      {typeOption.label}
                     </div>
                   ))}
               </div>

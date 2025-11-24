@@ -677,22 +677,11 @@ function AllFacilities() {
                     margin: 0,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.875rem',
+                    gap: '0.75rem',
                     fontWeight: '700',
                     flexWrap: 'wrap',
                     letterSpacing: '-0.02em'
                   }}>
-                    <span style={{ 
-                      fontSize: isMobile ? '1.5rem' : '1.875rem',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: isMobile ? '40px' : '48px',
-                      height: isMobile ? '40px' : '48px',
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                      border: '1px solid rgba(16, 185, 129, 0.2)'
-                    }}>{FACILITY_TYPE_ICONS[type]}</span>
                     <span>
                       {FACILITY_TYPE_LABELS[type]}
                       <span style={{ 
