@@ -537,7 +537,9 @@ function SportsBasePublic() {
   }
 
   // Get first gallery image or default
-  const heroImage = gallery.length > 0 ? getImageUrl(gallery[0]) || 'https://via.placeholder.com/1200x400?text=Baza+Sportiva' : 'https://via.placeholder.com/1200x400?text=Baza+Sportiva'
+  // Get hero images: first 3 on desktop, first 1 on mobile
+  const heroImages = gallery.slice(0, isMobile ? 1 : 3).map(img => getImageUrl(img)).filter(Boolean)
+  const hasHeroImages = heroImages.length > 0
 
   return (
     <div style={{
@@ -549,13 +551,37 @@ function SportsBasePublic() {
       <div style={{
         position: 'relative',
         height: isMobile ? '300px' : '500px',
-        backgroundImage: `url(${heroImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        overflow: 'hidden'
       }}>
+        {hasHeroImages ? (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            width: '100%',
+            height: '100%',
+            gap: '0'
+          }}>
+            {heroImages.map((imgUrl, idx) => (
+              <div
+                key={idx}
+                style={{
+                  backgroundImage: `url(${imgUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  width: '100%',
+                  height: '100%'
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div style={{
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+          }} />
+        )}
         <div style={{
           position: 'absolute',
           top: 0,
@@ -565,13 +591,20 @@ function SportsBasePublic() {
           background: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.6))'
         }} />
         <div style={{
-          position: 'relative',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           zIndex: 1,
           textAlign: 'center',
           color: 'white',
           padding: isMobile ? '1rem' : '2rem',
           maxWidth: '1200px',
-          width: '100%'
+          margin: '0 auto'
         }}>
           {/* Logo */}
           {logoUrl && getImageUrl(logoUrl) && (
@@ -594,7 +627,6 @@ function SportsBasePublic() {
                 }}
                 onError={(e) => {
                   console.error('[Frontend] Failed to load logo:', logoUrl, '->', getImageUrl(logoUrl))
-                  // Hide logo if image fails to load
                   e.currentTarget.style.display = 'none'
                 }}
                 onLoad={() => {
@@ -603,99 +635,30 @@ function SportsBasePublic() {
               />
             </div>
           )}
-          <h1 style={{
-            fontSize: isMobile ? '2rem' : '3.5rem',
-            fontWeight: '700',
-            marginBottom: '1rem',
-            textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-          }}>
-            {facility.name}
-          </h1>
-          {facility.location && (
-            <div style={{
-              fontSize: isMobile ? '1rem' : '1.25rem',
-              marginTop: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem'
+          <div>
+            <h1 style={{
+              fontSize: isMobile ? '2rem' : '3.5rem',
+              fontWeight: '700',
+              marginBottom: '1rem',
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)'
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-              <span>{facility.location}</span>
-            </div>
-          )}
-          <div style={{
-            display: 'flex',
-            gap: '1rem',
-            justifyContent: 'center',
-            marginTop: '2rem',
-            flexWrap: 'wrap'
-          }}>
-            {phones.length > 0 && (
-              <a
-                href={`tel:${phones[0]}`}
-                style={{
-                  padding: '0.875rem 2rem',
-                  background: '#10b981',
-                  color: 'white',
-                  textDecoration: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#059669'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#10b981'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                }}
-              >
+              {facility.name}
+            </h1>
+            {facility.location && (
+              <div style={{
+                fontSize: isMobile ? '1rem' : '1.25rem',
+                marginTop: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
+              }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                Sună
-              </a>
-            )}
-            {emails.length > 0 && (
-              <a
-                href={`mailto:${emails[0]}`}
-                style={{
-                  padding: '0.875rem 2rem',
-                  background: 'rgba(255,255,255,0.2)',
-                  color: 'white',
-                  textDecoration: 'none',
-                  borderRadius: '8px',
-                  fontWeight: '600',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  border: '2px solid white',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.3)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.2)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                  <polyline points="22,6 12,13 2,6"></polyline>
-                </svg>
-                Trimite email
-              </a>
+                <span>{facility.location}</span>
+              </div>
             )}
           </div>
         </div>
@@ -774,43 +737,60 @@ function SportsBasePublic() {
               Date de contact
             </h2>
             <div style={{
-              background: '#f8fafc',
+              background: 'white',
               padding: '2rem',
-              borderRadius: '12px',
-              border: '1px solid #e2e8f0'
+              borderRadius: '16px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
             }}>
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1.5rem'
+                gap: '2rem'
               }}>
                 {phones.length > 0 && (
                   <div>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem',
-                      marginBottom: '0.5rem'
+                      gap: '0.75rem',
+                      marginBottom: '0.75rem'
                     }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                      </svg>
-                      <strong style={{ color: '#0f172a' }}>Telefon</strong>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                      </div>
+                      <strong style={{ color: '#0f172a', fontSize: '0.9375rem', fontWeight: '600' }}>Telefon</strong>
                     </div>
-                    {phones.map((phone, idx) => (
-                      <a
-                        key={idx}
-                        href={`tel:${phone}`}
-                        style={{
-                          color: '#10b981',
-                          textDecoration: 'none',
-                          display: 'block',
-                          marginBottom: '0.25rem'
-                        }}
-                      >
-                        {phone}
-                      </a>
-                    ))}
+                    <div style={{ paddingLeft: '3.25rem' }}>
+                      {phones.map((phone, idx) => (
+                        <a
+                          key={idx}
+                          href={`tel:${phone}`}
+                          style={{
+                            color: '#64748b',
+                            textDecoration: 'none',
+                            display: 'block',
+                            marginBottom: '0.5rem',
+                            fontSize: '0.9375rem',
+                            transition: 'color 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                        >
+                          {phone}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {whatsapps.length > 0 && (
@@ -818,30 +798,46 @@ function SportsBasePublic() {
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem',
-                      marginBottom: '0.5rem'
+                      gap: '0.75rem',
+                      marginBottom: '0.75rem'
                     }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                      </svg>
-                      <strong style={{ color: '#0f172a' }}>WhatsApp</strong>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                        </svg>
+                      </div>
+                      <strong style={{ color: '#0f172a', fontSize: '0.9375rem', fontWeight: '600' }}>WhatsApp</strong>
                     </div>
-                    {whatsapps.map((whatsapp, idx) => (
-                      <a
-                        key={idx}
-                        href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: '#10b981',
-                          textDecoration: 'none',
-                          display: 'block',
-                          marginBottom: '0.25rem'
-                        }}
-                      >
-                        {whatsapp}
-                      </a>
-                    ))}
+                    <div style={{ paddingLeft: '3.25rem' }}>
+                      {whatsapps.map((whatsapp, idx) => (
+                        <a
+                          key={idx}
+                          href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: '#64748b',
+                            textDecoration: 'none',
+                            display: 'block',
+                            marginBottom: '0.5rem',
+                            fontSize: '0.9375rem',
+                            transition: 'color 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#25D366'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                        >
+                          {whatsapp}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {emails.length > 0 && (
@@ -849,29 +845,261 @@ function SportsBasePublic() {
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.5rem',
-                      marginBottom: '0.5rem'
+                      gap: '0.75rem',
+                      marginBottom: '0.75rem'
                     }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
-                      </svg>
-                      <strong style={{ color: '#0f172a' }}>Email</strong>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                          <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                      </div>
+                      <strong style={{ color: '#0f172a', fontSize: '0.9375rem', fontWeight: '600' }}>Email</strong>
                     </div>
-                    {emails.map((email, idx) => (
-                      <a
-                        key={idx}
-                        href={`mailto:${email}`}
-                        style={{
-                          color: '#10b981',
-                          textDecoration: 'none',
-                          display: 'block',
-                          marginBottom: '0.25rem'
-                        }}
-                      >
-                        {email}
-                      </a>
-                    ))}
+                    <div style={{ paddingLeft: '3.25rem' }}>
+                      {emails.map((email, idx) => (
+                        <a
+                          key={idx}
+                          href={`mailto:${email}`}
+                          style={{
+                            color: '#64748b',
+                            textDecoration: 'none',
+                            display: 'block',
+                            marginBottom: '0.5rem',
+                            fontSize: '0.9375rem',
+                            transition: 'color 0.2s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#6366f1'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
+                        >
+                          {email}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Social Media */}
+                {(socialMedia.facebook || socialMedia.instagram || socialMedia.x || socialMedia.tiktok || socialMedia.youtube || socialMedia.linkedin) && (
+                  <div style={{ paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      marginBottom: '1rem'
+                    }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                        </svg>
+                      </div>
+                      <strong style={{ color: '#0f172a', fontSize: '0.9375rem', fontWeight: '600' }}>Rețele sociale</strong>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '0.75rem',
+                      paddingLeft: '3.25rem'
+                    }}>
+                      {socialMedia.facebook && (
+                        <a
+                          href={socialMedia.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            background: '#1877f2',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textDecoration: 'none',
+                            transition: 'transform 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)'
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(24, 119, 242, 0.3)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)'
+                            e.currentTarget.style.boxShadow = 'none'
+                          }}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                          </svg>
+                        </a>
+                      )}
+                      {socialMedia.instagram && (
+                        <a
+                          href={socialMedia.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textDecoration: 'none',
+                            transition: 'transform 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)'
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(225, 48, 108, 0.3)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)'
+                            e.currentTarget.style.boxShadow = 'none'
+                          }}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                          </svg>
+                        </a>
+                      )}
+                      {socialMedia.x && (
+                        <a
+                          href={socialMedia.x}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            background: '#000000',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textDecoration: 'none',
+                            transition: 'transform 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)'
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)'
+                            e.currentTarget.style.boxShadow = 'none'
+                          }}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+                          </svg>
+                        </a>
+                      )}
+                      {socialMedia.tiktok && (
+                        <a
+                          href={socialMedia.tiktok}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            background: '#000000',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textDecoration: 'none',
+                            transition: 'transform 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)'
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)'
+                            e.currentTarget.style.boxShadow = 'none'
+                          }}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"></path>
+                          </svg>
+                        </a>
+                      )}
+                      {socialMedia.youtube && (
+                        <a
+                          href={socialMedia.youtube}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            background: '#ff0000',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textDecoration: 'none',
+                            transition: 'transform 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)'
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(255, 0, 0, 0.3)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)'
+                            e.currentTarget.style.boxShadow = 'none'
+                          }}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path>
+                          </svg>
+                        </a>
+                      )}
+                      {socialMedia.linkedin && (
+                        <a
+                          href={socialMedia.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            background: '#0077b5',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textDecoration: 'none',
+                            transition: 'transform 0.2s, box-shadow 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)'
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 119, 181, 0.3)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)'
+                            e.currentTarget.style.boxShadow = 'none'
+                          }}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path>
+                          </svg>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1304,145 +1532,6 @@ function SportsBasePublic() {
           </div>
         )}
 
-        {/* Social Media */}
-        {(socialMedia.facebook || socialMedia.instagram || socialMedia.x || socialMedia.tiktok || socialMedia.youtube || socialMedia.linkedin) && (
-          <div>
-            <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: '600',
-              marginBottom: '1rem',
-              color: '#0f172a'
-            }}>
-              Rețele sociale
-            </h2>
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              flexWrap: 'wrap'
-            }}>
-              {socialMedia.facebook && (
-                <a
-                  href={socialMedia.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#1877f2',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  Facebook
-                </a>
-              )}
-              {socialMedia.instagram && (
-                <a
-                  href={socialMedia.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  Instagram
-                </a>
-              )}
-              {socialMedia.x && (
-                <a
-                  href={socialMedia.x}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#000000',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  X (Twitter)
-                </a>
-              )}
-              {socialMedia.tiktok && (
-                <a
-                  href={socialMedia.tiktok}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#000000',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  TikTok
-                </a>
-              )}
-              {socialMedia.youtube && (
-                <a
-                  href={socialMedia.youtube}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#ff0000',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  YouTube
-                </a>
-              )}
-              {socialMedia.linkedin && (
-                <a
-                  href={socialMedia.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#0077b5',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  LinkedIn
-                </a>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
