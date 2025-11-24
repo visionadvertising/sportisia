@@ -946,21 +946,25 @@ app.post('/api/register', upload.fields([
     // Process logo file (from uploaded file)
     let logoUrlFinal = null
     console.log('[REGISTER] Processing logo - req.files.logo:', req.files?.logo)
-    console.log('[REGISTER] Processing logo - logoFile:', logoFile ? 'exists' : 'null')
     if (req.files && req.files.logo && req.files.logo.length > 0) {
       const uploadedLogo = req.files.logo[0]
       logoUrlFinal = `/uploads/logos/${uploadedLogo.filename}`
       console.log('[REGISTER] Logo uploaded, logoUrlFinal:', logoUrlFinal)
-    } else if (logoFile && typeof logoFile === 'string' && logoFile.startsWith('data:image')) {
-      // Fallback: if base64 is still sent, save it as file
-      const base64Data = logoFile.replace(/^data:image\/\w+;base64,/, '')
-      const buffer = Buffer.from(base64Data, 'base64')
-      const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
-      const filename = `${uniqueSuffix}.jpg`
-      const logoDir = path.join(__dirname, 'uploads', 'logos')
-      if (!existsSync(logoDir)) mkdirSync(logoDir, { recursive: true })
-      writeFileSync(path.join(logoDir, filename), buffer)
-      logoUrlFinal = `/uploads/logos/${filename}`
+    } else {
+      // Check if logo is sent as base64 in body (fallback for old clients)
+      const logoFile = req.body.logoFile || req.body.logo
+      if (logoFile && typeof logoFile === 'string' && logoFile.startsWith('data:image')) {
+        // Fallback: if base64 is still sent, save it as file
+        const base64Data = logoFile.replace(/^data:image\/\w+;base64,/, '')
+        const buffer = Buffer.from(base64Data, 'base64')
+        const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
+        const filename = `${uniqueSuffix}.jpg`
+        const logoDir = path.join(__dirname, 'uploads', 'logos')
+        if (!existsSync(logoDir)) mkdirSync(logoDir, { recursive: true })
+        writeFileSync(path.join(logoDir, filename), buffer)
+        logoUrlFinal = `/uploads/logos/${filename}`
+        console.log('[REGISTER] Logo saved from base64, logoUrlFinal:', logoUrlFinal)
+      }
     }
 
     // Process gallery files (from uploaded files)
