@@ -677,60 +677,17 @@ function SportsBasePublic() {
         <div style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gridTemplateRows: isMobile ? 'auto auto' : 'auto',
           gap: '2rem',
           marginBottom: '3rem'
         }}>
-          {/* Map */}
-          <div>
-            <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: '600',
-              marginBottom: '1rem',
-              color: '#0f172a'
-            }}>
-              Locație
-            </h2>
-            {mapCoords && (
-              <PublicMap
-                coordinates={mapCoords}
-                location={facility.location || undefined}
-              />
-            )}
-            {!mapCoords && facility.location && (
-              <div style={{
-                width: '100%',
-                height: '400px',
-                borderRadius: '12px',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#64748b',
-                fontSize: '0.875rem'
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ margin: '0 auto 1rem' }}>
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                  </svg>
-                  <p style={{ margin: 0 }}>{facility.location}</p>
-                </div>
-              </div>
-            )}
-            {facility.location && (
-              <p style={{
-                color: '#64748b',
-                fontSize: '0.875rem',
-                marginTop: '0.5rem'
-              }}>
-                {facility.location}
-              </p>
-            )}
-          </div>
-
-          {/* Contact Section */}
-          <div>
+          {/* Contact Section - First on mobile */}
+          <div style={{
+            gridRow: isMobile ? '1' : 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            height: isMobile ? 'auto' : '100%'
+          }}>
             <h2 style={{
               fontSize: '1.5rem',
               fontWeight: '600',
@@ -744,7 +701,10 @@ function SportsBasePublic() {
               padding: '2.5rem',
               borderRadius: '20px',
               border: '1px solid #e2e8f0',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+              height: isMobile ? 'auto' : '100%',
+              display: 'flex',
+              flexDirection: 'column'
             }}>
               <div style={{
                 display: 'flex',
@@ -1132,6 +1092,57 @@ function SportsBasePublic() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Map - Second on mobile */}
+          <div style={{
+            gridRow: isMobile ? '2' : 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            height: isMobile ? 'auto' : '100%'
+          }}>
+            <h2 style={{
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              marginBottom: '1rem',
+              color: '#0f172a'
+            }}>
+              Locație
+            </h2>
+            <div style={{
+              height: isMobile ? '300px' : '100%',
+              minHeight: isMobile ? '300px' : '400px',
+              flex: isMobile ? 'none' : '1'
+            }}>
+              {mapCoords && (
+                <PublicMap
+                  coordinates={mapCoords}
+                  location={facility.location || undefined}
+                />
+              )}
+              {!mapCoords && facility.location && (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#64748b',
+                  fontSize: '0.875rem'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ margin: '0 auto 1rem' }}>
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <p style={{ margin: 0 }}>{facility.location}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

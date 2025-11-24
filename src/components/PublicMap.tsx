@@ -73,7 +73,8 @@ function PublicMap({ coordinates, location }: PublicMapProps) {
       ref={mapRef}
       style={{
         width: '100%',
-        height: '400px',
+        height: '100%',
+        minHeight: '400px',
         borderRadius: '12px',
         overflow: 'hidden',
         border: '1px solid #e2e8f0',
