@@ -249,8 +249,8 @@ function RegisterSportsBase() {
     }
 
     try {
-      // Optimize logo before setting it
-      const optimizedFile = await optimizeImage(file)
+      // Optimize logo before setting it (isLogo = true for smaller size)
+      const optimizedFile = await optimizeImage(file, true)
       setLogoFile(optimizedFile)
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -263,8 +263,8 @@ function RegisterSportsBase() {
     }
   }
 
-  // Optimize image: resize and compress
-  const optimizeImage = (file: File): Promise<File> => {
+  // Optimize image: resize and compress more aggressively
+  const optimizeImage = (file: File, isLogo: boolean = false): Promise<File> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -277,9 +277,9 @@ function RegisterSportsBase() {
             return
           }
 
-          // Calculate new dimensions (max 1920x1920, maintain aspect ratio)
-          const maxWidth = 1920
-          const maxHeight = 1920
+          // More aggressive resizing: max 1200x1200 for gallery, 800x800 for logo
+          const maxWidth = isLogo ? 800 : 1200
+          const maxHeight = isLogo ? 800 : 1200
           let width = img.width
           let height = img.height
 
@@ -297,21 +297,73 @@ function RegisterSportsBase() {
           canvas.height = height
           ctx.drawImage(img, 0, 0, width, height)
 
-          // Convert to blob with compression (quality 0.85)
+          // More aggressive compression: quality 0.75 for gallery, 0.8 for logo
+          const quality = isLogo ? 0.8 : 0.75
           canvas.toBlob(
             (blob) => {
               if (blob) {
-                const optimizedFile = new File([blob], file.name, {
-                  type: 'image/jpeg',
-                  lastModified: Date.now()
-                })
-                resolve(optimizedFile)
+                // Check if file size is still too large (> 500KB), compress more
+                if (blob.size > 500 * 1024) {
+                  const img2 = new Image()
+                  img2.onload = () => {
+                    const canvas2 = document.createElement('canvas')
+                    const ctx2 = canvas2.getContext('2d')
+                    if (!ctx2) {
+                      const optimizedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                      })
+                      resolve(optimizedFile)
+                      return
+                    }
+                    
+                    // Further reduce size
+                    const scale = Math.sqrt(500 * 1024 / blob.size)
+                    canvas2.width = width * scale
+                    canvas2.height = height * scale
+                    ctx2.drawImage(img2, 0, 0, canvas2.width, canvas2.height)
+                    
+                    canvas2.toBlob(
+                      (blob2) => {
+                        if (blob2) {
+                          const optimizedFile = new File([blob2], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                          })
+                          resolve(optimizedFile)
+                        } else {
+                          const optimizedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                          })
+                          resolve(optimizedFile)
+                        }
+                      },
+                      'image/jpeg',
+                      0.7
+                    )
+                  }
+                  img2.onerror = () => {
+                    const optimizedFile = new File([blob], file.name, {
+                      type: 'image/jpeg',
+                      lastModified: Date.now()
+                    })
+                    resolve(optimizedFile)
+                  }
+                  img2.src = URL.createObjectURL(blob)
+                } else {
+                  const optimizedFile = new File([blob], file.name, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                  })
+                  resolve(optimizedFile)
+                }
               } else {
                 reject(new Error('Failed to create blob'))
               }
             },
             'image/jpeg',
-            0.85
+            quality
           )
         }
         img.onerror = () => reject(new Error('Failed to load image'))
