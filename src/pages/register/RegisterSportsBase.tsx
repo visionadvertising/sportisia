@@ -1576,16 +1576,40 @@ function RegisterSportsBase() {
           {/* Step 2: Branding - Identical to RegisterRepairShop */}
           {currentStep === 2 && (
             <div>
-              <h2 style={{ 
-                fontSize: isMobile ? '1.25rem' : '1.75rem', 
-                color: '#0f172a', 
-                marginBottom: isMobile ? '1.5rem' : '2.5rem',
-                fontWeight: '600',
-                letterSpacing: '-0.02em',
-                lineHeight: '1.3'
+              <div style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+                borderRadius: '12px',
+                padding: isMobile ? '1.5rem' : '2rem',
+                marginBottom: isMobile ? '2rem' : '2.5rem',
+                border: '1px solid #d1fae5'
               }}>
-                Branding și prezentare
-              </h2>
+                <h2 style={{ 
+                  fontSize: isMobile ? '1.25rem' : '1.75rem', 
+                  color: '#0f172a', 
+                  marginBottom: isMobile ? '1.25rem' : '1.5rem',
+                  fontWeight: '700',
+                  letterSpacing: '-0.02em',
+                  lineHeight: '1.3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <div style={{
+                    width: '4px',
+                    height: isMobile ? '24px' : '28px',
+                    background: '#10b981',
+                    borderRadius: '2px'
+                  }} />
+                  Branding și prezentare
+                </h2>
+                <p style={{
+                  fontSize: isMobile ? '0.875rem' : '0.9375rem',
+                  color: '#64748b',
+                  marginBottom: isMobile ? '1.5rem' : '2rem',
+                  lineHeight: '1.6'
+                }}>
+                  Completează informațiile despre brandul și prezentarea bazei tale sportive
+                </p>
               <div style={{ marginBottom: '2.5rem' }}>
                 <label style={{
                   display: 'block',
@@ -1962,22 +1986,47 @@ function RegisterSportsBase() {
                   />
                 </div>
               </div>
+              </div>
             </div>
           )}
 
           {/* Step 3: Gallery - Identical to RegisterRepairShop */}
           {currentStep === 3 && (
             <div>
-              <h2 style={{ 
-                fontSize: isMobile ? '1.25rem' : '1.75rem', 
-                color: '#0f172a', 
-                marginBottom: isMobile ? '1.5rem' : '2.5rem',
-                fontWeight: '600',
-                letterSpacing: '-0.02em',
-                lineHeight: '1.3'
+              <div style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+                borderRadius: '12px',
+                padding: isMobile ? '1.5rem' : '2rem',
+                marginBottom: isMobile ? '2rem' : '2.5rem',
+                border: '1px solid #d1fae5'
               }}>
-                Galerie imagini
-              </h2>
+                <h2 style={{ 
+                  fontSize: isMobile ? '1.25rem' : '1.75rem', 
+                  color: '#0f172a', 
+                  marginBottom: isMobile ? '1.25rem' : '1.5rem',
+                  fontWeight: '700',
+                  letterSpacing: '-0.02em',
+                  lineHeight: '1.3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <div style={{
+                    width: '4px',
+                    height: isMobile ? '24px' : '28px',
+                    background: '#10b981',
+                    borderRadius: '2px'
+                  }} />
+                  Galerie imagini
+                </h2>
+                <p style={{
+                  fontSize: isMobile ? '0.875rem' : '0.9375rem',
+                  color: '#64748b',
+                  marginBottom: isMobile ? '1.5rem' : '2rem',
+                  lineHeight: '1.6'
+                }}>
+                  Încarcă imagini pentru a-ți prezenta baza sportivă. Poți adăuga până la 10 imagini, fiecare cu maximum 5MB.
+                </p>
               <div style={{ marginBottom: '2.5rem' }}>
                 <label style={{
                   display: 'block',
@@ -2096,30 +2145,47 @@ function RegisterSportsBase() {
                   Nu ai adăugat imagini încă. Poți sări peste acest pas.
                 </p>
               )}
+              </div>
             </div>
           )}
 
           {/* Step 4: Sports Fields */}
           {currentStep === 4 && (
             <div>
-              <h2 style={{ 
-                fontSize: isMobile ? '1.25rem' : '1.75rem', 
-                color: '#0f172a', 
-                marginBottom: isMobile ? '1.5rem' : '2.5rem',
-                fontWeight: '600',
-                letterSpacing: '-0.02em',
-                lineHeight: '1.3'
+              <div style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+                borderRadius: '12px',
+                padding: isMobile ? '1.5rem' : '2rem',
+                marginBottom: isMobile ? '2rem' : '2.5rem',
+                border: '1px solid #d1fae5'
               }}>
-                Terenuri
-              </h2>
-              <p style={{
-                color: '#64748b',
-                fontSize: '0.875rem',
-                marginBottom: isMobile ? '1.5rem' : '2rem',
-                lineHeight: '1.6'
-              }}>
-                Adaugă toate terenurile disponibile în baza ta sportivă. Fiecare teren poate fi de un tip diferit (fotbal, tenis, etc.) și poate avea propriile prețuri și facilități.
-              </p>
+                <h2 style={{ 
+                  fontSize: isMobile ? '1.25rem' : '1.75rem', 
+                  color: '#0f172a', 
+                  marginBottom: isMobile ? '1.25rem' : '1.5rem',
+                  fontWeight: '700',
+                  letterSpacing: '-0.02em',
+                  lineHeight: '1.3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <div style={{
+                    width: '4px',
+                    height: isMobile ? '24px' : '28px',
+                    background: '#10b981',
+                    borderRadius: '2px'
+                  }} />
+                  Terenuri
+                </h2>
+                <p style={{
+                  fontSize: isMobile ? '0.875rem' : '0.9375rem',
+                  color: '#64748b',
+                  marginBottom: isMobile ? '1.5rem' : '2rem',
+                  lineHeight: '1.6'
+                }}>
+                  Adaugă toate terenurile disponibile în baza ta sportivă. Fiecare teren poate fi de un tip diferit (fotbal, tenis, etc.) și poate avea propriile prețuri și facilități.
+                </p>
               
               {/* Sports Fields List */}
               <div style={{ marginBottom: isMobile ? '1.5rem' : '2rem' }}>
@@ -3153,6 +3219,7 @@ function RegisterSportsBase() {
 
                   </div>
                 ))}
+              </div>
               </div>
             </div>
           )}
