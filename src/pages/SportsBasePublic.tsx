@@ -597,6 +597,7 @@ function SportsBasePublic() {
           right: 0,
           bottom: 0,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1,
@@ -604,14 +605,16 @@ function SportsBasePublic() {
           color: 'white',
           padding: isMobile ? '1rem' : '2rem',
           maxWidth: '1200px',
-          margin: '0 auto'
+          margin: '0 auto',
+          width: '100%'
         }}>
           {/* Logo */}
           {logoUrl && getImageUrl(logoUrl) && (
             <div style={{
               marginBottom: '1.5rem',
               display: 'flex',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              width: '100%'
             }}>
               <img
                 src={getImageUrl(logoUrl) || ''}
@@ -635,7 +638,7 @@ function SportsBasePublic() {
               />
             </div>
           )}
-          <div>
+          <div style={{ width: '100%' }}>
             <h1 style={{
               fontSize: isMobile ? '2rem' : '3.5rem',
               fontWeight: '700',
