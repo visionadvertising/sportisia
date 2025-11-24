@@ -1766,10 +1766,10 @@ function RegisterSportsBase() {
                   letterSpacing: '0.01em'
                 }}>Website</label>
                 <input
-                  type="url"
+                  type="text"
                   value={website}
                   onChange={(e) => setWebsite(e.target.value)}
-                  placeholder="https://example.com"
+                  placeholder="https://example.com sau www.example.com"
                   style={{
                     width: '100%',
                     padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
