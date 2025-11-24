@@ -506,6 +506,34 @@ function RegisterSportsBase() {
   }
 
   // Update slot status and price (used in the new simple interface)
+  // Check if two time slots overlap
+  const doSlotsOverlap = (start1: string, end1: string, start2: string, end2: string): boolean => {
+    const [start1H, start1M] = start1.split(':').map(Number)
+    const [end1H, end1M] = end1.split(':').map(Number)
+    const [start2H, start2M] = start2.split(':').map(Number)
+    const [end2H, end2M] = end2.split(':').map(Number)
+    
+    const start1Minutes = start1H * 60 + start1M
+    const end1Minutes = end1H * 60 + end1M
+    const start2Minutes = start2H * 60 + start2M
+    const end2Minutes = end2H * 60 + end2M
+    
+    // Check if intervals overlap (excluding exact boundaries)
+    return start1Minutes < end2Minutes && start2Minutes < end1Minutes
+  }
+
+  // Check if a slot overlaps with any existing slot for a day
+  const hasOverlappingSlot = (day: string, startTime: string, endTime: string, existingSlots: TimeSlot[], excludeSlot?: TimeSlot): boolean => {
+    return existingSlots.some(slot => {
+      if (slot.day !== day) return false
+      // Exclude the slot being edited
+      if (excludeSlot && slot.startTime === excludeSlot.startTime && slot.endTime === excludeSlot.endTime && slot.day === excludeSlot.day) {
+        return false
+      }
+      return doSlotsOverlap(startTime, endTime, slot.startTime, slot.endTime)
+    })
+  }
+
   const updateSlot = (fieldIndex: number, day: string, startTime: string, updates: Partial<TimeSlot>) => {
     const updated = [...sportsFields]
     updated[fieldIndex] = {
@@ -3184,13 +3212,30 @@ function RegisterSportsBase() {
                               const updated = [...sportsFields]
                               const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
                               
-                              // Remove existing slots for all days
-                              updated[index] = {
-                                ...updated[index],
-                                timeSlots: updated[index].timeSlots.filter(s => !days.includes(s.day))
+                              // Check for overlapping slots before adding
+                              const overlappingDays: string[] = []
+                              days.forEach(day => {
+                                if (hasOverlappingSlot(day, startTime, endTime, updated[index].timeSlots)) {
+                                  overlappingDays.push(day)
+                                }
+                              })
+                              
+                              if (overlappingDays.length > 0) {
+                                const dayLabels: { [key: string]: string } = {
+                                  monday: 'Luni',
+                                  tuesday: 'Marți',
+                                  wednesday: 'Miercuri',
+                                  thursday: 'Joi',
+                                  friday: 'Vineri',
+                                  saturday: 'Sâmbătă',
+                                  sunday: 'Duminică'
+                                }
+                                const dayNames = overlappingDays.map(d => dayLabels[d]).join(', ')
+                                alert(`Există deja un slot configurat pentru intervalul ${startTime} - ${endTime} în zilele: ${dayNames}. Te rugăm să verifici și să modifici slot-urile existente.`)
+                                return
                               }
                               
-                              // Add new slots for all days
+                              // Add new slots for all days (without removing existing ones)
                               days.forEach(day => {
                                 updated[index].timeSlots.push({
                                   day,
@@ -3393,9 +3438,18 @@ function RegisterSportsBase() {
                                                 s.endTime === slot.endTime
                                               )
                                               if (slotIdx !== -1) {
+                                                const newStartTime = e.target.value
+                                                const currentSlot = updated[index].timeSlots[slotIdx]
+                                                
+                                                // Check for overlapping slots (excluding current slot)
+                                                if (hasOverlappingSlot(day.key, newStartTime, currentSlot.endTime, updated[index].timeSlots, currentSlot)) {
+                                                  alert(`Există deja un slot configurat pentru intervalul ${newStartTime} - ${currentSlot.endTime} în ziua ${day.label}. Te rugăm să verifici și să modifici slot-urile existente.`)
+                                                  return
+                                                }
+                                                
                                                 updated[index].timeSlots[slotIdx] = {
                                                   ...updated[index].timeSlots[slotIdx],
-                                                  startTime: e.target.value
+                                                  startTime: newStartTime
                                                 }
                                                 setSportsFields(updated)
                                               }
@@ -3441,9 +3495,18 @@ function RegisterSportsBase() {
                                                 s.endTime === slot.endTime
                                               )
                                               if (slotIdx !== -1) {
+                                                const newEndTime = e.target.value
+                                                const currentSlot = updated[index].timeSlots[slotIdx]
+                                                
+                                                // Check for overlapping slots (excluding current slot)
+                                                if (hasOverlappingSlot(day.key, currentSlot.startTime, newEndTime, updated[index].timeSlots, currentSlot)) {
+                                                  alert(`Există deja un slot configurat pentru intervalul ${currentSlot.startTime} - ${newEndTime} în ziua ${day.label}. Te rugăm să verifici și să modifici slot-urile existente.`)
+                                                  return
+                                                }
+                                                
                                                 updated[index].timeSlots[slotIdx] = {
                                                   ...updated[index].timeSlots[slotIdx],
-                                                  endTime: e.target.value
+                                                  endTime: newEndTime
                                                 }
                                                 setSportsFields(updated)
                                               }
@@ -3659,6 +3722,13 @@ function RegisterSportsBase() {
                                       price: null,
                                       isPriceUnspecified: false
                                     }
+                                    
+                                    // Check for overlapping slots
+                                    if (hasOverlappingSlot(day.key, newSlot.startTime, newSlot.endTime, updated[index].timeSlots)) {
+                                      alert(`Există deja un slot configurat pentru intervalul ${newSlot.startTime} - ${newSlot.endTime} în ziua ${day.label}. Te rugăm să verifici și să modifici slot-urile existente.`)
+                                      return
+                                    }
+                                    
                                     updated[index] = {
                                       ...updated[index],
                                       timeSlots: [...updated[index].timeSlots, newSlot]
