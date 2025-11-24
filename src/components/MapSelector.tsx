@@ -53,53 +53,16 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
 
     mapInstanceRef.current = map
 
-    // Add click handler to place marker
-    map.on('click', (e) => {
-      const { lat, lng } = e.latlng
-      onCoordinatesChange({ lat, lng })
-      
-      // Reverse geocode to get address
-      setIsGeocoding(true)
-      fetch(`/api/reverse-geocode?lat=${lat}&lon=${lng}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.display_name) {
-            onLocationChange(data.display_name)
-          }
-          setIsGeocoding(false)
-        })
-        .catch(() => {
-          setIsGeocoding(false)
-        })
-    })
+    // Click handler dezactivat - pin-ul se pune doar prin butonul "Găsește pe hartă"
+    // map.on('click', (e) => { ... })
 
-    // If coordinates exist, set marker (draggable)
+    // If coordinates exist, set marker (non-draggable)
     if (coordinates) {
       const marker = L.marker([coordinates.lat, coordinates.lng], {
-        draggable: true
+        draggable: false
       }).addTo(map)
       markerRef.current = marker
       map.setView([coordinates.lat, coordinates.lng], 15)
-      
-      // Handle marker drag
-      marker.on('dragend', (e) => {
-        const { lat, lng } = e.target.getLatLng()
-        onCoordinatesChange({ lat, lng })
-        
-        // Reverse geocode to get address
-        setIsGeocoding(true)
-        fetch(`/api/reverse-geocode?lat=${lat}&lon=${lng}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.display_name) {
-              onLocationChange(data.display_name)
-            }
-            setIsGeocoding(false)
-          })
-          .catch(() => {
-            setIsGeocoding(false)
-          })
-      })
     }
 
     return () => {
@@ -116,29 +79,9 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
         markerRef.current.setLatLng([coordinates.lat, coordinates.lng])
       } else {
         const marker = L.marker([coordinates.lat, coordinates.lng], {
-          draggable: true
+          draggable: false
         }).addTo(mapInstanceRef.current)
         markerRef.current = marker
-        
-        // Handle marker drag
-        marker.on('dragend', (e) => {
-          const { lat, lng } = e.target.getLatLng()
-          onCoordinatesChange({ lat, lng })
-          
-          // Reverse geocode to get address
-          setIsGeocoding(true)
-          fetch(`/api/reverse-geocode?lat=${lat}&lon=${lng}`)
-            .then(res => res.json())
-            .then(data => {
-              if (data.display_name) {
-                onLocationChange(data.display_name)
-              }
-              setIsGeocoding(false)
-            })
-            .catch(() => {
-              setIsGeocoding(false)
-            })
-        })
       }
       mapInstanceRef.current.setView([coordinates.lat, coordinates.lng], 15)
     } else {

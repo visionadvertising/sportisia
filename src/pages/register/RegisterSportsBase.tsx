@@ -382,18 +382,21 @@ function RegisterSportsBase() {
       case 1:
         const validPhones = phones.filter(p => p.trim() !== '')
         const validEmails = emails.filter(e => e.trim() !== '')
-        if (validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified)) {
+        if (validPhones.length === 0 || validEmails.length === 0 || !city) {
           setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon și un email)')
           return false
         }
         break
       case 2:
+        // Locația poate fi nespecificată, deci nu validăm nimic aici
+        break
+      case 3:
         if (!name) {
           setError('Te rugăm să introduci denumirea facilității')
           return false
         }
         break
-      case 4:
+      case 5:
         // Validate that at least one field is complete with time slots
         const validFields = sportsFields.filter(field => {
           const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
@@ -551,7 +554,7 @@ function RegisterSportsBase() {
         
         if (username && password) {
           setCredentials({ username, password })
-          setCurrentStep(5)
+          setCurrentStep(6)
           setError('')
           // Scroll to top to show success message
           window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -571,9 +574,10 @@ function RegisterSportsBase() {
     }
   }
 
-  const totalSteps = 4
+  const totalSteps = 5
   const steps = [
     'Date de contact',
+    'Locație',
     'Branding',
     'Galerie',
     'Terenuri, prețuri și program'
@@ -720,7 +724,7 @@ function RegisterSportsBase() {
           </div>
         )}
 
-        <form onSubmit={currentStep === 4 ? (e) => handleSubmit(e) : (e) => { e.preventDefault(); nextStep(); }}>
+        <form onSubmit={currentStep === 5 ? (e) => handleSubmit(e) : (e) => { e.preventDefault(); nextStep(); }}>
           {/* Step 1: Contact Details - Identical to RegisterRepairShop */}
           {currentStep === 1 && (
             <div>
@@ -1455,133 +1459,174 @@ function RegisterSportsBase() {
                   </div>
                 )}
               </div>
-              
-              {/* Location with Map - Identical to RegisterRepairShop */}
-              <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: isMobile ? 'column' : 'row',
-                  alignItems: isMobile ? 'flex-start' : 'center', 
-                  gap: isMobile ? '0.75rem' : '0.5rem', 
-                  marginBottom: '0.75rem' 
+            </div>
+          )}
+
+          {/* Step 2: Location */}
+          {currentStep === 2 && (
+            <div>
+              <div style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+                borderRadius: '12px',
+                padding: isMobile ? '1.5rem' : '2rem',
+                marginBottom: isMobile ? '2rem' : '2.5rem',
+                border: '1px solid #d1fae5'
+              }}>
+                <h2 style={{ 
+                  fontSize: isMobile ? '1.25rem' : '1.75rem', 
+                  color: '#0f172a', 
+                  marginBottom: isMobile ? '1.25rem' : '1.5rem',
+                  fontWeight: '700',
+                  letterSpacing: '-0.02em',
+                  lineHeight: '1.3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
                 }}>
-                  <label style={{
-                    display: 'block',
-                    color: '#0f172a',
-                    fontWeight: '600',
-                    fontSize: '0.875rem',
-                    letterSpacing: '0.01em',
-                    margin: 0
-                  }}>Adresă completă {!locationNotSpecified && '*'}</label>
+                  <div style={{
+                    width: '4px',
+                    height: isMobile ? '24px' : '28px',
+                    background: '#10b981',
+                    borderRadius: '2px'
+                  }} />
+                  Locație
+                </h2>
+                <p style={{
+                  fontSize: isMobile ? '0.875rem' : '0.9375rem',
+                  color: '#64748b',
+                  marginBottom: isMobile ? '1.5rem' : '2rem',
+                  lineHeight: '1.6'
+                }}>
+                  Completează locația bazei tale sportive. Poți specifica adresa completă sau marca locația ca nespecificată.
+                </p>
+                
+                {/* Location with Map */}
+                <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem' }}>
                   <div style={{ 
                     display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.75rem',
-                    marginLeft: isMobile ? '0' : 'auto'
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center', 
+                    gap: isMobile ? '0.75rem' : '0.5rem', 
+                    marginBottom: '0.75rem' 
                   }}>
-                    <span style={{
+                    <label style={{
+                      display: 'block',
+                      color: '#0f172a',
+                      fontWeight: '600',
                       fontSize: '0.875rem',
-                      color: '#64748b',
-                      fontWeight: '500'
-                    }}>Nespecificat</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newValue = !locationNotSpecified
-                        setLocationNotSpecified(newValue)
-                        if (newValue) {
-                          setLocation('')
-                          setMapCoordinates(null)
-                        }
-                      }}
-                      style={{
-                        position: 'relative',
-                        width: isMobile ? '48px' : '44px',
-                        height: isMobile ? '28px' : '24px',
-                        borderRadius: '14px',
-                        border: 'none',
-                        background: locationNotSpecified ? '#10b981' : '#cbd5e1',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s ease',
-                        outline: 'none',
-                        padding: 0,
-                        touchAction: 'manipulation',
-                        minWidth: isMobile ? '48px' : '44px'
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)'
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.boxShadow = 'none'
-                      }}
-                    >
-                      <div style={{
-                        position: 'absolute',
-                        top: '2px',
-                        left: locationNotSpecified ? (isMobile ? '22px' : '22px') : '2px',
-                        width: isMobile ? '24px' : '20px',
-                        height: isMobile ? '24px' : '20px',
-                        borderRadius: '50%',
-                        background: '#ffffff',
-                        transition: 'left 0.2s ease',
-                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                      }} />
-                    </button>
-                  </div>
-                </div>
-                {!locationNotSpecified && (
-                  <>
-                    <textarea
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Ex: Strada Mihai Eminescu, Nr. 10, Bl. A1, Sc. 2, Ap. 15"
-                      required={!locationNotSpecified}
-                      rows={3}
-                      style={{
-                        width: '100%',
-                        padding: '0.875rem 1rem',
-                        border: '1.5px solid #e2e8f0',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        outline: 'none',
-                        fontFamily: 'inherit',
-                        resize: 'vertical',
-                        marginBottom: isMobile ? '1rem' : '1.5rem',
-                        background: '#ffffff',
-                        color: '#0f172a',
-                        transition: 'all 0.2s ease',
-                        fontWeight: '400',
-                        lineHeight: '1.5',
-                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                        WebkitAppearance: 'none',
-                        touchAction: 'manipulation'
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = '#0f172a'
-                        e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = '#e2e8f0'
-                        e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                      }}
-                    />
-                    <div style={{ marginBottom: isMobile ? '1rem' : '1.5rem' }}>
-                      <MapSelector
-                        location={location}
-                        coordinates={mapCoordinates}
-                        onLocationChange={setLocation}
-                        onCoordinatesChange={setMapCoordinates}
-                        city={city}
-                      />
+                      letterSpacing: '0.01em',
+                      margin: 0
+                    }}>Adresă completă {!locationNotSpecified && '*'}</label>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem',
+                      marginLeft: isMobile ? '0' : 'auto'
+                    }}>
+                      <span style={{
+                        fontSize: '0.875rem',
+                        color: '#64748b',
+                        fontWeight: '500'
+                      }}>Nespecificat</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newValue = !locationNotSpecified
+                          setLocationNotSpecified(newValue)
+                          if (newValue) {
+                            setLocation('')
+                            setMapCoordinates(null)
+                          }
+                        }}
+                        style={{
+                          position: 'relative',
+                          width: isMobile ? '48px' : '44px',
+                          height: isMobile ? '28px' : '24px',
+                          borderRadius: '14px',
+                          border: 'none',
+                          background: locationNotSpecified ? '#10b981' : '#cbd5e1',
+                          cursor: 'pointer',
+                          transition: 'background 0.2s ease',
+                          outline: 'none',
+                          padding: 0,
+                          touchAction: 'manipulation',
+                          minWidth: isMobile ? '48px' : '44px'
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)'
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.boxShadow = 'none'
+                        }}
+                      >
+                        <div style={{
+                          position: 'absolute',
+                          top: '2px',
+                          left: locationNotSpecified ? (isMobile ? '22px' : '22px') : '2px',
+                          width: isMobile ? '24px' : '20px',
+                          height: isMobile ? '24px' : '20px',
+                          borderRadius: '50%',
+                          background: '#ffffff',
+                          transition: 'left 0.2s ease',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                        }} />
+                      </button>
                     </div>
-                  </>
-                )}
+                  </div>
+                  {!locationNotSpecified && (
+                    <>
+                      <textarea
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="Ex: Strada Mihai Eminescu, Nr. 10, Bl. A1, Sc. 2, Ap. 15"
+                        required={!locationNotSpecified}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          outline: 'none',
+                          fontFamily: 'inherit',
+                          resize: 'vertical',
+                          marginBottom: isMobile ? '1rem' : '1.5rem',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                      <div style={{ marginBottom: isMobile ? '1rem' : '1.5rem' }}>
+                        <MapSelector
+                          location={location}
+                          coordinates={mapCoordinates}
+                          onLocationChange={setLocation}
+                          onCoordinatesChange={setMapCoordinates}
+                          city={city}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Step 2: Branding - Identical to RegisterRepairShop */}
-          {currentStep === 2 && (
+          {/* Step 3: Branding - Identical to RegisterRepairShop */}
+          {currentStep === 3 && (
             <div>
               <div style={{
                 background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
@@ -1997,8 +2042,8 @@ function RegisterSportsBase() {
             </div>
           )}
 
-          {/* Step 3: Gallery - Identical to RegisterRepairShop */}
-          {currentStep === 3 && (
+          {/* Step 4: Gallery - Identical to RegisterRepairShop */}
+          {currentStep === 4 && (
             <div>
               <div style={{
                 background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
@@ -2156,8 +2201,8 @@ function RegisterSportsBase() {
             </div>
           )}
 
-          {/* Step 4: Sports Fields */}
-          {currentStep === 4 && (
+          {/* Step 5: Sports Fields */}
+          {currentStep === 5 && (
             <div>
               <div style={{
                 background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
@@ -3269,7 +3314,7 @@ function RegisterSportsBase() {
           )}
 
           {/* Navigation Buttons - Same as RegisterRepairShop */}
-          {currentStep < 5 && (
+          {currentStep < 6 && (
             <div style={{ 
               display: 'flex', 
               flexDirection: isMobile ? 'column-reverse' : 'row',
@@ -3301,7 +3346,7 @@ function RegisterSportsBase() {
                 </button>
               )}
               {!isMobile && <div style={{ flex: 1 }} />}
-              {currentStep < 5 ? (
+              {currentStep < 6 ? (
                 <button
                   type="submit"
                   style={{
@@ -3350,7 +3395,7 @@ function RegisterSportsBase() {
         </form>
 
         {/* Success Step - Outside form since it doesn't need form submission */}
-        {currentStep === 5 && credentials && (
+        {currentStep === 6 && credentials && (
           <div style={{
             textAlign: 'center',
             padding: isMobile ? '2rem 1rem' : '3rem'
