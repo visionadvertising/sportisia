@@ -33,6 +33,7 @@ import FacilitiesList from './pages/FacilitiesList'
 import AllFacilities from './pages/AllFacilities'
 import SuggestFacility from './pages/SuggestFacility'
 import SportsBasePublic from './pages/SportsBasePublic'
+import Footer from './components/Footer'
 
 function AppContent() {
   const location = useLocation()
@@ -341,6 +342,9 @@ function AppContent() {
           <Route path="smtp-config" element={<SMTPConfig />} />
         </Route>
       </Routes>
+      
+      {/* Footer - doar pentru rute non-admin */}
+      {!isAdminRoute && <Footer />}
     </div>
   )
 }
