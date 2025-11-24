@@ -390,9 +390,32 @@ function SportsBasePublic() {
   const gallery = facility.gallery || []
   const socialMedia = facility.social_media || {}
   const mapCoords = facility.map_coordinates || null
+  const logoUrl = facility.logo_url || null
+
+  // Helper function to get full image URL
+  const getImageUrl = (path: string | null | undefined): string | null => {
+    if (!path) return null
+    // If already a full URL, return as is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path
+    }
+    // If relative path starting with /uploads, ensure it's accessible
+    // Backend serves /uploads statically, so we can use it directly
+    // But if it doesn't work, we might need to prepend API_BASE_URL
+    if (path.startsWith('/uploads/')) {
+      return path
+    }
+    // If path doesn't start with /, it might be a relative path from API
+    // Try with API_BASE_URL first, then fallback to direct path
+    if (path.startsWith('/')) {
+      return path
+    }
+    // Otherwise, prepend / to make it absolute
+    return `/${path}`
+  }
 
   // Get first gallery image or default
-  const heroImage = gallery.length > 0 ? gallery[0] : 'https://via.placeholder.com/1200x400?text=Baza+Sportiva'
+  const heroImage = gallery.length > 0 ? getImageUrl(gallery[0]) || 'https://via.placeholder.com/1200x400?text=Baza+Sportiva' : 'https://via.placeholder.com/1200x400?text=Baza+Sportiva'
 
   return (
     <div style={{
@@ -428,6 +451,32 @@ function SportsBasePublic() {
           maxWidth: '1200px',
           width: '100%'
         }}>
+          {/* Logo */}
+          {logoUrl && getImageUrl(logoUrl) && (
+            <div style={{
+              marginBottom: '1.5rem',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
+              <img
+                src={getImageUrl(logoUrl) || ''}
+                alt={`${facility.name} logo`}
+                style={{
+                  maxWidth: isMobile ? '120px' : '200px',
+                  maxHeight: isMobile ? '120px' : '200px',
+                  objectFit: 'contain',
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  padding: '0.75rem',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+                }}
+                onError={(e) => {
+                  // Hide logo if image fails to load
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+            </div>
+          )}
           <h1 style={{
             fontSize: isMobile ? '2rem' : '3.5rem',
             fontWeight: '700',
@@ -954,28 +1003,36 @@ function SportsBasePublic() {
               gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
               gap: '1rem'
             }}>
-              {gallery.map((image: string, idx: number) => (
-                <img
-                  key={idx}
-                  src={image}
-                  alt={`Galerie ${idx + 1}`}
-                  style={{
-                    width: '100%',
-                    height: '200px',
-                    objectFit: 'cover',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.05)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)'
-                  }}
-                />
-              ))}
+              {gallery.map((image: string, idx: number) => {
+                const imageUrl = getImageUrl(image)
+                if (!imageUrl) return null
+                return (
+                  <img
+                    key={idx}
+                    src={imageUrl}
+                    alt={`Galerie ${idx + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '200px',
+                      objectFit: 'cover',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.05)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)'
+                    }}
+                    onError={(e) => {
+                      // Hide broken images
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                )
+              })}
             </div>
           </div>
         )}
