@@ -854,23 +854,48 @@ function SportsBasePublic() {
                     <div style={{
                       display: 'flex',
                       flexWrap: 'wrap',
-                      gap: '0.5rem',
-                      marginBottom: '1rem'
+                      gap: '0.625rem',
+                      marginTop: '1rem',
+                      paddingTop: '1rem',
+                      borderTop: '1px solid #f1f5f9'
                     }}>
                       {getFeatureLabels(field.features).map((label, labelIdx) => (
-                        <span
+                        <div
                           key={labelIdx}
                           style={{
-                            padding: '0.375rem 0.75rem',
-                            background: 'white',
-                            color: '#64748b',
-                            borderRadius: '6px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.375rem',
+                            padding: '0.5rem 0.875rem',
+                            background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+                            color: '#059669',
+                            borderRadius: '8px',
                             fontSize: '0.8125rem',
-                            border: '1px solid #e2e8f0'
+                            fontWeight: '500',
+                            border: '1px solid #d1fae5',
+                            boxShadow: '0 1px 2px rgba(16, 185, 129, 0.08)',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isMobile) {
+                              e.currentTarget.style.transform = 'translateY(-1px)'
+                              e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.12)'
+                              e.currentTarget.style.borderColor = '#10b981'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isMobile) {
+                              e.currentTarget.style.transform = 'translateY(0)'
+                              e.currentTarget.style.boxShadow = '0 1px 2px rgba(16, 185, 129, 0.08)'
+                              e.currentTarget.style.borderColor = '#d1fae5'
+                            }
                           }}
                         >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
                           {label}
-                        </span>
+                        </div>
                       ))}
                     </div>
                   )}
