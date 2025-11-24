@@ -123,16 +123,29 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
       }
 
       console.log('Geocoding query:', searchQuery)
-      const response = await fetch(
-        `/api/geocode?q=${encodeURIComponent(searchQuery)}`
+      let response = await fetch(
+        `/api/geocode?q=${encodeURIComponent(searchQuery)}&city=${encodeURIComponent(city || '')}`
       )
       
       if (!response.ok) {
         throw new Error(`Geocoding failed: ${response.status}`)
       }
       
-      const data = await response.json()
+      let data = await response.json()
       console.log('Geocoding response:', data)
+      
+      // Dacă nu găsește cu adresa completă, încearcă doar cu orașul
+      if (Array.isArray(data) && data.length === 0 && city && city.trim()) {
+        console.log('Trying fallback search with city only:', city)
+        const cityQuery = `${city.trim()}, România`
+        response = await fetch(
+          `/api/geocode?q=${encodeURIComponent(cityQuery)}&city=${encodeURIComponent(city)}`
+        )
+        if (response.ok) {
+          data = await response.json()
+          console.log('Fallback geocoding response:', data)
+        }
+      }
       
       // Handle both array response and error object
       if (Array.isArray(data) && data.length > 0) {
@@ -154,11 +167,14 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
         console.log('Map view updated')
       } else if (data.error) {
         console.error('Geocoding error:', data.error, data.details)
+        alert('Nu s-a putut găsi locația. Te rugăm să verifici adresa și să încerci din nou.')
       } else {
         console.warn('Geocoding returned empty or invalid data:', data)
+        alert('Nu s-a găsit locația pentru adresa introdusă. Te rugăm să verifici adresa sau să folosești doar numele străzii și orașul.')
       }
     } catch (error) {
       console.error('Geocoding error:', error)
+      alert('Eroare la căutarea locației. Te rugăm să încerci din nou.')
     } finally {
       setIsGeocoding(false)
     }
