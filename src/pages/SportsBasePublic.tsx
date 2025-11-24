@@ -118,6 +118,7 @@ function SportsBasePublic() {
       const data = await response.json()
       
       console.log(`[Frontend] Response:`, data)
+      console.log(`[Frontend] sportsFields/sports_fields:`, data.data?.sportsFields || data.data?.sports_fields || data.facility?.sportsFields || data.facility?.sports_fields)
       
       let facilityData = null
       
@@ -173,6 +174,23 @@ function SportsBasePublic() {
             facilityData.map_coordinates = null
           }
         }
+        if (facilityData.sportsFields && typeof facilityData.sportsFields === 'string') {
+          try {
+            facilityData.sportsFields = JSON.parse(facilityData.sportsFields)
+          } catch (e) {
+            console.error('Error parsing sportsFields:', e)
+            facilityData.sportsFields = []
+          }
+        }
+        // Also check for sports_fields (snake_case from backend)
+        if (facilityData.sports_fields && typeof facilityData.sports_fields === 'string') {
+          try {
+            facilityData.sportsFields = JSON.parse(facilityData.sports_fields)
+          } catch (e) {
+            console.error('Error parsing sports_fields:', e)
+            facilityData.sportsFields = []
+          }
+        }
         
         setFacility(facilityData)
       } else if (data.success && data.facility) {
@@ -219,6 +237,23 @@ function SportsBasePublic() {
             facilityData.map_coordinates = JSON.parse(facilityData.map_coordinates)
           } catch (e) {
             facilityData.map_coordinates = null
+          }
+        }
+        if (facilityData.sportsFields && typeof facilityData.sportsFields === 'string') {
+          try {
+            facilityData.sportsFields = JSON.parse(facilityData.sportsFields)
+          } catch (e) {
+            console.error('Error parsing sportsFields:', e)
+            facilityData.sportsFields = []
+          }
+        }
+        // Also check for sports_fields (snake_case from backend)
+        if (facilityData.sports_fields && typeof facilityData.sports_fields === 'string') {
+          try {
+            facilityData.sportsFields = JSON.parse(facilityData.sports_fields)
+          } catch (e) {
+            console.error('Error parsing sports_fields:', e)
+            facilityData.sportsFields = []
           }
         }
         setFacility(facilityData)
