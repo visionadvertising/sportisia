@@ -17,6 +17,7 @@ interface TimeSlot {
   endTime: string // HH:mm format
   status: 'open' | 'closed' | 'not_specified' // Status of the slot
   price: number | null // Price for this slot (null if not_specified or closed)
+  isPriceUnspecified?: boolean // Toggle for "preț nespecificat"
 }
 
 interface SportsField {
@@ -3110,21 +3111,53 @@ function RegisterSportsBase() {
                             }}>
                               Preț (lei/oră)
                             </label>
-                            <input
-                              type="number"
-                              id={`quick-price-${index}`}
-                              min="0"
-                              step="0.01"
-                              placeholder="Ex: 50"
-                              style={{
-                                width: '100%',
-                                padding: '0.625rem',
-                                border: '1.5px solid #e2e8f0',
-                                borderRadius: '8px',
-                                fontSize: '0.875rem',
-                                background: '#ffffff'
-                              }}
-                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              <input
+                                type="number"
+                                id={`quick-price-${index}`}
+                                min="0"
+                                step="0.01"
+                                placeholder="Ex: 50"
+                                style={{
+                                  width: '100%',
+                                  padding: '0.625rem',
+                                  border: '1.5px solid #e2e8f0',
+                                  borderRadius: '8px',
+                                  fontSize: '0.875rem',
+                                  background: '#ffffff'
+                                }}
+                              />
+                              <label style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                fontSize: '0.8125rem',
+                                color: '#64748b',
+                                cursor: 'pointer'
+                              }}>
+                                <input
+                                  type="checkbox"
+                                  id={`quick-price-unspecified-${index}`}
+                                  style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    cursor: 'pointer'
+                                  }}
+                                  onChange={(e) => {
+                                    const priceInput = document.getElementById(`quick-price-${index}`) as HTMLInputElement
+                                    if (e.target.checked) {
+                                      priceInput.value = ''
+                                      priceInput.disabled = true
+                                      priceInput.style.opacity = '0.5'
+                                    } else {
+                                      priceInput.disabled = false
+                                      priceInput.style.opacity = '1'
+                                    }
+                                  }}
+                                />
+                                <span>Preț nespecificat</span>
+                              </label>
+                            </div>
                           </div>
                           <button
                             type="button"
@@ -3133,7 +3166,20 @@ function RegisterSportsBase() {
                               const endTime = (document.getElementById(`quick-end-${index}`) as HTMLInputElement)?.value || '18:00'
                               const status = (document.getElementById(`quick-status-${index}`) as HTMLSelectElement)?.value as 'open' | 'closed'
                               const priceInput = document.getElementById(`quick-price-${index}`) as HTMLInputElement
-                              const price = priceInput?.value ? parseFloat(priceInput.value) : null
+                              const priceUnspecifiedCheckbox = document.getElementById(`quick-price-unspecified-${index}`) as HTMLInputElement
+                              
+                              let price: number | null = null
+                              let isPriceUnspecified = false
+                              
+                              if (status === 'open') {
+                                if (priceUnspecifiedCheckbox?.checked) {
+                                  isPriceUnspecified = true
+                                  price = null
+                                } else {
+                                  price = priceInput?.value ? parseFloat(priceInput.value) : null
+                                  isPriceUnspecified = false
+                                }
+                              }
                               
                               const updated = [...sportsFields]
                               const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
@@ -3151,7 +3197,8 @@ function RegisterSportsBase() {
                                   startTime,
                                   endTime,
                                   status,
-                                  price: status === 'open' ? price : null
+                                  price: status === 'open' ? price : null,
+                                  isPriceUnspecified: status === 'open' ? isPriceUnspecified : false
                                 })
                               })
                               
@@ -3225,411 +3272,433 @@ function RegisterSportsBase() {
                                 {day.label}
                               </h3>
                               
-                              {/* Single time interval per day */}
-                              {(() => {
-                                const daySlot = daySlots.length > 0 ? daySlots[0] : null
-                                const hasSlot = daySlot !== null
-                                
-                                return (
+                              {/* Multiple time intervals per day */}
+                              <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '1rem'
+                              }}>
+                                {/* Display existing intervals or "Închis" message */}
+                                {daySlots.length === 0 ? (
                                   <div style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '1rem'
+                                    padding: '1rem',
+                                    background: '#f8fafc',
+                                    borderRadius: '8px',
+                                    border: '1.5px solid #e2e8f0',
+                                    textAlign: 'center',
+                                    color: '#64748b',
+                                    fontSize: '0.875rem'
                                   }}>
-                                    {/* Time interval inputs */}
-                                    <div style={{
-                                      display: 'grid',
-                                      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                                      gap: '0.75rem'
+                                    Închis - Nu există intervale configurate
+                                  </div>
+                                ) : (
+                                  daySlots.map((slot, slotIndex) => (
+                                    <div key={slotIndex} style={{
+                                      padding: '1rem',
+                                      background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                                      borderRadius: '10px',
+                                      border: '1.5px solid #e2e8f0',
+                                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
                                     }}>
-                                      <div>
-                                        <label style={{
-                                          display: 'block',
+                                      <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        marginBottom: '0.75rem'
+                                      }}>
+                                        <span style={{
                                           fontSize: '0.8125rem',
                                           fontWeight: '600',
-                                          color: '#0f172a',
-                                          marginBottom: '0.5rem'
+                                          color: '#0f172a'
                                         }}>
-                                          De la
-                                        </label>
-                                        <input
-                                          type="time"
-                                          value={hasSlot ? daySlot.startTime : '08:00'}
-                                          onChange={(e) => {
+                                          Interval {slotIndex + 1}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
                                             const updated = [...sportsFields]
-                                            if (hasSlot) {
-                                              const slotIndex = updated[index].timeSlots.findIndex(s => 
-                                                s.day === day.key
+                                            // Find and remove the specific slot by matching all properties
+                                            const slotToRemove = updated[index].timeSlots.findIndex(s => 
+                                              s.day === day.key && 
+                                              s.startTime === slot.startTime && 
+                                              s.endTime === slot.endTime
+                                            )
+                                            if (slotToRemove !== -1) {
+                                              updated[index] = {
+                                                ...updated[index],
+                                                timeSlots: updated[index].timeSlots.filter((_, idx) => idx !== slotToRemove)
+                                              }
+                                              setSportsFields(updated)
+                                            }
+                                          }}
+                                          style={{
+                                            padding: '0.375rem 0.625rem',
+                                            background: 'white',
+                                            color: '#ef4444',
+                                            border: '1.5px solid #fee2e2',
+                                            borderRadius: '6px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem'
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            if (!isMobile) {
+                                              e.currentTarget.style.borderColor = '#ef4444'
+                                              e.currentTarget.style.background = '#fef2f2'
+                                            }
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            if (!isMobile) {
+                                              e.currentTarget.style.borderColor = '#fee2e2'
+                                              e.currentTarget.style.background = 'white'
+                                            }
+                                          }}
+                                        >
+                                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M18 6L6 18M6 6l12 12"/>
+                                          </svg>
+                                          Șterge
+                                        </button>
+                                      </div>
+                                      
+                                      {/* Time interval inputs */}
+                                      <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                                        gap: '0.75rem',
+                                        marginBottom: '0.75rem'
+                                      }}>
+                                        <div>
+                                          <label style={{
+                                            display: 'block',
+                                            fontSize: '0.8125rem',
+                                            fontWeight: '600',
+                                            color: '#0f172a',
+                                            marginBottom: '0.5rem'
+                                          }}>
+                                            De la
+                                          </label>
+                                          <input
+                                            type="time"
+                                            value={slot.startTime}
+                                            onChange={(e) => {
+                                              const updated = [...sportsFields]
+                                              const slotIdx = updated[index].timeSlots.findIndex(s => 
+                                                s.day === day.key && 
+                                                s.startTime === slot.startTime && 
+                                                s.endTime === slot.endTime
                                               )
-                                              if (slotIndex !== -1) {
-                                                updated[index].timeSlots[slotIndex] = {
-                                                  ...updated[index].timeSlots[slotIndex],
+                                              if (slotIdx !== -1) {
+                                                updated[index].timeSlots[slotIdx] = {
+                                                  ...updated[index].timeSlots[slotIdx],
                                                   startTime: e.target.value
                                                 }
                                                 setSportsFields(updated)
                                               }
-                                            } else {
-                                              // Create new slot
-                                              const newSlot: TimeSlot = {
-                                                day: day.key,
-                                                startTime: e.target.value,
-                                                endTime: '18:00',
-                                                status: 'open',
-                                                price: null
-                                              }
-                                              updated[index] = {
-                                                ...updated[index],
-                                                timeSlots: [...updated[index].timeSlots, newSlot]
-                                              }
-                                              setSportsFields(updated)
-                                            }
-                                          }}
-                                          style={{
-                                            width: '100%',
-                                            padding: '0.75rem',
-                                            border: '1.5px solid #e2e8f0',
-                                            borderRadius: '8px',
-                                            fontSize: '0.9375rem',
-                                            background: '#ffffff',
-                                            transition: 'all 0.2s ease'
-                                          }}
-                                          onFocus={(e) => {
-                                            e.target.style.borderColor = '#10b981'
-                                            e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-                                          }}
-                                          onBlur={(e) => {
-                                            e.target.style.borderColor = '#e2e8f0'
-                                            e.target.style.boxShadow = 'none'
-                                          }}
-                                        />
-                                      </div>
-                                      
-                                      <div>
-                                        <label style={{
-                                          display: 'block',
-                                          fontSize: '0.8125rem',
-                                          fontWeight: '600',
-                                          color: '#0f172a',
-                                          marginBottom: '0.5rem'
-                                        }}>
-                                          Până la
-                                        </label>
-                                        <input
-                                          type="time"
-                                          value={hasSlot ? daySlot.endTime : '18:00'}
-                                          onChange={(e) => {
-                                            const updated = [...sportsFields]
-                                            if (hasSlot) {
-                                              const slotIndex = updated[index].timeSlots.findIndex(s => 
-                                                s.day === day.key
-                                              )
-                                              if (slotIndex !== -1) {
-                                                updated[index].timeSlots[slotIndex] = {
-                                                  ...updated[index].timeSlots[slotIndex],
-                                                  endTime: e.target.value
-                                                }
-                                                setSportsFields(updated)
-                                              }
-                                            } else {
-                                              // Create new slot
-                                              const newSlot: TimeSlot = {
-                                                day: day.key,
-                                                startTime: '08:00',
-                                                endTime: e.target.value,
-                                                status: 'open',
-                                                price: null
-                                              }
-                                              updated[index] = {
-                                                ...updated[index],
-                                                timeSlots: [...updated[index].timeSlots, newSlot]
-                                              }
-                                              setSportsFields(updated)
-                                            }
-                                          }}
-                                          style={{
-                                            width: '100%',
-                                            padding: '0.75rem',
-                                            border: '1.5px solid #e2e8f0',
-                                            borderRadius: '8px',
-                                            fontSize: '0.9375rem',
-                                            background: '#ffffff',
-                                            transition: 'all 0.2s ease'
-                                          }}
-                                          onFocus={(e) => {
-                                            e.target.style.borderColor = '#10b981'
-                                            e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-                                          }}
-                                          onBlur={(e) => {
-                                            e.target.style.borderColor = '#e2e8f0'
-                                            e.target.style.boxShadow = 'none'
-                                          }}
-                                        />
-                                      </div>
-                                    </div>
-                                    
-                                    {/* Status selector */}
-                                    <div>
-                                      <label style={{
-                                        display: 'block',
-                                        fontSize: '0.8125rem',
-                                        fontWeight: '600',
-                                        color: '#0f172a',
-                                        marginBottom: '0.5rem'
-                                      }}>
-                                        Status
-                                      </label>
-                                      <select
-                                        value={hasSlot ? daySlot.status : 'open'}
-                                        onChange={(e) => {
-                                          const updated = [...sportsFields]
-                                          const status = e.target.value as 'open' | 'closed'
-                                          
-                                          if (hasSlot) {
-                                            const slotIndex = updated[index].timeSlots.findIndex(s => 
-                                              s.day === day.key
-                                            )
-                                            if (slotIndex !== -1) {
-                                              updated[index].timeSlots[slotIndex] = {
-                                                ...updated[index].timeSlots[slotIndex],
-                                                status,
-                                                price: status === 'closed' ? null : updated[index].timeSlots[slotIndex].price
-                                              }
-                                              setSportsFields(updated)
-                                            }
-                                          } else {
-                                            // Create new slot
-                                            const newSlot: TimeSlot = {
-                                              day: day.key,
-                                              startTime: '08:00',
-                                              endTime: '18:00',
-                                              status,
-                                              price: null
-                                            }
-                                            updated[index] = {
-                                              ...updated[index],
-                                              timeSlots: [...updated[index].timeSlots, newSlot]
-                                            }
-                                            setSportsFields(updated)
-                                          }
-                                        }}
-                                        style={{
-                                          width: '100%',
-                                          padding: '0.75rem',
-                                          border: '1.5px solid #e2e8f0',
-                                          borderRadius: '8px',
-                                          fontSize: '0.9375rem',
-                                          cursor: 'pointer',
-                                          background: '#ffffff',
-                                          transition: 'all 0.2s ease'
-                                        }}
-                                        onFocus={(e) => {
-                                          e.currentTarget.style.borderColor = '#10b981'
-                                          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-                                        }}
-                                        onBlur={(e) => {
-                                          e.currentTarget.style.borderColor = '#e2e8f0'
-                                          e.currentTarget.style.boxShadow = 'none'
-                                        }}
-                                      >
-                                        <option value="open">Deschis</option>
-                                        <option value="closed">Închis</option>
-                                      </select>
-                                    </div>
-                                    
-                                    {/* Price input - only if status is open */}
-                                    {((hasSlot && daySlot.status === 'open') || (!hasSlot)) && (
-                                      <div>
-                                        <label style={{
-                                          display: 'block',
-                                          fontSize: '0.8125rem',
-                                          fontWeight: '600',
-                                          color: '#0f172a',
-                                          marginBottom: '0.5rem'
-                                        }}>
-                                          Preț (lei/oră)
-                                        </label>
-                                        <div style={{
-                                          display: 'flex',
-                                          gap: '0.75rem',
-                                          alignItems: 'center'
-                                        }}>
-                                          <input
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={hasSlot && daySlot.price !== null ? daySlot.price : ''}
-                                            onChange={(e) => {
-                                              const updated = [...sportsFields]
-                                              if (hasSlot) {
-                                                const slotIndex = updated[index].timeSlots.findIndex(s => 
-                                                  s.day === day.key
-                                                )
-                                                if (slotIndex !== -1) {
-                                                  updated[index].timeSlots[slotIndex] = {
-                                                    ...updated[index].timeSlots[slotIndex],
-                                                    price: e.target.value ? parseFloat(e.target.value) : null
-                                                  }
-                                                  setSportsFields(updated)
-                                                }
-                                              } else {
-                                                // Create new slot
-                                                const newSlot: TimeSlot = {
-                                                  day: day.key,
-                                                  startTime: '08:00',
-                                                  endTime: '18:00',
-                                                  status: 'open',
-                                                  price: e.target.value ? parseFloat(e.target.value) : null
-                                                }
-                                                updated[index] = {
-                                                  ...updated[index],
-                                                  timeSlots: [...updated[index].timeSlots, newSlot]
-                                                }
-                                                setSportsFields(updated)
-                                              }
                                             }}
-                                            placeholder="Ex: 50"
-                                            disabled={hasSlot && daySlot.price === null}
                                             style={{
-                                              flex: 1,
+                                              width: '100%',
                                               padding: '0.75rem',
                                               border: '1.5px solid #e2e8f0',
                                               borderRadius: '8px',
                                               fontSize: '0.9375rem',
-                                              background: (hasSlot && daySlot.price === null) ? '#f8fafc' : '#ffffff',
-                                              color: (hasSlot && daySlot.price === null) ? '#94a3b8' : '#0f172a',
-                                              transition: 'all 0.2s ease',
-                                              cursor: (hasSlot && daySlot.price === null) ? 'not-allowed' : 'text'
+                                              background: '#ffffff',
+                                              transition: 'all 0.2s ease'
                                             }}
                                             onFocus={(e) => {
-                                              if (!(hasSlot && daySlot.price === null)) {
-                                                e.target.style.borderColor = '#10b981'
-                                                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-                                              }
+                                              e.target.style.borderColor = '#10b981'
+                                              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
                                             }}
                                             onBlur={(e) => {
                                               e.target.style.borderColor = '#e2e8f0'
                                               e.target.style.boxShadow = 'none'
                                             }}
                                           />
-                                          <button
-                                            type="button"
-                                            onClick={() => {
+                                        </div>
+                                        
+                                        <div>
+                                          <label style={{
+                                            display: 'block',
+                                            fontSize: '0.8125rem',
+                                            fontWeight: '600',
+                                            color: '#0f172a',
+                                            marginBottom: '0.5rem'
+                                          }}>
+                                            Până la
+                                          </label>
+                                          <input
+                                            type="time"
+                                            value={slot.endTime}
+                                            onChange={(e) => {
                                               const updated = [...sportsFields]
-                                              if (hasSlot) {
-                                                const slotIndex = updated[index].timeSlots.findIndex(s => 
-                                                  s.day === day.key
-                                                )
-                                                if (slotIndex !== -1) {
-                                                  const isUnspecified = updated[index].timeSlots[slotIndex].price === null
-                                                  updated[index].timeSlots[slotIndex] = {
-                                                    ...updated[index].timeSlots[slotIndex],
-                                                    price: isUnspecified ? 0 : null
-                                                  }
-                                                  setSportsFields(updated)
-                                                }
-                                              } else {
-                                                // Create new slot with unspecified price
-                                                const newSlot: TimeSlot = {
-                                                  day: day.key,
-                                                  startTime: '08:00',
-                                                  endTime: '18:00',
-                                                  status: 'open',
-                                                  price: null
-                                                }
-                                                updated[index] = {
-                                                  ...updated[index],
-                                                  timeSlots: [...updated[index].timeSlots, newSlot]
+                                              const slotIdx = updated[index].timeSlots.findIndex(s => 
+                                                s.day === day.key && 
+                                                s.startTime === slot.startTime && 
+                                                s.endTime === slot.endTime
+                                              )
+                                              if (slotIdx !== -1) {
+                                                updated[index].timeSlots[slotIdx] = {
+                                                  ...updated[index].timeSlots[slotIdx],
+                                                  endTime: e.target.value
                                                 }
                                                 setSportsFields(updated)
                                               }
                                             }}
                                             style={{
-                                              padding: '0.625rem 1rem',
-                                              background: (hasSlot && daySlot.price === null) 
-                                                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
-                                                : 'white',
-                                              color: (hasSlot && daySlot.price === null) ? 'white' : '#64748b',
-                                              border: (hasSlot && daySlot.price === null) 
-                                                ? 'none' 
-                                                : '1.5px solid #e2e8f0',
+                                              width: '100%',
+                                              padding: '0.75rem',
+                                              border: '1.5px solid #e2e8f0',
                                               borderRadius: '8px',
-                                              fontSize: '0.8125rem',
-                                              fontWeight: '600',
-                                              cursor: 'pointer',
-                                              transition: 'all 0.2s ease',
-                                              whiteSpace: 'nowrap',
-                                              boxShadow: (hasSlot && daySlot.price === null) 
-                                                ? '0 2px 4px rgba(16, 185, 129, 0.2)' 
-                                                : 'none'
+                                              fontSize: '0.9375rem',
+                                              background: '#ffffff',
+                                              transition: 'all 0.2s ease'
                                             }}
-                                            onMouseEnter={(e) => {
-                                              if (!isMobile && !(hasSlot && daySlot.price === null)) {
-                                                e.currentTarget.style.borderColor = '#10b981'
-                                                e.currentTarget.style.color = '#10b981'
-                                              }
+                                            onFocus={(e) => {
+                                              e.target.style.borderColor = '#10b981'
+                                              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
                                             }}
-                                            onMouseLeave={(e) => {
-                                              if (!isMobile && !(hasSlot && daySlot.price === null)) {
-                                                e.currentTarget.style.borderColor = '#e2e8f0'
-                                                e.currentTarget.style.color = '#64748b'
-                                              }
+                                            onBlur={(e) => {
+                                              e.target.style.borderColor = '#e2e8f0'
+                                              e.target.style.boxShadow = 'none'
                                             }}
-                                          >
-                                            {hasSlot && daySlot.price === null ? 'Nespecificat ✓' : 'Nespecificat'}
-                                          </button>
+                                          />
                                         </div>
                                       </div>
-                                    )}
-                                    
-                                    {/* Remove slot button */}
-                                    {hasSlot && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const updated = [...sportsFields]
-                                          updated[index] = {
-                                            ...updated[index],
-                                            timeSlots: updated[index].timeSlots.filter(s => s.day !== day.key)
-                                          }
-                                          setSportsFields(updated)
-                                        }}
-                                        style={{
-                                          padding: '0.625rem 1rem',
-                                          background: 'white',
-                                          color: '#64748b',
-                                          border: '1.5px solid #e2e8f0',
-                                          borderRadius: '8px',
+                                      
+                                      {/* Status selector */}
+                                      <div style={{ marginBottom: '0.75rem' }}>
+                                        <label style={{
+                                          display: 'block',
                                           fontSize: '0.8125rem',
                                           fontWeight: '600',
-                                          cursor: 'pointer',
-                                          transition: 'all 0.2s ease',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          gap: '0.5rem'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          if (!isMobile) {
-                                            e.currentTarget.style.borderColor = '#ef4444'
-                                            e.currentTarget.style.color = '#ef4444'
-                                          }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          if (!isMobile) {
+                                          color: '#0f172a',
+                                          marginBottom: '0.5rem'
+                                        }}>
+                                          Status
+                                        </label>
+                                        <select
+                                          value={slot.status}
+                                          onChange={(e) => {
+                                            const updated = [...sportsFields]
+                                            const status = e.target.value as 'open' | 'closed'
+                                            const slotIdx = updated[index].timeSlots.findIndex(s => 
+                                              s.day === day.key && 
+                                              s.startTime === slot.startTime && 
+                                              s.endTime === slot.endTime
+                                            )
+                                            if (slotIdx !== -1) {
+                                              updated[index].timeSlots[slotIdx] = {
+                                                ...updated[index].timeSlots[slotIdx],
+                                                status,
+                                                price: status === 'closed' ? null : updated[index].timeSlots[slotIdx].price,
+                                                isPriceUnspecified: status === 'closed' ? false : updated[index].timeSlots[slotIdx].isPriceUnspecified
+                                              }
+                                              setSportsFields(updated)
+                                            }
+                                          }}
+                                          style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            border: '1.5px solid #e2e8f0',
+                                            borderRadius: '8px',
+                                            fontSize: '0.9375rem',
+                                            cursor: 'pointer',
+                                            background: '#ffffff',
+                                            transition: 'all 0.2s ease'
+                                          }}
+                                          onFocus={(e) => {
+                                            e.currentTarget.style.borderColor = '#10b981'
+                                            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                          }}
+                                          onBlur={(e) => {
                                             e.currentTarget.style.borderColor = '#e2e8f0'
-                                            e.currentTarget.style.color = '#64748b'
-                                          }
-                                        }}
-                                      >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                          <path d="M18 6L6 18M6 6l12 12"/>
-                                        </svg>
-                                        Șterge interval
-                                      </button>
-                                    )}
-                                  </div>
-                                )
-                              })()}
+                                            e.currentTarget.style.boxShadow = 'none'
+                                          }}
+                                        >
+                                          <option value="open">Deschis</option>
+                                          <option value="closed">Închis</option>
+                                        </select>
+                                      </div>
+                                      
+                                      {/* Price input - only if status is open */}
+                                      {slot.status === 'open' && (
+                                        <div>
+                                          <label style={{
+                                            display: 'block',
+                                            fontSize: '0.8125rem',
+                                            fontWeight: '600',
+                                            color: '#0f172a',
+                                            marginBottom: '0.5rem'
+                                          }}>
+                                            Preț (lei/oră)
+                                          </label>
+                                          <div style={{
+                                            display: 'flex',
+                                            gap: '0.75rem',
+                                            alignItems: 'center'
+                                          }}>
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.01"
+                                              value={slot.price !== null && slot.price !== undefined ? slot.price : ''}
+                                              onChange={(e) => {
+                                                const updated = [...sportsFields]
+                                                const slotIdx = updated[index].timeSlots.findIndex(s => 
+                                                  s.day === day.key && 
+                                                  s.startTime === slot.startTime && 
+                                                  s.endTime === slot.endTime
+                                                )
+                                                if (slotIdx !== -1) {
+                                                  updated[index].timeSlots[slotIdx] = {
+                                                    ...updated[index].timeSlots[slotIdx],
+                                                    price: e.target.value ? parseFloat(e.target.value) : null,
+                                                    isPriceUnspecified: false
+                                                  }
+                                                  setSportsFields(updated)
+                                                }
+                                              }}
+                                              placeholder="Ex: 50"
+                                              disabled={slot.isPriceUnspecified}
+                                              style={{
+                                                flex: 1,
+                                                padding: '0.75rem',
+                                                border: '1.5px solid #e2e8f0',
+                                                borderRadius: '8px',
+                                                fontSize: '0.9375rem',
+                                                background: slot.isPriceUnspecified ? '#f8fafc' : '#ffffff',
+                                                color: slot.isPriceUnspecified ? '#94a3b8' : '#0f172a',
+                                                transition: 'all 0.2s ease',
+                                                cursor: slot.isPriceUnspecified ? 'not-allowed' : 'text'
+                                              }}
+                                              onFocus={(e) => {
+                                                if (!slot.isPriceUnspecified) {
+                                                  e.target.style.borderColor = '#10b981'
+                                                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                                }
+                                              }}
+                                              onBlur={(e) => {
+                                                e.target.style.borderColor = '#e2e8f0'
+                                                e.target.style.boxShadow = 'none'
+                                              }}
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const updated = [...sportsFields]
+                                                const slotIdx = updated[index].timeSlots.findIndex(s => 
+                                                  s.day === day.key && 
+                                                  s.startTime === slot.startTime && 
+                                                  s.endTime === slot.endTime
+                                                )
+                                                if (slotIdx !== -1) {
+                                                  const isUnspecified = updated[index].timeSlots[slotIdx].isPriceUnspecified || false
+                                                  updated[index].timeSlots[slotIdx] = {
+                                                    ...updated[index].timeSlots[slotIdx],
+                                                    isPriceUnspecified: !isUnspecified,
+                                                    price: !isUnspecified ? null : updated[index].timeSlots[slotIdx].price
+                                                  }
+                                                  setSportsFields(updated)
+                                                }
+                                              }}
+                                              style={{
+                                                padding: '0.625rem 1rem',
+                                                background: slot.isPriceUnspecified 
+                                                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                                                  : 'white',
+                                                color: slot.isPriceUnspecified ? 'white' : '#64748b',
+                                                border: slot.isPriceUnspecified 
+                                                  ? 'none' 
+                                                  : '1.5px solid #e2e8f0',
+                                                borderRadius: '8px',
+                                                fontSize: '0.8125rem',
+                                                fontWeight: '600',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                                whiteSpace: 'nowrap',
+                                                boxShadow: slot.isPriceUnspecified 
+                                                  ? '0 2px 4px rgba(16, 185, 129, 0.2)' 
+                                                  : 'none'
+                                              }}
+                                              onMouseEnter={(e) => {
+                                                if (!isMobile && !slot.isPriceUnspecified) {
+                                                  e.currentTarget.style.borderColor = '#10b981'
+                                                  e.currentTarget.style.color = '#10b981'
+                                                }
+                                              }}
+                                              onMouseLeave={(e) => {
+                                                if (!isMobile && !slot.isPriceUnspecified) {
+                                                  e.currentTarget.style.borderColor = '#e2e8f0'
+                                                  e.currentTarget.style.color = '#64748b'
+                                                }
+                                              }}
+                                            >
+                                              {slot.isPriceUnspecified ? 'Nespecificat ✓' : 'Nespecificat'}
+                                            </button>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))
+                                )}
+                                
+                                {/* Add new interval button */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...sportsFields]
+                                    const newSlot: TimeSlot = {
+                                      day: day.key,
+                                      startTime: '08:00',
+                                      endTime: '18:00',
+                                      status: 'open',
+                                      price: null,
+                                      isPriceUnspecified: false
+                                    }
+                                    updated[index] = {
+                                      ...updated[index],
+                                      timeSlots: [...updated[index].timeSlots, newSlot]
+                                    }
+                                    setSportsFields(updated)
+                                  }}
+                                  style={{
+                                    padding: '0.75rem 1rem',
+                                    background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+                                    color: '#10b981',
+                                    border: '1.5px solid #d1fae5',
+                                    borderRadius: '8px',
+                                    fontSize: '0.8125rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.5rem'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!isMobile) {
+                                      e.currentTarget.style.background = 'linear-gradient(135deg, #d1fae5 0%, #f0fdf4 100%)'
+                                      e.currentTarget.style.borderColor = '#10b981'
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!isMobile) {
+                                      e.currentTarget.style.background = 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)'
+                                      e.currentTarget.style.borderColor = '#d1fae5'
+                                    }
+                                  }}
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                  </svg>
+                                  Adaugă interval
+                                </button>
+                              </div>
                             </div>
                           )
                         })}

@@ -10,6 +10,7 @@ interface TimeSlot {
   endTime: string
   status: 'open' | 'closed' | 'not_specified'
   price: number | null
+  isPriceUnspecified?: boolean
 }
 
 interface SportsField {

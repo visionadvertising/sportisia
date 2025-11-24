@@ -685,22 +685,60 @@ function SportsBasePublic() {
                       const field = facility.sportsFields?.[0] // Use first field for opening hours
                       if (!field) return null
                       const slots = getDaySlots(day.key, field.timeSlots || [])
-                      const daySlot = slots.length > 0 ? slots[0] : null
                       
-                      let displayText = 'Nespecificat'
-                      if (daySlot) {
-                        if (daySlot.status === 'closed') {
-                          displayText = 'Închis'
-                        } else if (daySlot.status === 'open') {
-                          const timeRange = `${formatTime(daySlot.startTime)} - ${formatTime(daySlot.endTime)}`
-                          if (daySlot.price !== null && daySlot.price !== undefined) {
-                            displayText = `${timeRange} - ${daySlot.price} lei/oră`
-                          } else {
-                            displayText = `${timeRange} - Preț nespecificat`
-                          }
-                        }
+                      // If no slots, show "Închis"
+                      if (slots.length === 0) {
+                        return (
+                          <tr key={day.key} style={{
+                            borderBottom: '1px solid #e2e8f0'
+                          }}>
+                            <td style={{
+                              padding: '0.75rem 0',
+                              fontWeight: '600',
+                              color: '#0f172a',
+                              width: '30%'
+                            }}>
+                              {day.label}
+                            </td>
+                            <td style={{
+                              padding: '0.75rem 0',
+                              color: '#ef4444'
+                            }}>
+                              Închis
+                            </td>
+                          </tr>
+                        )
                       }
                       
+                      // Display all intervals for this day
+                      const openSlots = slots.filter(s => s.status === 'open')
+                      const closedSlots = slots.filter(s => s.status === 'closed')
+                      
+                      // If all slots are closed, show "Închis"
+                      if (openSlots.length === 0 && closedSlots.length > 0) {
+                        return (
+                          <tr key={day.key} style={{
+                            borderBottom: '1px solid #e2e8f0'
+                          }}>
+                            <td style={{
+                              padding: '0.75rem 0',
+                              fontWeight: '600',
+                              color: '#0f172a',
+                              width: '30%'
+                            }}>
+                              {day.label}
+                            </td>
+                            <td style={{
+                              padding: '0.75rem 0',
+                              color: '#ef4444'
+                            }}>
+                              Închis
+                            </td>
+                          </tr>
+                        )
+                      }
+                      
+                      // Display all open intervals
                       return (
                         <tr key={day.key} style={{
                           borderBottom: '1px solid #e2e8f0'
@@ -709,15 +747,42 @@ function SportsBasePublic() {
                             padding: '0.75rem 0',
                             fontWeight: '600',
                             color: '#0f172a',
-                            width: '30%'
+                            width: '30%',
+                            verticalAlign: 'top'
                           }}>
                             {day.label}
                           </td>
                           <td style={{
                             padding: '0.75rem 0',
-                            color: daySlot?.status === 'closed' ? '#ef4444' : '#64748b'
+                            color: '#64748b'
                           }}>
-                            {displayText}
+                            <div style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '0.5rem'
+                            }}>
+                              {openSlots.map((slot, idx) => {
+                                const timeRange = `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`
+                                let priceDisplay = ''
+                                
+                                if (slot.isPriceUnspecified) {
+                                  priceDisplay = 'Preț nespecificat'
+                                } else if (slot.price !== null && slot.price !== undefined) {
+                                  priceDisplay = `${slot.price} RON/oră`
+                                } else {
+                                  priceDisplay = 'Preț nespecificat'
+                                }
+                                
+                                return (
+                                  <div key={idx} style={{
+                                    color: '#10b981',
+                                    fontWeight: '500'
+                                  }}>
+                                    {timeRange} {priceDisplay && `(${priceDisplay})`}
+                                  </div>
+                                )
+                              })}
+                            </div>
                           </td>
                         </tr>
                       )
