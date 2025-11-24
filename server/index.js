@@ -1667,6 +1667,20 @@ app.get('/api/facilities/:slug', async (req, res) => {
       facility.sportsFields = sportsFields
     }
 
+    // Debug: Log logo_url and gallery before sending response
+    console.log(`[API] Facility ${facilityId} (${facility.name}) - logo_url:`, facility.logo_url)
+    console.log(`[API] Facility ${facilityId} (${facility.name}) - gallery:`, facility.gallery)
+    console.log(`[API] Facility ${facilityId} (${facility.name}) - gallery type:`, typeof facility.gallery)
+    console.log(`[API] Facility ${facilityId} (${facility.name}) - all keys:`, Object.keys(facility))
+
+    // Ensure logo_url and gallery are included in response (even if null)
+    if (!facility.hasOwnProperty('logo_url')) {
+      console.warn(`[API] WARNING: Facility ${facilityId} missing logo_url property`)
+    }
+    if (!facility.hasOwnProperty('gallery')) {
+      console.warn(`[API] WARNING: Facility ${facilityId} missing gallery property`)
+    }
+
     res.json({ success: true, data: facility })
   } catch (error) {
     console.error('Error fetching facility:', error)
