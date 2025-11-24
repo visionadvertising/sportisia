@@ -706,137 +706,217 @@ function AllFacilities() {
                       to={facilityUrl}
                       style={{
                         background: 'white',
-                        borderRadius: '12px',
+                        borderRadius: '16px',
                         overflow: 'hidden',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                        border: '1px solid #f1f5f9',
-                        transition: 'all 0.3s ease',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)',
+                        border: '1px solid #e2e8f0',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         cursor: 'pointer',
                         textDecoration: 'none',
-                        display: 'block'
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%'
                       }}
                       onMouseEnter={(e) => {
                         if (!isMobile) {
-                          e.currentTarget.style.transform = 'translateY(-6px)'
-                          e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.12)'
-                          e.currentTarget.style.borderColor = '#e2e8f0'
+                          e.currentTarget.style.transform = 'translateY(-4px)'
+                          e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05)'
+                          e.currentTarget.style.borderColor = '#cbd5e1'
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isMobile) {
                           e.currentTarget.style.transform = 'translateY(0)'
-                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)'
-                          e.currentTarget.style.borderColor = '#f1f5f9'
+                          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)'
+                          e.currentTarget.style.borderColor = '#e2e8f0'
                         }
                       }}
                     >
-                      {displayImage && (
-                        <div style={{
-                          width: '100%',
-                          height: isMobile ? '200px' : '220px',
-                          background: `url(${displayImage}) center/cover`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                          position: 'relative'
-                        }} />
-                      )}
-                      <div style={{ padding: isMobile ? '1.25rem' : '1.75rem' }}>
+                      {/* Image Section */}
+                      <div style={{
+                        width: '100%',
+                        height: isMobile ? '180px' : '200px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        background: displayImage 
+                          ? `url(${displayImage}) center/cover`
+                          : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}>
+                        {!displayImage && (
+                          <div style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#10b981',
+                            opacity: 0.3
+                          }}>
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                              <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                          </div>
+                        )}
+                        {/* Price Badge - Top Right */}
+                        {(price || facility.price_per_lesson) && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '0.75rem',
+                            right: '0.75rem',
+                            background: 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(10px)',
+                            padding: '0.5rem 0.875rem',
+                            borderRadius: '8px',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.375rem'
+                          }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5">
+                              <line x1="12" y1="1" x2="12" y2="23"></line>
+                              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                            <span style={{
+                              color: '#0f172a',
+                              fontSize: '0.875rem',
+                              fontWeight: '700'
+                            }}>
+                              {price ? `${price} RON` : facility.price_per_lesson ? `${facility.price_per_lesson} RON` : ''}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content Section */}
+                      <div style={{ 
+                        padding: isMobile ? '1.25rem' : '1.5rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        flex: 1,
+                        gap: '0.75rem'
+                      }}>
+                        {/* Title */}
                         <h3 style={{
-                          margin: '0 0 0.75rem 0',
-                          fontSize: isMobile ? '1.25rem' : '1.5rem',
+                          margin: 0,
+                          fontSize: isMobile ? '1.125rem' : '1.25rem',
                           color: '#0f172a',
                           fontWeight: '700',
-                          lineHeight: '1.3',
-                          letterSpacing: '-0.01em'
+                          lineHeight: '1.4',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
                         }}>{facility.name}</h3>
-                        <p style={{
-                          margin: '0 0 0.75rem 0',
-                          color: '#64748b',
-                          fontSize: isMobile ? '0.875rem' : '0.9375rem',
+                        
+                        {/* Location */}
+                        <div style={{
                           display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
+                          alignItems: 'flex-start',
+                          gap: '0.5rem',
+                          color: '#64748b',
+                          fontSize: '0.8125rem',
+                          lineHeight: '1.5'
                         }}>
-                          <span style={{ fontSize: '1rem' }}>📍</span>
-                          <span>{facility.city}{facility.location ? `, ${facility.location}` : ''}</span>
-                        </p>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                          </svg>
+                          <span style={{ flex: 1 }}>
+                            {facility.city}{facility.county ? `, ${facility.county}` : ''}
+                            {facility.location && (
+                              <span style={{ display: 'block', marginTop: '0.125rem', opacity: 0.8 }}>
+                                {facility.location}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Sports Tags */}
                         {sports.length > 0 && (
                           <div style={{
-                            margin: '0 0 1rem 0',
                             display: 'flex',
                             flexWrap: 'wrap',
-                            gap: '0.5rem'
+                            gap: '0.5rem',
+                            marginTop: '0.25rem'
                           }}>
-                            {sports.map((sport, idx) => (
+                            {sports.slice(0, 3).map((sport, idx) => (
                               <div
                                 key={idx}
                                 style={{
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '0.5rem',
-                                  padding: '0.375rem 0.75rem',
-                                  background: '#f0fdf4',
+                                  gap: '0.375rem',
+                                  padding: '0.375rem 0.625rem',
+                                  background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
                                   borderRadius: '6px',
-                                  color: '#10b981',
+                                  fontSize: '0.75rem',
                                   fontWeight: '600',
-                                  fontSize: isMobile ? '0.8125rem' : '0.875rem'
+                                  color: '#059669',
+                                  border: '1px solid rgba(16, 185, 129, 0.2)'
                                 }}
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                                  <path d="M4 22h16"/>
-                                  <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-                                  <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-                                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
-                                </svg>
                                 <span>{SPORT_NAMES[sport] || sport}</span>
                               </div>
                             ))}
-                          </div>
-                        )}
-                        {(price || facility.price_per_lesson) && (
-                          <div style={{
-                            marginTop: '1rem',
-                            paddingTop: '1rem',
-                            borderTop: '1px solid #f1f5f9'
-                          }}>
-                            {price && (
-                              <p style={{
-                                margin: 0,
-                                color: '#0f172a',
-                                fontSize: isMobile ? '1.125rem' : '1.25rem',
-                                fontWeight: '700'
-                              }}>De la {price} RON/oră</p>
-                            )}
-                            {facility.price_per_lesson && (
-                              <p style={{
-                                margin: 0,
-                                color: '#0f172a',
-                                fontSize: isMobile ? '1.125rem' : '1.25rem',
-                                fontWeight: '700'
-                              }}>De la {facility.price_per_lesson} RON/lecție</p>
+                            {sports.length > 3 && (
+                              <div style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '0.375rem 0.625rem',
+                                background: '#f8fafc',
+                                borderRadius: '6px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                color: '#64748b',
+                                border: '1px solid #e2e8f0'
+                              }}>
+                                +{sports.length - 3}
+                              </div>
                             )}
                           </div>
                         )}
-                        {facility.specialization && (
-                          <p style={{
-                            margin: '0 0 1rem 0',
-                            color: '#64748b',
-                            fontSize: isMobile ? '0.8125rem' : '0.9rem'
-                          }}>Specializare: {facility.specialization}</p>
-                        )}
+
+                        {/* Description - Only if exists */}
                         {facility.description && (
                           <p style={{
                             margin: 0,
                             color: '#64748b',
-                            fontSize: isMobile ? '0.8125rem' : '0.9rem',
-                            lineHeight: '1.5',
+                            fontSize: '0.8125rem',
+                            lineHeight: '1.6',
                             display: '-webkit-box',
-                            WebkitLineClamp: isMobile ? 2 : 3,
+                            WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
+                            overflow: 'hidden',
+                            marginTop: 'auto',
+                            paddingTop: '0.75rem',
+                            borderTop: '1px solid #f1f5f9'
                           }}>{facility.description}</p>
+                        )}
+
+                        {/* Specialization - Only for coaches */}
+                        {facility.specialization && facility.facility_type === 'coach' && (
+                          <div style={{
+                            marginTop: 'auto',
+                            paddingTop: '0.75rem',
+                            borderTop: '1px solid #f1f5f9',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span style={{
+                              color: '#64748b',
+                              fontSize: '0.8125rem',
+                              fontWeight: '500'
+                            }}>{facility.specialization}</span>
+                          </div>
                         )}
                       </div>
                     </Link>
