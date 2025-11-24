@@ -945,9 +945,12 @@ app.post('/api/register', upload.fields([
 
     // Process logo file (from uploaded file)
     let logoUrlFinal = null
+    console.log('[REGISTER] Processing logo - req.files.logo:', req.files?.logo)
+    console.log('[REGISTER] Processing logo - logoFile:', logoFile ? 'exists' : 'null')
     if (req.files && req.files.logo && req.files.logo.length > 0) {
       const uploadedLogo = req.files.logo[0]
       logoUrlFinal = `/uploads/logos/${uploadedLogo.filename}`
+      console.log('[REGISTER] Logo uploaded, logoUrlFinal:', logoUrlFinal)
     } else if (logoFile && typeof logoFile === 'string' && logoFile.startsWith('data:image')) {
       // Fallback: if base64 is still sent, save it as file
       const base64Data = logoFile.replace(/^data:image\/\w+;base64,/, '')
@@ -962,8 +965,11 @@ app.post('/api/register', upload.fields([
 
     // Process gallery files (from uploaded files)
     let galleryFinal = null
+    console.log('[REGISTER] Processing gallery - req.files.gallery:', req.files?.gallery)
+    console.log('[REGISTER] Processing gallery - gallery (from body):', gallery ? 'exists' : 'null', typeof gallery)
     if (req.files && req.files.gallery && req.files.gallery.length > 0) {
       galleryFinal = req.files.gallery.map(file => `/uploads/gallery/${file.filename}`)
+      console.log('[REGISTER] Gallery uploaded, galleryFinal:', galleryFinal)
     } else if (gallery && Array.isArray(gallery) && gallery.length > 0) {
       // Fallback: if base64 is still sent, save them as files
       galleryFinal = []
@@ -1049,6 +1055,9 @@ app.post('/api/register', upload.fields([
 
       const facilityId = facilityResult.insertId
       console.log(`[REGISTER] Facility inserted with ID: ${facilityId}`)
+      console.log(`[REGISTER] logoUrlFinal:`, logoUrlFinal)
+      console.log(`[REGISTER] galleryFinal:`, galleryFinal)
+      console.log(`[REGISTER] galleryFinal JSON:`, galleryFinal ? JSON.stringify(galleryFinal) : null)
 
       // Insert sports fields if provided (for sports bases with multiple fields)
       if (facilityType === 'field' && parsedSportsFields && parsedSportsFields.length > 0) {
