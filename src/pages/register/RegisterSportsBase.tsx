@@ -2963,6 +2963,179 @@ function RegisterSportsBase() {
                         letterSpacing: '0.01em'
                       }}>Program și prețuri *</label>
                       
+                      {/* Quick Apply Section */}
+                      <div style={{
+                        marginBottom: '1.5rem',
+                        padding: '1rem',
+                        background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+                        borderRadius: '10px',
+                        border: '1px solid #d1fae5'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: isMobile ? 'column' : 'row',
+                          gap: '0.75rem',
+                          alignItems: isMobile ? 'stretch' : 'end'
+                        }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.8125rem',
+                              fontWeight: '600',
+                              color: '#0f172a',
+                              marginBottom: '0.5rem'
+                            }}>
+                              Interval orar
+                            </label>
+                            <div style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 1fr',
+                              gap: '0.5rem'
+                            }}>
+                              <input
+                                type="time"
+                                id={`quick-start-${index}`}
+                                defaultValue="08:00"
+                                style={{
+                                  width: '100%',
+                                  padding: '0.625rem',
+                                  border: '1.5px solid #e2e8f0',
+                                  borderRadius: '8px',
+                                  fontSize: '0.875rem',
+                                  background: '#ffffff'
+                                }}
+                              />
+                              <input
+                                type="time"
+                                id={`quick-end-${index}`}
+                                defaultValue="18:00"
+                                style={{
+                                  width: '100%',
+                                  padding: '0.625rem',
+                                  border: '1.5px solid #e2e8f0',
+                                  borderRadius: '8px',
+                                  fontSize: '0.875rem',
+                                  background: '#ffffff'
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.8125rem',
+                              fontWeight: '600',
+                              color: '#0f172a',
+                              marginBottom: '0.5rem'
+                            }}>
+                              Status
+                            </label>
+                            <select
+                              id={`quick-status-${index}`}
+                              defaultValue="open"
+                              style={{
+                                width: '100%',
+                                padding: '0.625rem',
+                                border: '1.5px solid #e2e8f0',
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                                cursor: 'pointer',
+                                background: '#ffffff'
+                              }}
+                            >
+                              <option value="open">Deschis</option>
+                              <option value="closed">Închis</option>
+                            </select>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{
+                              display: 'block',
+                              fontSize: '0.8125rem',
+                              fontWeight: '600',
+                              color: '#0f172a',
+                              marginBottom: '0.5rem'
+                            }}>
+                              Preț (lei/oră)
+                            </label>
+                            <input
+                              type="number"
+                              id={`quick-price-${index}`}
+                              min="0"
+                              step="0.01"
+                              placeholder="Ex: 50"
+                              style={{
+                                width: '100%',
+                                padding: '0.625rem',
+                                border: '1.5px solid #e2e8f0',
+                                borderRadius: '8px',
+                                fontSize: '0.875rem',
+                                background: '#ffffff'
+                              }}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const startTime = (document.getElementById(`quick-start-${index}`) as HTMLInputElement)?.value || '08:00'
+                              const endTime = (document.getElementById(`quick-end-${index}`) as HTMLInputElement)?.value || '18:00'
+                              const status = (document.getElementById(`quick-status-${index}`) as HTMLSelectElement)?.value as 'open' | 'closed'
+                              const priceInput = document.getElementById(`quick-price-${index}`) as HTMLInputElement
+                              const price = priceInput?.value ? parseFloat(priceInput.value) : null
+                              
+                              const updated = [...sportsFields]
+                              const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+                              
+                              // Remove existing slots for all days
+                              updated[index] = {
+                                ...updated[index],
+                                timeSlots: updated[index].timeSlots.filter(s => !days.includes(s.day))
+                              }
+                              
+                              // Add new slots for all days
+                              days.forEach(day => {
+                                updated[index].timeSlots.push({
+                                  day,
+                                  startTime,
+                                  endTime,
+                                  status,
+                                  price: status === 'open' ? price : null
+                                })
+                              })
+                              
+                              setSportsFields(updated)
+                            }}
+                            style={{
+                              padding: '0.625rem 1.25rem',
+                              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontSize: '0.8125rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                              whiteSpace: 'nowrap',
+                              boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
+                              height: 'fit-content'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.transform = 'translateY(-1px)'
+                                e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.3)'
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isMobile) {
+                                e.currentTarget.style.transform = 'translateY(0)'
+                                e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
+                              }
+                            }}
+                          >
+                            Aplică pentru toate zilele
+                          </button>
+                        </div>
+                      </div>
+
                       {/* Days List */}
                       <div style={{
                         display: 'flex',
@@ -3211,7 +3384,7 @@ function RegisterSportsBase() {
                                     </div>
                                     
                                     {/* Price input - only if status is open */}
-                                    {hasSlot && daySlot.status === 'open' && (
+                                    {((hasSlot && daySlot.status === 'open') || (!hasSlot)) && (
                                       <div>
                                         <label style={{
                                           display: 'block',
@@ -3231,72 +3404,126 @@ function RegisterSportsBase() {
                                             type="number"
                                             min="0"
                                             step="0.01"
-                                            value={daySlot.price || ''}
+                                            value={hasSlot && daySlot.price !== null ? daySlot.price : ''}
                                             onChange={(e) => {
                                               const updated = [...sportsFields]
-                                              const slotIndex = updated[index].timeSlots.findIndex(s => 
-                                                s.day === day.key
-                                              )
-                                              if (slotIndex !== -1) {
-                                                updated[index].timeSlots[slotIndex] = {
-                                                  ...updated[index].timeSlots[slotIndex],
-                                                  price: e.target.value ? parseFloat(e.target.value) : null
-                                                }
-                                                setSportsFields(updated)
-                                              }
-                                            }}
-                                            placeholder="Ex: 50"
-                                            style={{
-                                              flex: 1,
-                                              padding: '0.75rem',
-                                              border: '1.5px solid #e2e8f0',
-                                              borderRadius: '8px',
-                                              fontSize: '0.9375rem',
-                                              background: '#ffffff',
-                                              transition: 'all 0.2s ease'
-                                            }}
-                                            onFocus={(e) => {
-                                              e.target.style.borderColor = '#10b981'
-                                              e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
-                                            }}
-                                            onBlur={(e) => {
-                                              e.target.style.borderColor = '#e2e8f0'
-                                              e.target.style.boxShadow = 'none'
-                                            }}
-                                          />
-                                          <label style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            cursor: 'pointer',
-                                            fontSize: '0.875rem',
-                                            color: '#64748b',
-                                            whiteSpace: 'nowrap'
-                                          }}>
-                                            <input
-                                              type="checkbox"
-                                              checked={daySlot.price === null}
-                                              onChange={(e) => {
-                                                const updated = [...sportsFields]
+                                              if (hasSlot) {
                                                 const slotIndex = updated[index].timeSlots.findIndex(s => 
                                                   s.day === day.key
                                                 )
                                                 if (slotIndex !== -1) {
                                                   updated[index].timeSlots[slotIndex] = {
                                                     ...updated[index].timeSlots[slotIndex],
-                                                    price: e.target.checked ? null : 0
+                                                    price: e.target.value ? parseFloat(e.target.value) : null
                                                   }
                                                   setSportsFields(updated)
                                                 }
-                                              }}
-                                              style={{
-                                                width: '18px',
-                                                height: '18px',
-                                                cursor: 'pointer'
-                                              }}
-                                            />
-                                            Nespecificat
-                                          </label>
+                                              } else {
+                                                // Create new slot
+                                                const newSlot: TimeSlot = {
+                                                  day: day.key,
+                                                  startTime: '08:00',
+                                                  endTime: '18:00',
+                                                  status: 'open',
+                                                  price: e.target.value ? parseFloat(e.target.value) : null
+                                                }
+                                                updated[index] = {
+                                                  ...updated[index],
+                                                  timeSlots: [...updated[index].timeSlots, newSlot]
+                                                }
+                                                setSportsFields(updated)
+                                              }
+                                            }}
+                                            placeholder="Ex: 50"
+                                            disabled={hasSlot && daySlot.price === null}
+                                            style={{
+                                              flex: 1,
+                                              padding: '0.75rem',
+                                              border: '1.5px solid #e2e8f0',
+                                              borderRadius: '8px',
+                                              fontSize: '0.9375rem',
+                                              background: (hasSlot && daySlot.price === null) ? '#f8fafc' : '#ffffff',
+                                              color: (hasSlot && daySlot.price === null) ? '#94a3b8' : '#0f172a',
+                                              transition: 'all 0.2s ease',
+                                              cursor: (hasSlot && daySlot.price === null) ? 'not-allowed' : 'text'
+                                            }}
+                                            onFocus={(e) => {
+                                              if (!(hasSlot && daySlot.price === null)) {
+                                                e.target.style.borderColor = '#10b981'
+                                                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                                              }
+                                            }}
+                                            onBlur={(e) => {
+                                              e.target.style.borderColor = '#e2e8f0'
+                                              e.target.style.boxShadow = 'none'
+                                            }}
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const updated = [...sportsFields]
+                                              if (hasSlot) {
+                                                const slotIndex = updated[index].timeSlots.findIndex(s => 
+                                                  s.day === day.key
+                                                )
+                                                if (slotIndex !== -1) {
+                                                  const isUnspecified = updated[index].timeSlots[slotIndex].price === null
+                                                  updated[index].timeSlots[slotIndex] = {
+                                                    ...updated[index].timeSlots[slotIndex],
+                                                    price: isUnspecified ? 0 : null
+                                                  }
+                                                  setSportsFields(updated)
+                                                }
+                                              } else {
+                                                // Create new slot with unspecified price
+                                                const newSlot: TimeSlot = {
+                                                  day: day.key,
+                                                  startTime: '08:00',
+                                                  endTime: '18:00',
+                                                  status: 'open',
+                                                  price: null
+                                                }
+                                                updated[index] = {
+                                                  ...updated[index],
+                                                  timeSlots: [...updated[index].timeSlots, newSlot]
+                                                }
+                                                setSportsFields(updated)
+                                              }
+                                            }}
+                                            style={{
+                                              padding: '0.625rem 1rem',
+                                              background: (hasSlot && daySlot.price === null) 
+                                                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                                                : 'white',
+                                              color: (hasSlot && daySlot.price === null) ? 'white' : '#64748b',
+                                              border: (hasSlot && daySlot.price === null) 
+                                                ? 'none' 
+                                                : '1.5px solid #e2e8f0',
+                                              borderRadius: '8px',
+                                              fontSize: '0.8125rem',
+                                              fontWeight: '600',
+                                              cursor: 'pointer',
+                                              transition: 'all 0.2s ease',
+                                              whiteSpace: 'nowrap',
+                                              boxShadow: (hasSlot && daySlot.price === null) 
+                                                ? '0 2px 4px rgba(16, 185, 129, 0.2)' 
+                                                : 'none'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              if (!isMobile && !(hasSlot && daySlot.price === null)) {
+                                                e.currentTarget.style.borderColor = '#10b981'
+                                                e.currentTarget.style.color = '#10b981'
+                                              }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              if (!isMobile && !(hasSlot && daySlot.price === null)) {
+                                                e.currentTarget.style.borderColor = '#e2e8f0'
+                                                e.currentTarget.style.color = '#64748b'
+                                              }
+                                            }}
+                                          >
+                                            {hasSlot && daySlot.price === null ? 'Nespecificat ✓' : 'Nespecificat'}
+                                          </button>
                                         </div>
                                       </div>
                                     )}
