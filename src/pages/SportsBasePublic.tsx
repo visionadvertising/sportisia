@@ -614,11 +614,20 @@ function SportsBasePublic() {
                       const field = facility.sportsFields?.[0] // Use first field for opening hours
                       if (!field) return null
                       const slots = getDaySlots(day.key, field.timeSlots || [])
-                      const openSlots = slots.filter(s => s.status === 'open')
+                      const daySlot = slots.length > 0 ? slots[0] : null
                       
-                      let hours = 'Închis'
-                      if (openSlots.length > 0) {
-                        hours = openSlots.map(s => `${formatTime(s.startTime)} - ${formatTime(s.endTime)}`).join(', ')
+                      let displayText = 'Nespecificat'
+                      if (daySlot) {
+                        if (daySlot.status === 'closed') {
+                          displayText = 'Închis'
+                        } else if (daySlot.status === 'open') {
+                          const timeRange = `${formatTime(daySlot.startTime)} - ${formatTime(daySlot.endTime)}`
+                          if (daySlot.price !== null && daySlot.price !== undefined) {
+                            displayText = `${timeRange} - ${daySlot.price} lei/oră`
+                          } else {
+                            displayText = `${timeRange} - Preț nespecificat`
+                          }
+                        }
                       }
                       
                       return (
@@ -635,9 +644,9 @@ function SportsBasePublic() {
                           </td>
                           <td style={{
                             padding: '0.75rem 0',
-                            color: '#64748b'
+                            color: daySlot?.status === 'closed' ? '#ef4444' : '#64748b'
                           }}>
-                            {hours}
+                            {displayText}
                           </td>
                         </tr>
                       )
