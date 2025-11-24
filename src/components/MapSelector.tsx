@@ -112,19 +112,12 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
 
     setIsGeocoding(true)
     try {
-      // Construiește query-ul cu orașul inclus pentru o căutare mai precisă
-      let searchQuery = location.trim()
-      if (city && city.trim()) {
-        // Adaugă orașul și țara pentru o căutare mai precisă
-        searchQuery = `${searchQuery}, ${city.trim()}, România`
-      } else {
-        // Dacă nu e oraș, adaugă doar țara
-        searchQuery = `${searchQuery}, România`
-      }
-
-      console.log('Geocoding query:', searchQuery)
+      // Trimite doar adresa și orașul separat - backend-ul va construi query-ul
+      const addressQuery = location.trim()
+      console.log('Geocoding request - address:', addressQuery, 'city:', city)
+      
       let response = await fetch(
-        `/api/geocode?q=${encodeURIComponent(searchQuery)}&city=${encodeURIComponent(city || '')}`
+        `/api/geocode?q=${encodeURIComponent(addressQuery)}${city && city.trim() ? `&city=${encodeURIComponent(city.trim())}` : ''}`
       )
       
       if (!response.ok) {
@@ -137,9 +130,9 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
       // Dacă nu găsește cu adresa completă, încearcă doar cu orașul
       if (Array.isArray(data) && data.length === 0 && city && city.trim()) {
         console.log('Trying fallback search with city only:', city)
-        const cityQuery = `${city.trim()}, România`
+        // Pentru fallback, trimitem doar orașul fără adresă
         response = await fetch(
-          `/api/geocode?q=${encodeURIComponent(cityQuery)}&city=${encodeURIComponent(city)}`
+          `/api/geocode?q=${encodeURIComponent(city.trim())}&city=${encodeURIComponent(city.trim())}`
         )
         if (response.ok) {
           data = await response.json()
