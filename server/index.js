@@ -970,25 +970,29 @@ app.post('/api/register', upload.fields([
     // Process gallery files (from uploaded files)
     let galleryFinal = null
     console.log('[REGISTER] Processing gallery - req.files.gallery:', req.files?.gallery)
-    console.log('[REGISTER] Processing gallery - gallery (from body):', gallery ? 'exists' : 'null', typeof gallery)
     if (req.files && req.files.gallery && req.files.gallery.length > 0) {
       galleryFinal = req.files.gallery.map(file => `/uploads/gallery/${file.filename}`)
       console.log('[REGISTER] Gallery uploaded, galleryFinal:', galleryFinal)
-    } else if (gallery && Array.isArray(gallery) && gallery.length > 0) {
-      // Fallback: if base64 is still sent, save them as files
-      galleryFinal = []
-      const galleryDir = path.join(__dirname, 'uploads', 'gallery')
-      if (!existsSync(galleryDir)) mkdirSync(galleryDir, { recursive: true })
-      
-      for (const base64Image of gallery) {
-        if (typeof base64Image === 'string' && base64Image.startsWith('data:image')) {
-          const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '')
-          const buffer = Buffer.from(base64Data, 'base64')
-          const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
-          const filename = `${uniqueSuffix}.jpg`
-          writeFileSync(path.join(galleryDir, filename), buffer)
-          galleryFinal.push(`/uploads/gallery/${filename}`)
+    } else {
+      // Check if gallery is sent as base64 array in body (fallback for old clients)
+      const gallery = req.body.gallery
+      if (gallery && Array.isArray(gallery) && gallery.length > 0) {
+        // Fallback: if base64 is still sent, save them as files
+        galleryFinal = []
+        const galleryDir = path.join(__dirname, 'uploads', 'gallery')
+        if (!existsSync(galleryDir)) mkdirSync(galleryDir, { recursive: true })
+        
+        for (const base64Image of gallery) {
+          if (typeof base64Image === 'string' && base64Image.startsWith('data:image')) {
+            const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '')
+            const buffer = Buffer.from(base64Data, 'base64')
+            const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
+            const filename = `${uniqueSuffix}.jpg`
+            writeFileSync(path.join(galleryDir, filename), buffer)
+            galleryFinal.push(`/uploads/gallery/${filename}`)
+          }
         }
+        console.log('[REGISTER] Gallery saved from base64, galleryFinal:', galleryFinal)
       }
     }
 
