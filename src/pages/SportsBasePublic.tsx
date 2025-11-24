@@ -1014,18 +1014,25 @@ function SportsBasePublic() {
                     // Build legend data
                     const legendItems: Array<{ color: string, label: string }> = []
                     const allOpenSlots = field.timeSlots.filter(s => s.status === 'open')
+                    
+                    // Check for unspecified price slots (green)
+                    const hasUnspecifiedPrice = allOpenSlots.some(s => s.isPriceUnspecified || s.price === null || s.price === undefined)
+                    if (hasUnspecifiedPrice) {
+                      legendItems.push({ color: '#10b981', label: 'Verde: Preț nespecificat' })
+                    }
+                    
                     if (allOpenSlots.length > 0) {
                       const { main } = getMainAndSecondarySlots(allOpenSlots)
-                      if (main) {
-                        const mainPrice = main.isPriceUnspecified ? 'Nespecificat' : (main.price ? `${main.price} RON/oră` : 'Nespecificat')
-                        legendItems.push({ color: '#10b981', label: `Verde: ${mainPrice}` })
+                      // Only add main slot to legend if it has a price (not unspecified)
+                      if (main && !main.isPriceUnspecified && main.price !== null && main.price !== undefined) {
+                        legendItems.push({ color: '#10b981', label: `Verde: ${main.price} RON/oră` })
                       }
                       const secondarySlots = allOpenSlots.filter(s => 
-                        !(s.startTime === main?.startTime && s.endTime === main?.endTime)
+                        !(s.startTime === main?.startTime && s.endTime === main?.endTime) &&
+                        !s.isPriceUnspecified && s.price !== null && s.price !== undefined
                       )
                       if (secondarySlots.length > 0) {
                         const uniquePrices = [...new Set(secondarySlots
-                          .filter(s => !s.isPriceUnspecified && s.price !== null && s.price !== undefined)
                           .map(s => s.price as number)
                         )].sort((a, b) => a - b)
                         if (uniquePrices.length > 0) {
@@ -1035,12 +1042,6 @@ function SportsBasePublic() {
                               color: `rgba(59, 130, 246, ${intensity})`, 
                               label: `Albastru: ${price} RON/oră` 
                             })
-                          })
-                        }
-                        if (secondarySlots.some(s => s.isPriceUnspecified || s.price === null || s.price === undefined)) {
-                          legendItems.push({ 
-                            color: 'rgba(59, 130, 246, 0.3)', 
-                            label: 'Albastru: Nespecificat' 
                           })
                         }
                       }
@@ -1067,10 +1068,10 @@ function SportsBasePublic() {
                         {/* Schedule Grid */}
                         <div style={{
                           display: 'grid',
-                          gridTemplateColumns: `50px repeat(${DAYS_OF_WEEK.length}, 1fr)`,
-                          gap: '0.125rem',
+                          gridTemplateColumns: `60px repeat(${DAYS_OF_WEEK.length}, 1fr)`,
+                          gap: '0.25rem',
                           marginBottom: '0.75rem',
-                          fontSize: '0.65rem'
+                          fontSize: '0.7rem'
                         }}>
                           {/* Time slots header */}
                           <div style={{ gridColumn: '1' }}></div>
@@ -1079,34 +1080,34 @@ function SportsBasePublic() {
                               key={day.key}
                               style={{
                                 textAlign: 'center',
-                                fontSize: '0.65rem',
+                                fontSize: '0.7rem',
                                 fontWeight: '600',
                                 color: '#64748b',
-                                padding: '0.25rem 0.125rem'
+                                padding: '0.375rem 0.25rem'
                               }}
                             >
                               {day.label.substring(0, 3)}
                             </div>
                           ))}
                           
-                          {/* Generate time slots from 06:00 to 22:00 in 1-hour intervals (only relevant hours) */}
-                          {Array.from({ length: 17 }, (_, idx) => {
+                          {/* Generate time slots from 06:00 to 24:00 in 1-hour intervals */}
+                          {Array.from({ length: 19 }, (_, idx) => {
                             const hour = idx + 6 // Start from 6 AM
                             const timeSlot = `${hour.toString().padStart(2, '0')}:00`
-                            const nextHour = hour + 1
-                            const nextTimeSlot = `${nextHour.toString().padStart(2, '0')}:00`
+                            const nextHour = hour === 24 ? 24 : hour + 1
                             
                             return (
                               <div key={hour} style={{ display: 'contents' }}>
                                 {/* Time label */}
                                 <div style={{
-                                  fontSize: '0.6rem',
-                                  color: '#94a3b8',
-                                  padding: '0.125rem',
-                                  textAlign: 'right',
-                                  paddingRight: '0.25rem'
+                                  fontSize: '0.7rem',
+                                  color: '#64748b',
+                                  padding: '0.25rem',
+                                  textAlign: 'left',
+                                  paddingLeft: '0.5rem',
+                                  fontWeight: '500'
                                 }}>
-                                  {hour % 2 === 0 ? timeSlot : ''}
+                                  {timeSlot}
                                 </div>
                                 
                                 {/* Day columns */}
@@ -1145,7 +1146,8 @@ function SportsBasePublic() {
                                           style={{
                                             background: '#f1f5f9',
                                             border: '1px solid #e2e8f0',
-                                            minHeight: '12px'
+                                            minHeight: '16px',
+                                            borderRadius: '4px'
                                           }}
                                         />
                                       )
@@ -1157,7 +1159,8 @@ function SportsBasePublic() {
                                         style={{
                                           background: '#ffffff',
                                           border: '1px solid #f1f5f9',
-                                          minHeight: '12px'
+                                          minHeight: '16px',
+                                          borderRadius: '4px'
                                         }}
                                       />
                                     )
@@ -1168,16 +1171,20 @@ function SportsBasePublic() {
                                   let borderColor = '#e2e8f0'
                                   
                                   if (matchingSlot.status === 'closed') {
+                                    // Red for closed
                                     backgroundColor = '#fee2e2'
                                     borderColor = '#ef4444'
+                                  } else if (matchingSlot.isPriceUnspecified || matchingSlot.price === null) {
+                                    // Light green for unspecified price
+                                    backgroundColor = '#d1fae5'
+                                    borderColor = '#10b981'
                                   } else if (isMain) {
+                                    // Main slot - green
                                     backgroundColor = '#d1fae5'
                                     borderColor = '#10b981'
                                   } else {
                                     // Secondary slot - blue with intensity based on price
-                                    const intensity = matchingSlot.isPriceUnspecified || matchingSlot.price === null
-                                      ? 0.3
-                                      : getBlueIntensity(matchingSlot.price, maxPrice)
+                                    const intensity = getBlueIntensity(matchingSlot.price, maxPrice)
                                     backgroundColor = `rgba(59, 130, 246, ${intensity})`
                                     borderColor = `rgba(37, 99, 235, ${Math.min(intensity + 0.2, 1)})`
                                   }
@@ -1187,9 +1194,9 @@ function SportsBasePublic() {
                                       key={day.key}
                                       style={{
                                         background: backgroundColor,
-                                        border: `1.5px solid ${borderColor}`,
-                                        minHeight: '12px',
-                                        borderRadius: '3px'
+                                        border: `2px solid ${borderColor}`,
+                                        minHeight: '16px',
+                                        borderRadius: '4px'
                                       }}
                                       title={`${formatTime(matchingSlot.startTime)} - ${formatTime(matchingSlot.endTime)}${matchingSlot.status === 'open' ? (matchingSlot.isPriceUnspecified ? ' (Preț nespecificat)' : (matchingSlot.price ? ` (${matchingSlot.price} RON/oră)` : '')) : ' (Închis)'}`}
                                     />
