@@ -56,8 +56,9 @@ app.use(cors({
 }))
 
 // Parse JSON and URL-encoded bodies (for non-file fields in FormData)
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+// Increased limits to handle file uploads via FormData
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -91,7 +92,11 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB per file
+    fileSize: 5 * 1024 * 1024, // 5MB per file (already optimized on frontend)
+    fieldSize: 10 * 1024 * 1024, // 10MB for other form fields (JSON strings, etc.)
+    fields: 50, // Maximum number of non-file fields
+    fieldNameSize: 100, // Maximum field name size
+    files: 11 // Maximum number of files (1 logo + 10 gallery)
   },
   fileFilter: (req, file, cb) => {
     // Accept only images
@@ -103,8 +108,26 @@ const upload = multer({
   }
 })
 
+// Initialize uploads directory on startup
+const uploadsDir = path.join(__dirname, 'uploads')
+const logosDir = path.join(uploadsDir, 'logos')
+const galleryDir = path.join(uploadsDir, 'gallery')
+
+if (!existsSync(uploadsDir)) {
+  mkdirSync(uploadsDir, { recursive: true })
+  console.log('✅ Created uploads directory')
+}
+if (!existsSync(logosDir)) {
+  mkdirSync(logosDir, { recursive: true })
+  console.log('✅ Created uploads/logos directory')
+}
+if (!existsSync(galleryDir)) {
+  mkdirSync(galleryDir, { recursive: true })
+  console.log('✅ Created uploads/gallery directory')
+}
+
 // Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+app.use('/uploads', express.static(uploadsDir))
 
 // Database connection
 let pool
