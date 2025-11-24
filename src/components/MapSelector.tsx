@@ -176,32 +176,69 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
   return (
     <div>
       <div style={{ 
-        marginBottom: '0.5rem', 
+        marginBottom: '0.75rem', 
         display: 'flex', 
         flexDirection: isMobile ? 'column' : 'row',
-        gap: '0.5rem' 
+        gap: '0.75rem',
+        alignItems: 'stretch'
       }}>
         <button
           type="button"
           onClick={handleGeocode}
           disabled={isGeocoding || !location.trim()}
           style={{
-            padding: isMobile ? '0.75rem 1rem' : '0.5rem 1rem',
-            background: isGeocoding || !location.trim() ? '#e5e7eb' : '#0f172a',
-            color: 'white',
+            padding: isMobile ? '0.875rem 1.25rem' : '0.75rem 1.5rem',
+            background: isGeocoding || !location.trim() 
+              ? '#f1f5f9' 
+              : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: isGeocoding || !location.trim() ? '#94a3b8' : 'white',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '10px',
             cursor: isGeocoding || !location.trim() ? 'not-allowed' : 'pointer',
-            fontSize: isMobile ? '0.9375rem' : '0.9rem',
-            fontWeight: '600',
+            fontSize: isMobile ? '0.9375rem' : '0.875rem',
+            fontWeight: '500',
             width: isMobile ? '100%' : 'auto',
             touchAction: 'manipulation',
-            minHeight: isMobile ? '44px' : 'auto',
-            transition: 'all 0.2s ease',
-            boxShadow: isGeocoding || !location.trim() ? 'none' : '0 2px 4px rgba(15, 23, 42, 0.2)'
+            minHeight: isMobile ? '48px' : '42px',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: isGeocoding || !location.trim() 
+              ? 'none' 
+              : '0 2px 8px rgba(16, 185, 129, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            letterSpacing: '0.01em'
+          }}
+          onMouseEnter={(e) => {
+            if (!isGeocoding && location.trim() && !isMobile) {
+              e.currentTarget.style.transform = 'translateY(-1px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.35)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isGeocoding && location.trim() && !isMobile) {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.25)'
+            }
           }}
         >
-          {isGeocoding ? 'Căutare...' : 'Găsește pe hartă'}
+          {isGeocoding ? (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+              Căutare...
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              Găsește pe hartă
+            </>
+          )}
         </button>
         {coordinates && (
           <button
@@ -214,21 +251,47 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
               }
             }}
             style={{
-              padding: isMobile ? '0.75rem 1rem' : '0.5rem 1rem',
-              background: '#ef4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
+              padding: isMobile ? '0.875rem 1.25rem' : '0.75rem 1.5rem',
+              background: 'white',
+              color: '#64748b',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '10px',
               cursor: 'pointer',
-              fontSize: isMobile ? '0.9375rem' : '0.9rem',
-              fontWeight: '600',
+              fontSize: isMobile ? '0.9375rem' : '0.875rem',
+              fontWeight: '500',
               width: isMobile ? '100%' : 'auto',
               touchAction: 'manipulation',
-              minHeight: isMobile ? '44px' : 'auto',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
+              minHeight: isMobile ? '48px' : '42px',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              letterSpacing: '0.01em'
+            }}
+            onMouseEnter={(e) => {
+              if (!isMobile) {
+                e.currentTarget.style.background = '#fef2f2'
+                e.currentTarget.style.borderColor = '#fecaca'
+                e.currentTarget.style.color = '#dc2626'
+                e.currentTarget.style.transform = 'translateY(-1px)'
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(239, 68, 68, 0.15)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isMobile) {
+                e.currentTarget.style.background = 'white'
+                e.currentTarget.style.borderColor = '#e2e8f0'
+                e.currentTarget.style.color = '#64748b'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.08)'
+              }
             }}
           >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
             Șterge pin
           </button>
         )}
