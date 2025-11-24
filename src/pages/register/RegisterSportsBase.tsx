@@ -421,6 +421,11 @@ function RegisterSportsBase() {
     setError('')
   }
 
+  // Scroll la top când se schimbă pasul
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentStep])
+
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault()
