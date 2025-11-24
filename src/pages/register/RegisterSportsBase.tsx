@@ -103,6 +103,7 @@ function RegisterSportsBase() {
   // Step 4: Gallery
   const [galleryFiles, setGalleryFiles] = useState<File[]>([])
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
+  const [isDragging, setIsDragging] = useState(false)
   
 
   // Step 5: Specific Details
@@ -255,9 +256,7 @@ function RegisterSportsBase() {
     reader.readAsDataURL(file)
   }
 
-  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    
+  const processGalleryFiles = (files: File[]) => {
     if (galleryFiles.length + files.length > 10) {
       setError('Poți încărca maxim 10 imagini în galerie')
       return
@@ -282,6 +281,41 @@ function RegisterSportsBase() {
       }
       reader.readAsDataURL(file)
     })
+  }
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    processGalleryFiles(files)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (galleryFiles.length < 10) {
+      setIsDragging(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    if (galleryFiles.length >= 10) {
+      setError('Poți încărca maxim 10 imagini în galerie')
+      return
+    }
+
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'))
+    if (files.length > 0) {
+      processGalleryFiles(files)
+    }
   }
 
   // Functions for managing multiple sports fields
@@ -2066,91 +2100,230 @@ function RegisterSportsBase() {
                   Încarcă imagini pentru a-ți prezenta baza sportivă. Poți adăuga până la 10 imagini, fiecare cu maximum 5MB.
                 </p>
               <div style={{ marginBottom: '2.5rem' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.75rem',
-                  color: '#0f172a',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  letterSpacing: '0.01em'
-                }}>
-                  Încarcă imagini (max 10, 5MB/fișier)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleGalleryChange}
-                  disabled={galleryFiles.length >= 10}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
                   style={{
-                    width: '100%',
-                    padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
-                    border: '1.5px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: isMobile ? '16px' : '1rem',
-                    outline: 'none',
-                    background: '#ffffff',
-                    color: '#0f172a',
-                    transition: 'all 0.2s ease',
-                    fontWeight: '400',
-                    lineHeight: '1.5',
-                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                    WebkitAppearance: 'none',
-                    touchAction: 'manipulation',
+                    border: isDragging 
+                      ? '2px dashed #10b981' 
+                      : galleryFiles.length >= 10 
+                        ? '2px dashed #e2e8f0' 
+                        : '2px dashed #cbd5e1',
+                    borderRadius: '12px',
+                    padding: isMobile ? '2rem 1.5rem' : '3rem 2rem',
+                    background: isDragging 
+                      ? 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)' 
+                      : galleryFiles.length >= 10
+                        ? '#f8fafc'
+                        : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                    textAlign: 'center',
                     cursor: galleryFiles.length >= 10 ? 'not-allowed' : 'pointer',
-                    opacity: galleryFiles.length >= 10 ? 0.5 : 1
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    position: 'relative',
+                    opacity: galleryFiles.length >= 10 ? 0.6 : 1
                   }}
-                  onFocus={(e) => {
+                  onClick={() => {
                     if (galleryFiles.length < 10) {
-                      e.target.style.borderColor = '#0f172a'
-                      e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                      document.getElementById('gallery-file-input')?.click()
                     }
                   }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e2e8f0'
-                    e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
-                  }}
-                />
-                {galleryFiles.length > 0 && (
-                  <p style={{ marginTop: '0.75rem', color: '#64748b', fontSize: '0.875rem', fontWeight: '400' }}>
-                    {galleryFiles.length} / 10 imagini selectate
-                  </p>
-                )}
+                >
+                  <input
+                    id="gallery-file-input"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleGalleryChange}
+                    disabled={galleryFiles.length >= 10}
+                    style={{
+                      display: 'none'
+                    }}
+                  />
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '1rem'
+                  }}>
+                    <div style={{
+                      width: isMobile ? '56px' : '64px',
+                      height: isMobile ? '56px' : '64px',
+                      borderRadius: '50%',
+                      background: isDragging 
+                        ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                        : galleryFiles.length >= 10
+                          ? '#e2e8f0'
+                          : 'linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.3s ease',
+                      transform: isDragging ? 'scale(1.1)' : 'scale(1)'
+                    }}>
+                      <svg 
+                        width={isMobile ? '28' : '32'} 
+                        height={isMobile ? '28' : '32'} 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke={isDragging ? 'white' : galleryFiles.length >= 10 ? '#94a3b8' : '#10b981'} 
+                        strokeWidth="2"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                    </div>
+                    <div>
+                      <p style={{
+                        fontSize: isMobile ? '1rem' : '1.125rem',
+                        fontWeight: '600',
+                        color: isDragging ? '#10b981' : galleryFiles.length >= 10 ? '#94a3b8' : '#0f172a',
+                        marginBottom: '0.5rem',
+                        transition: 'color 0.3s ease'
+                      }}>
+                        {isDragging 
+                          ? 'Lasă fișierele aici' 
+                          : galleryFiles.length >= 10 
+                            ? 'Limită atinsă (10 imagini)'
+                            : 'Trage și plasează imagini aici'}
+                      </p>
+                      <p style={{
+                        fontSize: isMobile ? '0.8125rem' : '0.875rem',
+                        color: '#64748b',
+                        marginBottom: '0.75rem'
+                      }}>
+                        sau <span style={{ color: '#10b981', fontWeight: '600', cursor: 'pointer' }}>browsează</span> pentru a selecta
+                      </p>
+                      <p style={{
+                        fontSize: '0.75rem',
+                        color: '#94a3b8',
+                        marginTop: '0.5rem'
+                      }}>
+                        Maxim 10 imagini, fiecare până la 5MB
+                      </p>
+                    </div>
+                    {galleryFiles.length > 0 && (
+                      <div style={{
+                        marginTop: '0.5rem',
+                        padding: '0.5rem 1rem',
+                        background: '#f0fdf4',
+                        borderRadius: '8px',
+                        border: '1px solid #d1fae5'
+                      }}>
+                        <p style={{ 
+                          color: '#059669', 
+                          fontSize: '0.875rem', 
+                          fontWeight: '600',
+                          margin: 0
+                        }}>
+                          {galleryFiles.length} / 10 imagini încărcate
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               {galleryPreviews.length > 0 && (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))',
-                  gap: isMobile ? '0.75rem' : '1.5rem',
+                  gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(180px, 1fr))',
+                  gap: isMobile ? '1rem' : '1.25rem',
                   marginTop: isMobile ? '1.5rem' : '2rem'
                 }}>
                   {galleryPreviews.map((preview, index) => (
-                    <div key={index} style={{ position: 'relative' }}>
+                    <div 
+                      key={index} 
+                      style={{ 
+                        position: 'relative',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isMobile) {
+                          e.currentTarget.style.transform = 'translateY(-4px)'
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.12)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isMobile) {
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)'
+                        }
+                      }}
+                    >
                       <img
                         src={preview}
                         alt={`Gallery ${index + 1}`}
                         style={{
                           width: '100%',
-                          height: isMobile ? '150px' : '200px',
+                          height: isMobile ? '160px' : '200px',
                           objectFit: 'cover',
-                          borderRadius: '8px',
-                          border: '1px solid #e2e8f0'
+                          display: 'block'
                         }}
                       />
                       <button
                         type="button"
-                        onClick={() => removeGalleryImage(index)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeGalleryImage(index)
+                        }}
                         style={{
                           position: 'absolute',
-                          top: '0.5rem',
-                          right: '0.5rem',
-                          background: '#dc2626',
+                          top: '0.75rem',
+                          right: '0.75rem',
+                          background: 'rgba(220, 38, 38, 0.95)',
+                          backdropFilter: 'blur(8px)',
                           color: 'white',
                           border: 'none',
-                          width: '32px',
-                          height: '32px',
+                          width: '36px',
+                          height: '36px',
                           borderRadius: '50%',
                           cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.background = 'rgba(220, 38, 38, 1)'
+                            e.currentTarget.style.transform = 'scale(1.1)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isMobile) {
+                            e.currentTarget.style.background = 'rgba(220, 38, 38, 0.95)'
+                            e.currentTarget.style.transform = 'scale(1)'
+                          }
+                        }}
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)',
+                        padding: '0.75rem',
+                        color: 'white',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}>
+                        Imagine {index + 1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
                           fontSize: '1.25rem',
                           display: 'flex',
                           alignItems: 'center',
@@ -2173,15 +2346,44 @@ function RegisterSportsBase() {
                 </div>
               )}
               {galleryPreviews.length === 0 && (
-                <p style={{ 
-                  color: '#64748b', 
+                <div style={{ 
                   textAlign: 'center', 
-                  padding: '3rem 0',
-                  fontSize: '0.875rem',
-                  fontWeight: '400'
+                  marginTop: isMobile ? '1.5rem' : '2rem',
+                  padding: isMobile ? '1.5rem' : '2rem',
+                  background: '#f8fafc',
+                  borderRadius: '12px',
+                  border: '1px dashed #e2e8f0'
                 }}>
-                  Nu ai adăugat imagini încă. Poți sări peste acest pas.
-                </p>
+                  <svg 
+                    width="48" 
+                    height="48" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="#cbd5e1" 
+                    strokeWidth="1.5"
+                    style={{ margin: '0 auto 1rem' }}
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                  <p style={{ 
+                    color: '#64748b', 
+                    fontSize: isMobile ? '0.875rem' : '0.9375rem',
+                    margin: 0,
+                    fontWeight: '500'
+                  }}>
+                    Nu ai adăugat imagini încă
+                  </p>
+                  <p style={{ 
+                    color: '#94a3b8', 
+                    fontSize: isMobile ? '0.8125rem' : '0.875rem',
+                    marginTop: '0.5rem',
+                    margin: '0.5rem 0 0 0'
+                  }}>
+                    Poți sări peste acest pas
+                  </p>
+                </div>
               )}
               </div>
             </div>
