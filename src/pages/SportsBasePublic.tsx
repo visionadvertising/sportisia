@@ -1051,14 +1051,14 @@ function SportsBasePublic() {
                     
                     return (
                       <div style={{
-                        marginTop: '1.5rem',
-                        paddingTop: '1.5rem',
+                        marginTop: '1rem',
+                        paddingTop: '1rem',
                         borderTop: '1px solid #e2e8f0'
                       }}>
                         <h4 style={{
-                          fontSize: '1rem',
+                          fontSize: '0.875rem',
                           fontWeight: '600',
-                          marginBottom: '1rem',
+                          marginBottom: '0.75rem',
                           color: '#0f172a'
                         }}>
                           Program și prețuri
@@ -1067,9 +1067,10 @@ function SportsBasePublic() {
                         {/* Schedule Grid */}
                         <div style={{
                           display: 'grid',
-                          gridTemplateColumns: `80px repeat(${DAYS_OF_WEEK.length}, 1fr)`,
-                          gap: '0.5rem',
-                          marginBottom: '1rem'
+                          gridTemplateColumns: `50px repeat(${DAYS_OF_WEEK.length}, 1fr)`,
+                          gap: '0.125rem',
+                          marginBottom: '0.75rem',
+                          fontSize: '0.65rem'
                         }}>
                           {/* Time slots header */}
                           <div style={{ gridColumn: '1' }}></div>
@@ -1078,18 +1079,19 @@ function SportsBasePublic() {
                               key={day.key}
                               style={{
                                 textAlign: 'center',
-                                fontSize: '0.75rem',
+                                fontSize: '0.65rem',
                                 fontWeight: '600',
                                 color: '#64748b',
-                                padding: '0.5rem 0.25rem'
+                                padding: '0.25rem 0.125rem'
                               }}
                             >
                               {day.label.substring(0, 3)}
                             </div>
                           ))}
                           
-                          {/* Generate time slots from 00:00 to 24:00 in 1-hour intervals */}
-                          {Array.from({ length: 24 }, (_, hour) => {
+                          {/* Generate time slots from 06:00 to 22:00 in 1-hour intervals (only relevant hours) */}
+                          {Array.from({ length: 17 }, (_, idx) => {
+                            const hour = idx + 6 // Start from 6 AM
                             const timeSlot = `${hour.toString().padStart(2, '0')}:00`
                             const nextHour = hour + 1
                             const nextTimeSlot = `${nextHour.toString().padStart(2, '0')}:00`
@@ -1098,11 +1100,11 @@ function SportsBasePublic() {
                               <div key={hour} style={{ display: 'contents' }}>
                                 {/* Time label */}
                                 <div style={{
-                                  fontSize: '0.7rem',
+                                  fontSize: '0.6rem',
                                   color: '#94a3b8',
-                                  padding: '0.25rem',
+                                  padding: '0.125rem',
                                   textAlign: 'right',
-                                  paddingRight: '0.5rem'
+                                  paddingRight: '0.25rem'
                                 }}>
                                   {hour % 2 === 0 ? timeSlot : ''}
                                 </div>
@@ -1143,7 +1145,7 @@ function SportsBasePublic() {
                                           style={{
                                             background: '#f1f5f9',
                                             border: '1px solid #e2e8f0',
-                                            minHeight: '20px'
+                                            minHeight: '12px'
                                           }}
                                         />
                                       )
@@ -1155,7 +1157,7 @@ function SportsBasePublic() {
                                         style={{
                                           background: '#ffffff',
                                           border: '1px solid #f1f5f9',
-                                          minHeight: '20px'
+                                          minHeight: '12px'
                                         }}
                                       />
                                     )
@@ -1185,9 +1187,9 @@ function SportsBasePublic() {
                                       key={day.key}
                                       style={{
                                         background: backgroundColor,
-                                        border: `2px solid ${borderColor}`,
-                                        minHeight: '20px',
-                                        borderRadius: '4px'
+                                        border: `1.5px solid ${borderColor}`,
+                                        minHeight: '12px',
+                                        borderRadius: '3px'
                                       }}
                                       title={`${formatTime(matchingSlot.startTime)} - ${formatTime(matchingSlot.endTime)}${matchingSlot.status === 'open' ? (matchingSlot.isPriceUnspecified ? ' (Preț nespecificat)' : (matchingSlot.price ? ` (${matchingSlot.price} RON/oră)` : '')) : ' (Închis)'}`}
                                     />
@@ -1203,10 +1205,10 @@ function SportsBasePublic() {
                           <div style={{
                             display: 'flex',
                             flexWrap: 'wrap',
-                            gap: '1rem',
-                            padding: '1rem',
+                            gap: '0.5rem',
+                            padding: '0.75rem',
                             background: '#f8fafc',
-                            borderRadius: '8px',
+                            borderRadius: '6px',
                             border: '1px solid #e2e8f0'
                           }}>
                             {legendItems.map((item, idx) => (
@@ -1215,20 +1217,20 @@ function SportsBasePublic() {
                                 style={{
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: '0.5rem',
-                                  fontSize: '0.8125rem'
+                                  gap: '0.375rem',
+                                  fontSize: '0.7rem'
                                 }}
                               >
                                 <div
                                   style={{
-                                    width: '20px',
-                                    height: '20px',
+                                    width: '14px',
+                                    height: '14px',
                                     background: item.color,
-                                    border: item.color === '#10b981' ? '2px solid #059669' : 
-                                            item.color === '#ef4444' ? '2px solid #dc2626' :
-                                            item.color.startsWith('rgba') ? `2px solid rgba(37, 99, 235, ${item.color.match(/[\d.]+/g)?.[3] || '0.5'})` :
-                                            '2px solid #3b82f6',
-                                    borderRadius: '4px'
+                                    border: item.color === '#10b981' ? '1.5px solid #059669' : 
+                                            item.color === '#ef4444' ? '1.5px solid #dc2626' :
+                                            item.color.startsWith('rgba') ? `1.5px solid rgba(37, 99, 235, ${item.color.match(/[\d.]+/g)?.[3] || '0.5'})` :
+                                            '1.5px solid #3b82f6',
+                                    borderRadius: '3px'
                                   }}
                                 />
                                 <span style={{ color: '#64748b' }}>{item.label}</span>
