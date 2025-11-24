@@ -592,8 +592,8 @@ function RegisterSportsBase() {
       }}>
         {/* Progress Steps */}
         <div style={{
-          marginBottom: isMobile ? '2.5rem' : '3.5rem',
-          padding: isMobile ? '1.5rem 0' : '2rem 0'
+          marginBottom: isMobile ? '1.5rem' : '2rem',
+          padding: isMobile ? '0.75rem 0' : '1rem 0'
         }}>
           <div style={{
             display: 'flex',
