@@ -3226,6 +3226,43 @@ function RegisterSportsBase() {
                   </div>
                 ))}
               </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: isMobile ? 'center' : 'flex-end',
+                marginTop: isMobile ? '0.5rem' : '1rem'
+              }}>
+                <button
+                  type="button"
+                  onClick={addSportsField}
+                  style={{
+                    padding: isMobile ? '0.75rem 1.25rem' : '0.625rem 1.5rem',
+                    background: '#10b981',
+                    color: 'white',
+                    border: '1.5px solid #10b981',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '0.9375rem' : '0.875rem',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                    touchAction: 'manipulation'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isMobile) {
+                      e.currentTarget.style.background = '#059669'
+                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isMobile) {
+                      e.currentTarget.style.background = '#10b981'
+                      e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    }
+                  }}
+                >
+                  + Adaugă teren
+                </button>
+              </div>
               </div>
             </div>
           )}
