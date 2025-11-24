@@ -149,16 +149,16 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
     }
   }, [coordinates])
 
-  // Auto-geocode when location changes (debounced)
-  useEffect(() => {
-    if (!location.trim() || !mapInstanceRef.current) return
-    
-    const timeoutId = setTimeout(() => {
-      handleGeocode()
-    }, 1000) // Wait 1 second after user stops typing
-    
-    return () => clearTimeout(timeoutId)
-  }, [location, city])
+  // Auto-geocode dezactivat - pin-ul se pune doar când utilizatorul apasă "Găsește pe hartă"
+  // useEffect(() => {
+  //   if (!location.trim() || !mapInstanceRef.current) return
+  //   
+  //   const timeoutId = setTimeout(() => {
+  //     handleGeocode()
+  //   }, 1000) // Wait 1 second after user stops typing
+  //   
+  //   return () => clearTimeout(timeoutId)
+  // }, [location, city])
 
   // Geocode address when location changes
   const handleGeocode = async () => {
