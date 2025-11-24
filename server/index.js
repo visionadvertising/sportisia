@@ -553,15 +553,25 @@ initDatabase()
 // Geocoding endpoints - proxy pentru Nominatim (evită CORS)
 app.get('/api/geocode', async (req, res) => {
   try {
-    const { q } = req.query
+    const { q, city } = req.query
     if (!q) {
       return res.status(400).json({ error: 'Query parameter "q" is required' })
     }
 
-    console.log('Geocoding request for:', q)
+    // Construiește query-ul cu orașul inclus pentru o căutare mai precisă
+    let searchQuery = q.trim()
+    if (city && city.trim()) {
+      // Adaugă orașul și țara pentru o căutare mai precisă
+      searchQuery = `${searchQuery}, ${city.trim()}, România`
+    } else {
+      // Dacă nu e oraș, adaugă doar țara
+      searchQuery = `${searchQuery}, România`
+    }
+
+    console.log('Geocoding request for:', searchQuery)
 
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1&countrycodes=ro`,
       {
         headers: {
           'User-Agent': 'Sportisia/1.0 (contact@sportisia.ro)'

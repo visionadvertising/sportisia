@@ -22,9 +22,10 @@ interface MapSelectorProps {
   coordinates: { lat: number; lng: number } | null
   onLocationChange: (location: string) => void
   onCoordinatesChange: (coordinates: { lat: number; lng: number } | null) => void
+  city?: string
 }
 
-function MapSelector({ location, coordinates, onLocationChange, onCoordinatesChange }: MapSelectorProps) {
+function MapSelector({ location, coordinates, onLocationChange, onCoordinatesChange, city }: MapSelectorProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
   const markerRef = useRef<L.Marker | null>(null)
@@ -157,7 +158,7 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
     }, 1000) // Wait 1 second after user stops typing
     
     return () => clearTimeout(timeoutId)
-  }, [location])
+  }, [location, city])
 
   // Geocode address when location changes
   const handleGeocode = async () => {
@@ -165,8 +166,18 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
 
     setIsGeocoding(true)
     try {
+      // Construiește query-ul cu orașul inclus pentru o căutare mai precisă
+      let searchQuery = location.trim()
+      if (city && city.trim()) {
+        // Adaugă orașul și țara pentru o căutare mai precisă
+        searchQuery = `${searchQuery}, ${city.trim()}, România`
+      } else {
+        // Dacă nu e oraș, adaugă doar țara
+        searchQuery = `${searchQuery}, România`
+      }
+
       const response = await fetch(
-        `/api/geocode?q=${encodeURIComponent(location)}`
+        `/api/geocode?q=${encodeURIComponent(searchQuery)}`
       )
       
       if (!response.ok) {

@@ -1074,6 +1074,7 @@ function Dashboard() {
                     coordinates={formData.map_coordinates || null}
                     onLocationChange={(location) => setFormData({ ...formData, location })}
                     onCoordinatesChange={(coords) => setFormData({ ...formData, map_coordinates: coords })}
+                    city={formData.city || ''}
                   />
                 </div>
               </div>

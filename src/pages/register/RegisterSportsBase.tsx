@@ -1565,6 +1565,7 @@ function RegisterSportsBase() {
                         coordinates={mapCoordinates}
                         onLocationChange={setLocation}
                         onCoordinatesChange={setMapCoordinates}
+                        city={city}
                       />
                     </div>
                   </>

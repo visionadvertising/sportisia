@@ -24,3 +24,20 @@ body {
   }
 }
 
+/* Fix pentru suprapunerea hărții cu header-ul */
+.leaflet-container {
+  position: relative;
+  z-index: 1;
+}
+
+.leaflet-popup,
+.leaflet-control,
+.leaflet-pane {
+  z-index: 50 !important;
+}
+
+/* Asigură-te că header-ul rămâne deasupra */
+header {
+  z-index: 1000 !important;
+}
+

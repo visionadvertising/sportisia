@@ -67,7 +67,7 @@ function AppContent() {
           borderBottom: '1px solid #f1f5f9',
           position: 'sticky',
           top: 0,
-          zIndex: 100,
+          zIndex: 1000,
           backdropFilter: 'blur(10px)',
           backgroundColor: 'rgba(255, 255, 255, 0.95)'
         }}>

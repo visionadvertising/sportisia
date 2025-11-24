@@ -76,7 +76,9 @@ function PublicMap({ coordinates, location }: PublicMapProps) {
         height: '400px',
         borderRadius: '12px',
         overflow: 'hidden',
-        border: '1px solid #e2e8f0'
+        border: '1px solid #e2e8f0',
+        position: 'relative',
+        zIndex: 1
       }}
     />
   )
