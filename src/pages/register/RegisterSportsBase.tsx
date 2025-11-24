@@ -2398,27 +2398,6 @@ function RegisterSportsBase() {
                   ))}
                 </div>
               )}
-                          fontSize: '1.25rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: '600',
-                          transition: 'opacity 0.2s',
-                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.opacity = '0.8'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.opacity = '1'
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
               {galleryPreviews.length === 0 && (
                 <div style={{ 
                   textAlign: 'center', 
