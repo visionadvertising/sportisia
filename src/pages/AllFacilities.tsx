@@ -376,24 +376,37 @@ function AllFacilities() {
     }}>
       {/* Hero Section */}
       <div style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #0f172a 60%, #1e293b 100%)',
         padding: isMobile ? '3rem 1rem 2rem' : '5rem 2rem 3rem',
         textAlign: 'center',
-        color: 'white'
+        color: 'white',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
+        {/* Modern gradient overlay */}
         <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto'
-        }}>
-          <h1 style={{
-            fontSize: isMobile ? '2rem' : '3rem',
-            color: 'white',
-            marginBottom: isMobile ? '1.5rem' : '2rem',
-            fontWeight: '700',
-            lineHeight: '1.2',
-            padding: isMobile ? '0 0.5rem' : '0',
-            letterSpacing: '-0.02em'
-          }}>{getPageTitle()}</h1>
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'radial-gradient(circle at 30% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 50%), radial-gradient(circle at 70% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%)',
+          pointerEvents: 'none'
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto'
+          }}>
+            <h1 style={{
+              fontSize: isMobile ? '2rem' : '3rem',
+              color: 'white',
+              marginBottom: isMobile ? '1.5rem' : '2rem',
+              fontWeight: '700',
+              lineHeight: '1.2',
+              padding: isMobile ? '0 0.5rem' : '0',
+              letterSpacing: '-0.02em'
+            }}>{getPageTitle()}</h1>
           
           {/* SEO Description */}
           {getDescription() && (
@@ -487,15 +500,16 @@ function AllFacilities() {
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
 
       {/* Content Section */}
       <div style={{
         background: '#ffffff',
-        borderRadius: isMobile ? '24px 24px 0 0' : '32px 32px 0 0',
+        borderRadius: 0,
         padding: isMobile ? '2rem 1rem' : '3rem 2rem',
-        marginTop: '-1px'
+        marginTop: 0
       }}>
         <div style={{
           maxWidth: '1400px',
