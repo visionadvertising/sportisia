@@ -1329,7 +1329,7 @@ function SportsBasePublic() {
                         borderTop: '1px solid #e2e8f0'
                       }}>
                         <h4 style={{
-                          fontSize: '0.875rem',
+                          fontSize: '1.125rem',
                           fontWeight: '600',
                           marginBottom: '0.75rem',
                           color: '#0f172a'
