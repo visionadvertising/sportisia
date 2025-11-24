@@ -119,6 +119,8 @@ function SportsBasePublic() {
       
       console.log(`[Frontend] Response:`, data)
       console.log(`[Frontend] sportsFields/sports_fields:`, data.data?.sportsFields || data.data?.sports_fields || data.facility?.sportsFields || data.facility?.sports_fields)
+      console.log(`[Frontend] logo_url:`, data.data?.logo_url || data.facility?.logo_url)
+      console.log(`[Frontend] gallery (raw):`, data.data?.gallery || data.facility?.gallery)
       
       let facilityData = null
       
@@ -387,31 +389,47 @@ function SportsBasePublic() {
   const phones = facility.phones || (facility.phone ? [facility.phone] : [])
   const whatsapps = facility.whatsapps || (facility.whatsapp ? [facility.whatsapp] : [])
   const emails = facility.emails || (facility.email ? [facility.email] : [])
-  const gallery = facility.gallery || []
+  const gallery = Array.isArray(facility.gallery) ? facility.gallery : (facility.gallery || [])
   const socialMedia = facility.social_media || {}
   const mapCoords = facility.map_coordinates || null
   const logoUrl = facility.logo_url || null
 
+  // Debug logging
+  console.log('[Frontend] Facility data:', {
+    logo_url: logoUrl,
+    gallery: gallery,
+    galleryType: typeof facility.gallery,
+    galleryIsArray: Array.isArray(facility.gallery)
+  })
+
   // Helper function to get full image URL
   const getImageUrl = (path: string | null | undefined): string | null => {
-    if (!path) return null
+    if (!path) {
+      console.log('[Frontend] getImageUrl: path is null/undefined')
+      return null
+    }
+    console.log('[Frontend] getImageUrl: processing path:', path)
     // If already a full URL, return as is
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path
     }
     // If relative path starting with /uploads, ensure it's accessible
     // Backend serves /uploads statically, so we can use it directly
-    // But if it doesn't work, we might need to prepend API_BASE_URL
     if (path.startsWith('/uploads/')) {
-      return path
+      const fullUrl = path
+      console.log('[Frontend] getImageUrl: returning full path:', fullUrl)
+      return fullUrl
     }
-    // If path doesn't start with /, it might be a relative path from API
-    // Try with API_BASE_URL first, then fallback to direct path
-    if (path.startsWith('/')) {
-      return path
+    // If path doesn't start with /, prepend /uploads/ if it looks like a filename
+    if (!path.startsWith('/')) {
+      // If it's just a filename, assume it's in /uploads/gallery/ or /uploads/logos/
+      const fullUrl = `/uploads/${path}`
+      console.log('[Frontend] getImageUrl: prepended /uploads/, returning:', fullUrl)
+      return fullUrl
     }
-    // Otherwise, prepend / to make it absolute
-    return `/${path}`
+    // Otherwise return as is
+    console.log('[Frontend] getImageUrl: returning path as is:', path)
+    return path
   }
 
   // Get first gallery image or default
@@ -471,8 +489,12 @@ function SportsBasePublic() {
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
                 }}
                 onError={(e) => {
+                  console.error('[Frontend] Failed to load logo:', logoUrl, '->', getImageUrl(logoUrl))
                   // Hide logo if image fails to load
                   e.currentTarget.style.display = 'none'
+                }}
+                onLoad={() => {
+                  console.log('[Frontend] Successfully loaded logo:', logoUrl, '->', getImageUrl(logoUrl))
                 }}
               />
             </div>
