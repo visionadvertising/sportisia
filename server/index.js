@@ -1683,8 +1683,8 @@ app.get('/api/facilities/:slug', async (req, res) => {
       )
       
       // Parse and map sports fields to match frontend structure
-      facility.sportsFields = sportsFieldsRows.map((row: any) => {
-        const field: any = {
+      facility.sportsFields = sportsFieldsRows.map((row) => {
+        const field = {
           id: row.id,
           fieldName: row.field_name || row.fieldName,
           sportType: row.sport_type || row.sportType,
@@ -1839,8 +1839,8 @@ app.get('/api/facilities', async (req, res) => {
         )
         
         // Parse and map sports fields to match frontend structure
-        facility.sportsFields = sportsFieldsRows.map((row: any) => {
-          const field: any = {
+        facility.sportsFields = sportsFieldsRows.map((row) => {
+          const field = {
             id: row.id,
             fieldName: row.field_name || row.fieldName,
             sportType: row.sport_type || row.sportType,
