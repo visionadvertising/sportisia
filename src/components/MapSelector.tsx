@@ -105,7 +105,10 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
 
   // Geocode address when location changes
   const handleGeocode = async () => {
-    if (!location.trim() || !mapInstanceRef.current) return
+    if (!location.trim() || !mapInstanceRef.current) {
+      console.log('Geocoding skipped: location empty or map not initialized')
+      return
+    }
 
     setIsGeocoding(true)
     try {
@@ -119,6 +122,7 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
         searchQuery = `${searchQuery}, România`
       }
 
+      console.log('Geocoding query:', searchQuery)
       const response = await fetch(
         `/api/geocode?q=${encodeURIComponent(searchQuery)}`
       )
@@ -138,7 +142,9 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
         if (markerRef.current) {
           markerRef.current.setLatLng([coords.lat, coords.lng])
         } else {
-          markerRef.current = L.marker([coords.lat, coords.lng]).addTo(mapInstanceRef.current)
+          markerRef.current = L.marker([coords.lat, coords.lng], {
+            draggable: false
+          }).addTo(mapInstanceRef.current)
         }
         mapInstanceRef.current.setView([coords.lat, coords.lng], 15)
       } else if (data.error) {

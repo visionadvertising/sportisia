@@ -1500,6 +1500,294 @@ function RegisterSportsBase() {
                   Completează locația bazei tale sportive. Poți specifica adresa completă sau marca locația ca nespecificată.
                 </p>
                 
+                {/* City Selection */}
+                <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem', position: 'relative' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.75rem',
+                    color: '#0f172a',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    letterSpacing: '0.01em'
+                  }}>Oraș *</label>
+                  {!showAddCityInput ? (
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        value={city || citySearch}
+                        onChange={(e) => {
+                          setCitySearch(e.target.value)
+                          setShowCityDropdown(true)
+                          if (!e.target.value) {
+                            setCity('')
+                            setCounty('')
+                          }
+                        }}
+                        onClick={() => setShowCityDropdown(true)}
+                        onFocus={() => setShowCityDropdown(true)}
+                        placeholder="Caută sau selectează oraș"
+                        required={!city}
+                        style={{
+                          width: '100%',
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          paddingRight: isMobile ? '2.25rem' : '2.5rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onBlur={(e) => {
+                          setTimeout(() => setShowCityDropdown(false), 250)
+                        }}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        right: '0.75rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none'
+                      }}>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                          <path d="M5 7.5l5 5 5-5"/>
+                        </svg>
+                      </div>
+                      {showCityDropdown && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          marginTop: '0.25rem',
+                          background: '#ffffff',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          maxHeight: isMobile ? '250px' : '300px',
+                          overflowY: 'auto',
+                          zIndex: 1000,
+                          WebkitOverflowScrolling: 'touch'
+                        }}>
+                          {[...availableCities, ...customCities.filter(c => !availableCities.some(ac => ac.city === c.city))]
+                            .filter(cityOption => 
+                              !citySearch || 
+                              cityOption.city.toLowerCase().includes(citySearch.toLowerCase()) ||
+                              (cityOption.county && cityOption.county.toLowerCase().includes(citySearch.toLowerCase()))
+                            )
+                            .map(cityOption => (
+                              <div
+                                key={cityOption.city}
+                                onMouseDown={(e) => {
+                                  e.preventDefault()
+                                  setCity(cityOption.city)
+                                  setCounty(cityOption.county || '')
+                                  setCitySearch('')
+                                  setShowCityDropdown(false)
+                                }}
+                                style={{
+                                  padding: '0.75rem 1rem',
+                                  cursor: 'pointer',
+                                  borderBottom: '1px solid #f1f5f9',
+                                  color: '#0f172a',
+                                  fontSize: '0.9375rem',
+                                  transition: 'background 0.15s',
+                                  backgroundColor: city === cityOption.city ? '#f0fdf4' : 'transparent'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (city !== cityOption.city) {
+                                    e.currentTarget.style.backgroundColor = '#f8fafc'
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (city !== cityOption.city) {
+                                    e.currentTarget.style.backgroundColor = 'transparent'
+                                  }
+                                }}
+                              >
+                                <div style={{ fontWeight: '500' }}>{cityOption.city}</div>
+                                {cityOption.county && (
+                                  <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem' }}>
+                                    {cityOption.county}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          <div
+                            onMouseDown={(e) => {
+                              e.preventDefault()
+                              setShowAddCityInput(true)
+                              setShowCityDropdown(false)
+                            }}
+                            style={{
+                              padding: '0.75rem 1rem',
+                              cursor: 'pointer',
+                              borderTop: '1px solid #e2e8f0',
+                              background: '#f8fafc',
+                              color: '#10b981',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              transition: 'background 0.15s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#f0fdf4'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = '#f8fafc'
+                            }}
+                          >
+                            <span>+</span> Adaugă oraș nou
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        value={newCity}
+                        onChange={(e) => setNewCity(e.target.value)}
+                        placeholder="Nume oraș"
+                        style={{
+                          width: '100%',
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      />
+                      <select
+                        value={newCityCounty}
+                        onChange={(e) => setNewCityCounty(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: isMobile ? '0.875rem 0.875rem' : '0.875rem 1rem',
+                          border: '1.5px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: isMobile ? '16px' : '1rem',
+                          outline: 'none',
+                          background: '#ffffff',
+                          color: '#0f172a',
+                          transition: 'all 0.2s ease',
+                          fontWeight: '400',
+                          lineHeight: '1.5',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                          WebkitAppearance: 'none',
+                          touchAction: 'manipulation',
+                          cursor: 'pointer'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#0f172a'
+                          e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.1)'
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0'
+                          e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                        }}
+                      >
+                        <option value="">Selectează județul</option>
+                        {ROMANIAN_COUNTIES.map(county => (
+                          <option key={county} value={county}>{county}</option>
+                        ))}
+                      </select>
+                      <div style={{ 
+                        display: 'flex', 
+                        gap: '0.5rem',
+                        marginTop: '0.5rem'
+                      }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newCity.trim() && newCityCounty) {
+                              const newCityObj = { city: newCity.trim(), county: newCityCounty }
+                              setCustomCities([...customCities, newCityObj])
+                              setCity(newCity.trim())
+                              setCounty(newCityCounty)
+                              setNewCity('')
+                              setNewCityCounty('')
+                              setShowAddCityInput(false)
+                            }
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '0.75rem 1rem',
+                            background: '#10b981',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#059669'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#10b981'
+                          }}
+                        >
+                          Adaugă
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddCityInput(false)
+                            setNewCity('')
+                            setNewCityCounty('')
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '0.75rem 1rem',
+                            background: '#ffffff',
+                            color: '#0f172a',
+                            border: '1.5px solid #e2e8f0',
+                            borderRadius: '8px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#f8fafc'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#ffffff'
+                          }}
+                        >
+                          Anulează
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
                 {/* Location with Map */}
                 <div style={{ marginBottom: isMobile ? '1.5rem' : '2.5rem' }}>
                   <div style={{ 
