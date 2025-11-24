@@ -132,23 +132,30 @@ function MapSelector({ location, coordinates, onLocationChange, onCoordinatesCha
       }
       
       const data = await response.json()
+      console.log('Geocoding response:', data)
       
       // Handle both array response and error object
       if (Array.isArray(data) && data.length > 0) {
         const { lat, lon } = data[0]
         const coords = { lat: parseFloat(lat), lng: parseFloat(lon) }
+        console.log('Geocoding coordinates:', coords)
         onCoordinatesChange(coords)
         
         if (markerRef.current) {
           markerRef.current.setLatLng([coords.lat, coords.lng])
+          console.log('Marker updated')
         } else {
           markerRef.current = L.marker([coords.lat, coords.lng], {
             draggable: false
           }).addTo(mapInstanceRef.current)
+          console.log('Marker created')
         }
         mapInstanceRef.current.setView([coords.lat, coords.lng], 15)
+        console.log('Map view updated')
       } else if (data.error) {
         console.error('Geocoding error:', data.error, data.details)
+      } else {
+        console.warn('Geocoding returned empty or invalid data:', data)
       }
     } catch (error) {
       console.error('Geocoding error:', error)
