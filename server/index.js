@@ -1677,11 +1677,54 @@ app.get('/api/facilities/:slug', async (req, res) => {
 
     // If it's a sports base, fetch associated sports fields
     if (facility.facility_type === 'field') {
-      const [sportsFields] = await pool.query(
+      const [sportsFieldsRows] = await pool.query(
         'SELECT * FROM facility_sports_fields WHERE facility_id = ? ORDER BY created_at ASC',
         [facilityId]
       )
-      facility.sportsFields = sportsFields
+      
+      // Parse and map sports fields to match frontend structure
+      facility.sportsFields = sportsFieldsRows.map((row: any) => {
+        const field: any = {
+          id: row.id,
+          fieldName: row.field_name || row.fieldName,
+          sportType: row.sport_type || row.sportType,
+          description: row.description || '',
+          slotSize: row.slot_size || row.slotSize || 60,
+          features: {},
+          timeSlots: []
+        }
+        
+        // Parse features JSON
+        if (row.features) {
+          try {
+            field.features = typeof row.features === 'string' ? JSON.parse(row.features) : row.features
+          } catch (e) {
+            console.error('Error parsing features for field', row.id, ':', e)
+            field.features = {}
+          }
+        }
+        
+        // Parse time_slots JSON
+        if (row.time_slots) {
+          try {
+            field.timeSlots = typeof row.time_slots === 'string' ? JSON.parse(row.time_slots) : row.time_slots
+          } catch (e) {
+            console.error('Error parsing time_slots for field', row.id, ':', e)
+            field.timeSlots = []
+          }
+        }
+        
+        return field
+      })
+      
+      console.log(`[API] Facility ${facilityId} - sportsFields count:`, facility.sportsFields.length)
+      if (facility.sportsFields.length > 0) {
+        console.log(`[API] First field:`, {
+          fieldName: facility.sportsFields[0].fieldName,
+          sportType: facility.sportsFields[0].sportType,
+          timeSlotsCount: facility.sportsFields[0].timeSlots?.length || 0
+        })
+      }
     }
 
     // Debug: Log logo_url and gallery before sending response
@@ -1790,11 +1833,45 @@ app.get('/api/facilities', async (req, res) => {
     // For sports bases, fetch associated sports fields and parse gallery
     const facilitiesWithDetails = await Promise.all(rows.map(async (facility) => {
       if (facility.facility_type === 'field') {
-        const [sportsFields] = await pool.query(
+        const [sportsFieldsRows] = await pool.query(
           'SELECT * FROM facility_sports_fields WHERE facility_id = ? ORDER BY created_at ASC',
           [facility.id]
         )
-        facility.sportsFields = sportsFields
+        
+        // Parse and map sports fields to match frontend structure
+        facility.sportsFields = sportsFieldsRows.map((row: any) => {
+          const field: any = {
+            id: row.id,
+            fieldName: row.field_name || row.fieldName,
+            sportType: row.sport_type || row.sportType,
+            description: row.description || '',
+            slotSize: row.slot_size || row.slotSize || 60,
+            features: {},
+            timeSlots: []
+          }
+          
+          // Parse features JSON
+          if (row.features) {
+            try {
+              field.features = typeof row.features === 'string' ? JSON.parse(row.features) : row.features
+            } catch (e) {
+              console.error('Error parsing features for field', row.id, ':', e)
+              field.features = {}
+            }
+          }
+          
+          // Parse time_slots JSON
+          if (row.time_slots) {
+            try {
+              field.timeSlots = typeof row.time_slots === 'string' ? JSON.parse(row.time_slots) : row.time_slots
+            } catch (e) {
+              console.error('Error parsing time_slots for field', row.id, ':', e)
+              field.timeSlots = []
+            }
+          }
+          
+          return field
+        })
       }
       
       // Parse gallery if it's a string
