@@ -620,14 +620,18 @@ function RegisterSportsBase() {
         }
         break
       case 5:
-        // Validate that at least one field is complete with time slots
+        // Validate that at least one field is complete with time slots (open slots with price or unspecified price)
         const validFields = sportsFields.filter(field => {
           const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
           const hasTimeSlots = field.timeSlots && field.timeSlots.length > 0
-          return hasBasicInfo && hasTimeSlots
+          // Check if at least one slot is open (with price or with unspecified price)
+          const hasOpenSlot = field.timeSlots && field.timeSlots.some(slot => 
+            slot.status === 'open' && (slot.price !== null || slot.isPriceUnspecified === true)
+          )
+          return hasBasicInfo && hasTimeSlots && hasOpenSlot
         })
         if (validFields.length === 0) {
-          setError('Te rugăm să adaugi cel puțin un teren complet (nume, sport și cel puțin un interval de timp configurat)')
+          setError('Fiecare teren trebuie să aibă cel puțin un interval deschis cu preț configurat sau cu preț nespecificat')
           return false
         }
         break
@@ -664,15 +668,19 @@ function RegisterSportsBase() {
     const validPhones = phones.filter(p => p.trim() !== '')
     const validEmails = emails.filter(e => e.trim() !== '')
     
-    // Validate that at least one sports field is complete
+    // Validate that at least one sports field is complete with open slots (with price or unspecified price)
     const validFields = sportsFields.filter(field => {
       const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
       const hasTimeSlots = field.timeSlots && field.timeSlots.length > 0
-      return hasBasicInfo && hasTimeSlots
+      // Check if at least one slot is open (with price or with unspecified price)
+      const hasOpenSlot = field.timeSlots && field.timeSlots.some(slot => 
+        slot.status === 'open' && (slot.price !== null || slot.isPriceUnspecified === true)
+      )
+      return hasBasicInfo && hasTimeSlots && hasOpenSlot
     })
     
     if (!name || validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified) || validFields.length === 0) {
-      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon, un email și un teren complet cu sloturi configurate)')
+      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon, un email și un teren complet cu cel puțin un interval deschis cu preț configurat sau preț nespecificat)')
       return
     }
 
