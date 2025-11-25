@@ -624,11 +624,17 @@ function RegisterSportsBase() {
         const validFields = sportsFields.filter(field => {
           const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
           const hasTimeSlots = field.timeSlots && field.timeSlots.length > 0
+          if (!hasBasicInfo || !hasTimeSlots) return false
+          
           // Check if at least one slot is open (with price or with unspecified price)
-          const hasOpenSlot = field.timeSlots && field.timeSlots.some(slot => 
-            slot.status === 'open' && (slot.price !== null || slot.isPriceUnspecified === true)
-          )
-          return hasBasicInfo && hasTimeSlots && hasOpenSlot
+          const hasOpenSlot = field.timeSlots.some(slot => {
+            if (slot.status !== 'open') return false
+            // Slot is valid if it has a price (not null and not undefined and > 0) OR has unspecified price flag
+            const hasPrice = slot.price !== null && slot.price !== undefined && slot.price > 0
+            const hasUnspecifiedPrice = slot.isPriceUnspecified === true
+            return hasPrice || hasUnspecifiedPrice
+          })
+          return hasOpenSlot
         })
         if (validFields.length === 0) {
           setError('Fiecare teren trebuie să aibă cel puțin un interval deschis cu preț configurat sau cu preț nespecificat')
@@ -673,9 +679,13 @@ function RegisterSportsBase() {
       const hasBasicInfo = field.fieldName.trim() && field.sportType.trim()
       const hasTimeSlots = field.timeSlots && field.timeSlots.length > 0
       // Check if at least one slot is open (with price or with unspecified price)
-      const hasOpenSlot = field.timeSlots && field.timeSlots.some(slot => 
-        slot.status === 'open' && (slot.price !== null || slot.isPriceUnspecified === true)
-      )
+      const hasOpenSlot = field.timeSlots && field.timeSlots.some(slot => {
+        if (slot.status !== 'open') return false
+        // Slot is valid if it has a price (not null and not undefined) OR has unspecified price flag
+        const hasPrice = slot.price !== null && slot.price !== undefined && slot.price > 0
+        const hasUnspecifiedPrice = slot.isPriceUnspecified === true
+        return hasPrice || hasUnspecifiedPrice
+      })
       return hasBasicInfo && hasTimeSlots && hasOpenSlot
     })
     
@@ -3331,7 +3341,7 @@ function RegisterSportsBase() {
                                   endTime,
                                   status: 'open',
                                   price,
-                                  isPriceUnspecified
+                                  isPriceUnspecified: isPriceUnspecified
                                 })
                               })
                               
