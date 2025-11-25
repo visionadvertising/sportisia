@@ -1325,23 +1325,17 @@ function SportsBasePublic() {
                     // Check for unspecified price slots (green)
                     const hasUnspecifiedPrice = allOpenSlots.some(s => s.isPriceUnspecified || s.price === null || s.price === undefined)
                     if (hasUnspecifiedPrice) {
-                      legendItems.push({ color: '#10b981', label: 'Verde: Preț nespecificat' })
+                      legendItems.push({ color: '#d1fae5', label: 'Verde deschis: Preț nespecificat' })
                     }
                     
-                    if (allOpenSlots.length > 0) {
-                      const { main } = getMainAndSecondarySlots(allOpenSlots)
-                      // Only add main slot to legend if it has a price (not unspecified)
-                      if (main && !main.isPriceUnspecified && main.price !== null && main.price !== undefined) {
-                        legendItems.push({ color: '#10b981', label: `Verde: ${main.price} RON/oră` })
-                      }
-                      const secondarySlots = allOpenSlots.filter(s => 
-                        !(s.startTime === main?.startTime && s.endTime === main?.endTime) &&
-                        !s.isPriceUnspecified && s.price !== null && s.price !== undefined
-                      )
-                      if (secondarySlots.length > 0) {
-                        const uniquePrices = [...new Set(secondarySlots
-                          .map(s => s.price as number)
-                        )].sort((a, b) => a - b)
+                    // Check if there are slots with specified prices
+                    const slotsWithPrice = allOpenSlots.filter(s => 
+                      !s.isPriceUnspecified && s.price !== null && s.price !== undefined
+                    )
+                    if (slotsWithPrice.length > 0) {
+                      const uniquePrices = [...new Set(slotsWithPrice
+                        .map(s => s.price as number)
+                      )].sort((a, b) => a - b)
                         if (uniquePrices.length > 0) {
                           uniquePrices.forEach(price => {
                             const intensity = getBlueIntensity(price, maxPrice)
@@ -1481,19 +1475,14 @@ function SportsBasePublic() {
                                     // Red for closed
                                     backgroundColor = '#fee2e2'
                                     borderColor = '#ef4444'
-                                  } else if (matchingSlot.isPriceUnspecified || matchingSlot.price === null) {
+                                  } else if (matchingSlot.isPriceUnspecified || matchingSlot.price === null || matchingSlot.price === undefined) {
                                     // Light green for unspecified price
                                     backgroundColor = '#d1fae5'
                                     borderColor = '#10b981'
-                                  } else if (isMain) {
-                                    // Main slot - green
-                                    backgroundColor = '#d1fae5'
-                                    borderColor = '#10b981'
                                   } else {
-                                    // Secondary slot - blue with intensity based on price
-                                    const intensity = getBlueIntensity(matchingSlot.price, maxPrice)
-                                    backgroundColor = `rgba(59, 130, 246, ${intensity})`
-                                    borderColor = `rgba(37, 99, 235, ${Math.min(intensity + 0.2, 1)})`
+                                    // Darker green for specified price (both main and secondary slots)
+                                    backgroundColor = '#10b981'
+                                    borderColor = '#059669'
                                   }
                                   
                                   return (
