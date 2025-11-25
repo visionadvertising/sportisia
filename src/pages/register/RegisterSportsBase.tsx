@@ -795,6 +795,7 @@ function RegisterSportsBase() {
         padding: isMobile ? '2rem 1.5rem' : '3rem',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
       }}>
+        {/* Page Title */}
         {/* Progress Steps */}
         <div style={{
           marginBottom: isMobile ? '1.5rem' : '2rem',
