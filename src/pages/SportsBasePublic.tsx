@@ -1328,7 +1328,7 @@ function SportsBasePublic() {
                       legendItems.push({ color: '#d1fae5', label: 'Verde deschis: Preț nespecificat' })
                     }
                     
-                    // Check if there are slots with specified prices
+                    // Check if there are slots with specified prices (dark green)
                     const slotsWithPrice = allOpenSlots.filter(s => 
                       !s.isPriceUnspecified && s.price !== null && s.price !== undefined
                     )
@@ -1336,16 +1336,9 @@ function SportsBasePublic() {
                       const uniquePrices = [...new Set(slotsWithPrice
                         .map(s => s.price as number)
                       )].sort((a, b) => a - b)
-                        if (uniquePrices.length > 0) {
-                          uniquePrices.forEach(price => {
-                            const intensity = getBlueIntensity(price, maxPrice)
-                            legendItems.push({ 
-                              color: `rgba(59, 130, 246, ${intensity})`, 
-                              label: `Albastru: ${price} RON/oră` 
-                            })
-                          })
-                        }
-                      }
+                      uniquePrices.forEach(price => {
+                        legendItems.push({ color: '#10b981', label: `Verde închis: ${price} RON/oră` })
+                      })
                     }
                     if (field.timeSlots.some(s => s.status === 'closed')) {
                       legendItems.push({ color: '#ef4444', label: 'Roșu: Închis' })
