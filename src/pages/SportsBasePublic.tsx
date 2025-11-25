@@ -1232,18 +1232,6 @@ function SportsBasePublic() {
                   }}>
                     {field.fieldName}
                   </h3>
-                  <div style={{
-                    display: 'inline-block',
-                    padding: '0.375rem 0.75rem',
-                    background: '#10b981',
-                    color: 'white',
-                    borderRadius: '6px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    marginBottom: '1rem'
-                  }}>
-                    {field.sportType}
-                  </div>
                   {field.description && (
                     <p style={{
                       color: '#64748b',
