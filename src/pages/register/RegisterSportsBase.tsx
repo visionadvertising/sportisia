@@ -161,6 +161,7 @@ function RegisterSportsBase() {
   const [availableSports, setAvailableSports] = useState<string[]>([])
   const [sportSearch, setSportSearch] = useState<Record<number, string>>({})
   const [showSportDropdown, setShowSportDropdown] = useState<Record<number, boolean>>({})
+  const [quickPriceUnspecified, setQuickPriceUnspecified] = useState<Record<number, boolean>>({})
   
   // Legacy fields for backward compatibility (will be removed)
   const [sport, setSport] = useState('')
@@ -3172,7 +3173,6 @@ function RegisterSportsBase() {
                               }}
                             >
                               <option value="open">Deschis</option>
-                              <option value="closed">Închis</option>
                             </select>
                           </div>
                           <div style={{ flex: 1 }}>
@@ -3201,36 +3201,73 @@ function RegisterSportsBase() {
                                   background: '#ffffff'
                                 }}
                               />
-                              <label style={{
+                              <div style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem',
-                                fontSize: '0.8125rem',
-                                color: '#64748b',
-                                cursor: 'pointer'
+                                gap: '0.75rem',
+                                marginTop: '0.5rem'
                               }}>
-                                <input
-                                  type="checkbox"
-                                  id={`quick-price-unspecified-${index}`}
-                                  style={{
-                                    width: '16px',
-                                    height: '16px',
-                                    cursor: 'pointer'
-                                  }}
-                                  onChange={(e) => {
-                                    const priceInput = document.getElementById(`quick-price-${index}`) as HTMLInputElement
-                                    if (e.target.checked) {
-                                      priceInput.value = ''
-                                      priceInput.disabled = true
-                                      priceInput.style.opacity = '0.5'
-                                    } else {
-                                      priceInput.disabled = false
-                                      priceInput.style.opacity = '1'
-                                    }
-                                  }}
-                                />
-                                <span>Preț nespecificat</span>
-                              </label>
+                                <span style={{
+                                  fontSize: '0.8125rem',
+                                  color: '#64748b',
+                                  fontWeight: '500'
+                                }}>Preț nespecificat</span>
+                                <label style={{
+                                  position: 'relative',
+                                  display: 'inline-block',
+                                  width: '44px',
+                                  height: '24px',
+                                  cursor: 'pointer'
+                                }}>
+                                  <input
+                                    type="checkbox"
+                                    id={`quick-price-unspecified-${index}`}
+                                    checked={quickPriceUnspecified[index] || false}
+                                    onChange={(e) => {
+                                      const checked = e.target.checked
+                                      setQuickPriceUnspecified(prev => ({ ...prev, [index]: checked }))
+                                      const priceInput = document.getElementById(`quick-price-${index}`) as HTMLInputElement
+                                      if (checked) {
+                                        priceInput.value = ''
+                                        priceInput.disabled = true
+                                        priceInput.style.opacity = '0.5'
+                                      } else {
+                                        priceInput.disabled = false
+                                        priceInput.style.opacity = '1'
+                                      }
+                                    }}
+                                    style={{
+                                      opacity: 0,
+                                      width: 0,
+                                      height: 0
+                                    }}
+                                  />
+                                  <span style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    backgroundColor: quickPriceUnspecified[index] ? '#10b981' : '#e2e8f0',
+                                    borderRadius: '24px',
+                                    transition: 'all 0.3s ease',
+                                    boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                                  }}>
+                                    <span style={{
+                                      position: 'absolute',
+                                      height: '18px',
+                                      width: '18px',
+                                      left: '3px',
+                                      bottom: '3px',
+                                      backgroundColor: 'white',
+                                      borderRadius: '50%',
+                                      transition: 'all 0.3s ease',
+                                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                      transform: quickPriceUnspecified[index] ? 'translateX(20px)' : 'translateX(0)'
+                                    }} />
+                                  </span>
+                                </label>
+                              </div>
                             </div>
                           </div>
                           <button
@@ -3238,21 +3275,18 @@ function RegisterSportsBase() {
                             onClick={() => {
                               const startTime = (document.getElementById(`quick-start-${index}`) as HTMLInputElement)?.value || '08:00'
                               const endTime = (document.getElementById(`quick-end-${index}`) as HTMLInputElement)?.value || '18:00'
-                              const status = (document.getElementById(`quick-status-${index}`) as HTMLSelectElement)?.value as 'open' | 'closed'
+                              const status = 'open' as 'open'
                               const priceInput = document.getElementById(`quick-price-${index}`) as HTMLInputElement
-                              const priceUnspecifiedCheckbox = document.getElementById(`quick-price-unspecified-${index}`) as HTMLInputElement
                               
                               let price: number | null = null
                               let isPriceUnspecified = false
                               
-                              if (status === 'open') {
-                                if (priceUnspecifiedCheckbox?.checked) {
-                                  isPriceUnspecified = true
-                                  price = null
-                                } else {
-                                  price = priceInput?.value ? parseFloat(priceInput.value) : null
-                                  isPriceUnspecified = false
-                                }
+                              if (quickPriceUnspecified[index]) {
+                                isPriceUnspecified = true
+                                price = null
+                              } else {
+                                price = priceInput?.value ? parseFloat(priceInput.value) : null
+                                isPriceUnspecified = false
                               }
                               
                               const updated = [...sportsFields]
@@ -3287,9 +3321,9 @@ function RegisterSportsBase() {
                                   day,
                                   startTime,
                                   endTime,
-                                  status,
-                                  price: status === 'open' ? price : null,
-                                  isPriceUnspecified: status === 'open' ? isPriceUnspecified : false
+                                  status: 'open',
+                                  price,
+                                  isPriceUnspecified
                                 })
                               })
                               
@@ -3593,7 +3627,7 @@ function RegisterSportsBase() {
                                           value={slot.status}
                                           onChange={(e) => {
                                             const updated = [...sportsFields]
-                                            const status = e.target.value as 'open' | 'closed'
+                                            const status = e.target.value as 'open'
                                             const slotIdx = updated[index].timeSlots.findIndex(s => 
                                               s.day === day.key && 
                                               s.startTime === slot.startTime && 
@@ -3602,9 +3636,7 @@ function RegisterSportsBase() {
                                             if (slotIdx !== -1) {
                                               updated[index].timeSlots[slotIdx] = {
                                                 ...updated[index].timeSlots[slotIdx],
-                                                status,
-                                                price: status === 'closed' ? null : updated[index].timeSlots[slotIdx].price,
-                                                isPriceUnspecified: status === 'closed' ? false : updated[index].timeSlots[slotIdx].isPriceUnspecified
+                                                status
                                               }
                                               setSportsFields(updated)
                                             }
@@ -3629,7 +3661,6 @@ function RegisterSportsBase() {
                                           }}
                                         >
                                           <option value="open">Deschis</option>
-                                          <option value="closed">Închis</option>
                                         </select>
                                       </div>
                                       
@@ -3695,59 +3726,77 @@ function RegisterSportsBase() {
                                                 e.target.style.boxShadow = 'none'
                                               }}
                                             />
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                const updated = [...sportsFields]
-                                                const slotIdx = updated[index].timeSlots.findIndex(s => 
-                                                  s.day === day.key && 
-                                                  s.startTime === slot.startTime && 
-                                                  s.endTime === slot.endTime
-                                                )
-                                                if (slotIdx !== -1) {
-                                                  const isUnspecified = updated[index].timeSlots[slotIdx].isPriceUnspecified || false
-                                                  updated[index].timeSlots[slotIdx] = {
-                                                    ...updated[index].timeSlots[slotIdx],
-                                                    isPriceUnspecified: !isUnspecified,
-                                                    price: !isUnspecified ? null : updated[index].timeSlots[slotIdx].price
-                                                  }
-                                                  setSportsFields(updated)
-                                                }
-                                              }}
-                                              style={{
-                                                padding: '0.625rem 1rem',
-                                                background: slot.isPriceUnspecified 
-                                                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
-                                                  : 'white',
-                                                color: slot.isPriceUnspecified ? 'white' : '#64748b',
-                                                border: slot.isPriceUnspecified 
-                                                  ? 'none' 
-                                                  : '1.5px solid #e2e8f0',
-                                                borderRadius: '8px',
+                                            <div style={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: '0.75rem'
+                                            }}>
+                                              <span style={{
                                                 fontSize: '0.8125rem',
-                                                fontWeight: '600',
+                                                color: '#64748b',
+                                                fontWeight: '500',
+                                                whiteSpace: 'nowrap'
+                                              }}>Preț nespecificat</span>
+                                              <label style={{
+                                                position: 'relative',
+                                                display: 'inline-block',
+                                                width: '44px',
+                                                height: '24px',
                                                 cursor: 'pointer',
-                                                transition: 'all 0.2s ease',
-                                                whiteSpace: 'nowrap',
-                                                boxShadow: slot.isPriceUnspecified 
-                                                  ? '0 2px 4px rgba(16, 185, 129, 0.2)' 
-                                                  : 'none'
-                                              }}
-                                              onMouseEnter={(e) => {
-                                                if (!isMobile && !slot.isPriceUnspecified) {
-                                                  e.currentTarget.style.borderColor = '#10b981'
-                                                  e.currentTarget.style.color = '#10b981'
-                                                }
-                                              }}
-                                              onMouseLeave={(e) => {
-                                                if (!isMobile && !slot.isPriceUnspecified) {
-                                                  e.currentTarget.style.borderColor = '#e2e8f0'
-                                                  e.currentTarget.style.color = '#64748b'
-                                                }
-                                              }}
-                                            >
-                                              {slot.isPriceUnspecified ? 'Nespecificat ✓' : 'Nespecificat'}
-                                            </button>
+                                                flexShrink: 0
+                                              }}>
+                                                <input
+                                                  type="checkbox"
+                                                  checked={slot.isPriceUnspecified || false}
+                                                  onChange={() => {
+                                                    const updated = [...sportsFields]
+                                                    const slotIdx = updated[index].timeSlots.findIndex(s => 
+                                                      s.day === day.key && 
+                                                      s.startTime === slot.startTime && 
+                                                      s.endTime === slot.endTime
+                                                    )
+                                                    if (slotIdx !== -1) {
+                                                      const isUnspecified = updated[index].timeSlots[slotIdx].isPriceUnspecified || false
+                                                      updated[index].timeSlots[slotIdx] = {
+                                                        ...updated[index].timeSlots[slotIdx],
+                                                        isPriceUnspecified: !isUnspecified,
+                                                        price: !isUnspecified ? null : updated[index].timeSlots[slotIdx].price
+                                                      }
+                                                      setSportsFields(updated)
+                                                    }
+                                                  }}
+                                                  style={{
+                                                    opacity: 0,
+                                                    width: 0,
+                                                    height: 0
+                                                  }}
+                                                />
+                                                <span style={{
+                                                  position: 'absolute',
+                                                  top: 0,
+                                                  left: 0,
+                                                  right: 0,
+                                                  bottom: 0,
+                                                  backgroundColor: slot.isPriceUnspecified ? '#10b981' : '#e2e8f0',
+                                                  borderRadius: '24px',
+                                                  transition: 'all 0.3s ease',
+                                                  boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                                                }}>
+                                                  <span style={{
+                                                    position: 'absolute',
+                                                    height: '18px',
+                                                    width: '18px',
+                                                    left: '3px',
+                                                    bottom: '3px',
+                                                    backgroundColor: 'white',
+                                                    borderRadius: '50%',
+                                                    transition: 'all 0.3s ease',
+                                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                                    transform: slot.isPriceUnspecified ? 'translateX(20px)' : 'translateX(0)'
+                                                  }} />
+                                                </span>
+                                              </label>
+                                            </div>
                                           </div>
                                         </div>
                                       )}
