@@ -105,6 +105,7 @@ function RegisterSportsBase() {
   const [galleryFiles, setGalleryFiles] = useState<File[]>([])
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
   const [isDragging, setIsDragging] = useState(false)
+  const [draggedGalleryIndex, setDraggedGalleryIndex] = useState<number | null>(null)
   
 
   // Step 5: Specific Details
@@ -564,6 +565,33 @@ function RegisterSportsBase() {
   const removeGalleryImage = (index: number) => {
     setGalleryFiles(galleryFiles.filter((_, i) => i !== index))
     setGalleryPreviews(galleryPreviews.filter((_, i) => i !== index))
+  }
+
+  const handleGalleryDragStart = (index: number) => {
+    setDraggedGalleryIndex(index)
+  }
+
+  const handleGalleryDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+  }
+
+  const handleGalleryDrop = (index: number) => {
+    if (draggedGalleryIndex === null || draggedGalleryIndex === index) {
+      setDraggedGalleryIndex(null)
+      return
+    }
+
+    const updatedFiles = [...galleryFiles]
+    const [movedFile] = updatedFiles.splice(draggedGalleryIndex, 1)
+    updatedFiles.splice(index, 0, movedFile)
+    setGalleryFiles(updatedFiles)
+
+    const updatedPreviews = [...galleryPreviews]
+    const [movedPreview] = updatedPreviews.splice(draggedGalleryIndex, 1)
+    updatedPreviews.splice(index, 0, movedPreview)
+    setGalleryPreviews(updatedPreviews)
+
+    setDraggedGalleryIndex(null)
   }
 
   const validateStep = (step: number): boolean => {
@@ -2391,14 +2419,21 @@ function RegisterSportsBase() {
                   {galleryPreviews.map((preview, index) => (
                     <div 
                       key={index} 
+                      draggable
+                      onDragStart={() => handleGalleryDragStart(index)}
+                      onDragOver={handleGalleryDragOver}
+                      onDrop={() => handleGalleryDrop(index)}
+                      onDragEnd={() => setDraggedGalleryIndex(null)}
                       style={{ 
                         position: 'relative',
                         borderRadius: '12px',
                         overflow: 'hidden',
                         background: '#ffffff',
                         border: '1px solid #e2e8f0',
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                        boxShadow: draggedGalleryIndex === index ? '0 0 0 2px rgba(16,185,129,0.3)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        cursor: 'grab',
+                        opacity: draggedGalleryIndex === index ? 0.7 : 1
                       }}
                       onMouseEnter={(e) => {
                         if (!isMobile) {
@@ -2480,6 +2515,16 @@ function RegisterSportsBase() {
                     </div>
                   ))}
                 </div>
+              )}
+              {galleryPreviews.length > 0 && (
+                <p style={{
+                  marginTop: '0.75rem',
+                  fontSize: isMobile ? '0.8125rem' : '0.875rem',
+                  color: '#94a3b8',
+                  textAlign: 'center'
+                }}>
+                  Ține apăsat pe o imagine și trage pentru a schimba ordinea.
+                </p>
               )}
               {galleryPreviews.length === 0 && (
                 <div style={{ 
