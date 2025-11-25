@@ -796,6 +796,31 @@ function RegisterSportsBase() {
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
       }}>
         {/* Page Title */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: isMobile ? '2rem' : '3rem',
+          paddingBottom: isMobile ? '1.5rem' : '2rem',
+          borderBottom: '1px solid #e2e8f0'
+        }}>
+          <h1 style={{
+            fontSize: isMobile ? '1.875rem' : '2.75rem',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg, #0f172a 0%, #10b981 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            marginBottom: '0.5rem',
+            letterSpacing: '-0.02em',
+            lineHeight: '1.2'
+          }}>Înregistrare Baze Sportive</h1>
+          <p style={{
+            fontSize: isMobile ? '0.875rem' : '1rem',
+            color: '#64748b',
+            marginTop: '0.75rem',
+            fontWeight: '400'
+          }}>Completează formularul pentru a-ți înregistra baza sportivă</p>
+        </div>
+
         {/* Progress Steps */}
         <div style={{
           marginBottom: isMobile ? '1.5rem' : '2rem',
@@ -880,31 +905,6 @@ function RegisterSportsBase() {
               {steps[currentStep - 1]}
             </div>
           )}
-        </div>
-
-        <div style={{
-          textAlign: 'center',
-          marginBottom: isMobile ? '2rem' : '3rem',
-          paddingBottom: isMobile ? '1.5rem' : '2rem',
-          borderBottom: '1px solid #e2e8f0'
-        }}>
-          <h1 style={{
-            fontSize: isMobile ? '1.875rem' : '2.75rem',
-            fontWeight: '700',
-            background: 'linear-gradient(135deg, #0f172a 0%, #10b981 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            marginBottom: '0.5rem',
-            letterSpacing: '-0.02em',
-            lineHeight: '1.2'
-          }}>Înregistrare Baze Sportive</h1>
-          <p style={{
-            fontSize: isMobile ? '0.875rem' : '1rem',
-            color: '#64748b',
-            marginTop: '0.75rem',
-            fontWeight: '400'
-          }}>Completează formularul pentru a-ți înregistra baza sportivă</p>
         </div>
 
         {error && (
