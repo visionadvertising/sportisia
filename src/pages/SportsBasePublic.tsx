@@ -1432,30 +1432,17 @@ function SportsBasePublic() {
                                   }
                                   
                                   if (!matchingSlot) {
-                                    // Check if day has any slots (closed or open)
-                                    if (daySlots.length === 0) {
-                                      return (
-                                        <div
-                                          key={day.key}
-                                          style={{
-                                            background: '#f1f5f9',
-                                            border: '1px solid #e2e8f0',
-                                            minHeight: '16px',
-                                            borderRadius: '4px'
-                                          }}
-                                        />
-                                      )
-                                    }
-                                    // No slot for this hour
+                                    // No slot defined for this hour - mark as closed (red)
                                     return (
                                       <div
                                         key={day.key}
                                         style={{
-                                          background: '#ffffff',
-                                          border: '1px solid #f1f5f9',
+                                          background: '#fee2e2',
+                                          border: '2px solid #ef4444',
                                           minHeight: '16px',
                                           borderRadius: '4px'
                                         }}
+                                        title="Închis"
                                       />
                                     )
                                   }
