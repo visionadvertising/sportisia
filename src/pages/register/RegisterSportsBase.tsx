@@ -59,6 +59,7 @@ function RegisterSportsBase() {
   const [loading, setLoading] = useState(false)
   const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null)
   const [error, setError] = useState('')
+  const [showErrorModal, setShowErrorModal] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   
   useEffect(() => {
@@ -601,21 +602,27 @@ function RegisterSportsBase() {
         const validPhones = phones.filter(p => p.trim() !== '')
         const validEmails = emails.filter(e => e.trim() !== '')
         if (validPhones.length === 0 || validEmails.length === 0) {
-          setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon și un email)')
+          const errorMessage = 'Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon și un email)'
+          setError(errorMessage)
+          setShowErrorModal(true)
           return false
         }
         break
       case 2:
         // Verifică dacă orașul este completat
         if (!city) {
-          setError('Te rugăm să selectezi orașul')
+          const errorMessage = 'Te rugăm să selectezi orașul'
+          setError(errorMessage)
+          setShowErrorModal(true)
           return false
         }
         // Locația poate fi nespecificată, deci nu validăm locația aici
         break
       case 3:
         if (!name) {
-          setError('Te rugăm să introduci denumirea facilității')
+          const errorMessage = 'Te rugăm să introduci denumirea facilității'
+          setError(errorMessage)
+          setShowErrorModal(true)
           return false
         }
         break
@@ -637,7 +644,9 @@ function RegisterSportsBase() {
           return hasOpenSlot
         })
         if (validFields.length === 0) {
-          setError('Fiecare teren trebuie să aibă cel puțin un interval deschis cu preț configurat sau cu preț nespecificat')
+          const errorMessage = 'Fiecare teren trebuie să aibă cel puțin un interval deschis cu preț configurat sau cu preț nespecificat'
+          setError(errorMessage)
+          setShowErrorModal(true)
           return false
         }
         break
@@ -690,7 +699,9 @@ function RegisterSportsBase() {
     })
     
     if (!name || validPhones.length === 0 || validEmails.length === 0 || !city || (!location && !locationNotSpecified) || validFields.length === 0) {
-      setError('Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon, un email și un teren complet cu cel puțin un interval deschis cu preț configurat sau preț nespecificat)')
+      const errorMessage = 'Te rugăm să completezi toate câmpurile obligatorii (cel puțin un telefon, un email și un teren complet cu cel puțin un interval deschis cu preț configurat sau preț nespecificat)'
+      setError(errorMessage)
+      setShowErrorModal(true)
       return
     }
 
@@ -779,9 +790,13 @@ function RegisterSportsBase() {
         console.error('Registration failed - HTTP error:', response.status, errorText)
         try {
           const errorData = JSON.parse(errorText)
-          setError(errorData.error || `Eroare la înregistrare (${response.status})`)
+          const errorMessage = errorData.error || `Eroare la înregistrare (${response.status})`
+          setError(errorMessage)
+          setShowErrorModal(true)
         } catch {
-          setError(`Eroare la înregistrare: ${errorText || response.statusText}`)
+          const errorMessage = `Eroare la înregistrare: ${errorText || response.statusText}`
+          setError(errorMessage)
+          setShowErrorModal(true)
         }
         return
       }
@@ -806,11 +821,15 @@ function RegisterSportsBase() {
         }
       } else {
         console.error('Registration failed:', data)
-        setError(data.error || 'Eroare la înregistrare')
+        const errorMessage = data.error || 'Eroare la înregistrare'
+        setError(errorMessage)
+        setShowErrorModal(true)
       }
     } catch (err) {
       console.error('Registration error:', err)
-      setError('Eroare la conectarea la server. Te rugăm să verifici consola pentru detalii.')
+      const errorMessage = 'Eroare la conectarea la server. Te rugăm să verifici consola pentru detalii.'
+      setError(errorMessage)
+      setShowErrorModal(true)
     } finally {
       setLoading(false)
     }
@@ -954,16 +973,147 @@ function RegisterSportsBase() {
           )}
         </div>
 
-        {error && (
+        {/* Error Modal */}
+        {showErrorModal && error && (
           <div style={{
-            padding: '1rem',
-            background: '#fee2e2',
-            color: '#dc2626',
-            borderRadius: '8px',
-            marginBottom: '2rem',
-            textAlign: 'center'
-          }}>
-            {error}
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: isMobile ? '1rem' : '2rem'
+          }}
+          onClick={() => {
+            setShowErrorModal(false)
+            setError('')
+          }}
+          >
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: isMobile ? '1.5rem' : '2rem',
+              maxWidth: '500px',
+              width: '100%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              position: 'relative',
+              animation: 'slideIn 0.3s ease-out'
+            }}
+            onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowErrorModal(false)
+                  setError('')
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  background: 'transparent',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#f1f5f9'
+                  e.currentTarget.style.color = '#0f172a'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = '#64748b'
+                }}
+              >
+                ×
+              </button>
+
+              {/* Error icon */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: '#fee2e2',
+                margin: '0 auto 1.5rem',
+                flexShrink: 0
+              }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+
+              {/* Error title */}
+              <h3 style={{
+                fontSize: isMobile ? '1.25rem' : '1.5rem',
+                fontWeight: '700',
+                color: '#0f172a',
+                marginBottom: '1rem',
+                textAlign: 'center'
+              }}>
+                Eroare
+              </h3>
+
+              {/* Error message */}
+              <p style={{
+                fontSize: isMobile ? '0.9375rem' : '1rem',
+                color: '#475569',
+                lineHeight: '1.6',
+                textAlign: 'center',
+                marginBottom: '1.5rem'
+              }}>
+                {error}
+              </p>
+
+              {/* OK button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowErrorModal(false)
+                  setError('')
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.875rem 1.5rem',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 6px 12px -1px rgba(16, 185, 129, 0.4)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(16, 185, 129, 0.3)'
+                }}
+              >
+                Înțeleg
+              </button>
+            </div>
           </div>
         )}
 

@@ -895,19 +895,23 @@ app.post('/api/register', upload.fields([
               })
             }
             
-            // Check if at least one time slot has a price (for open slots)
-            const hasPrice = field.timeSlots.some(slot => 
-              slot.status === 'open' && slot.price !== null && slot.price > 0
-            )
+            // Check if at least one time slot has a price OR has unspecified price flag (for open slots)
+            const hasValidOpenSlot = field.timeSlots.some(slot => {
+              if (slot.status !== 'open') return false
+              // Slot is valid if it has a price (not null and > 0) OR has unspecified price flag
+              const hasPrice = slot.price !== null && slot.price !== undefined && slot.price > 0
+              const hasUnspecifiedPrice = slot.isPriceUnspecified === true
+              return hasPrice || hasUnspecifiedPrice
+            })
             
-            // Note: We allow slots with 'not_specified' or 'closed' status, but at least one should have a price
+            // Note: We allow slots with 'not_specified' or 'closed' status, but at least one should have a price or unspecified price
             // If all slots are closed or not_specified, that's also acceptable (facility can set prices later)
-            // But if there are open slots, at least one should have a price
+            // But if there are open slots, at least one should have a price or unspecified price
             const hasOpenSlots = field.timeSlots.some(slot => slot.status === 'open')
-            if (hasOpenSlots && !hasPrice) {
+            if (hasOpenSlots && !hasValidOpenSlot) {
               return res.status(400).json({
                 success: false,
-                error: 'Fiecare teren trebuie să aibă cel puțin un interval deschis cu preț configurat'
+                error: 'Fiecare teren trebuie să aibă cel puțin un interval deschis cu preț configurat sau cu preț nespecificat'
               })
             }
           }
