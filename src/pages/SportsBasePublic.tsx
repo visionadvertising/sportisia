@@ -697,11 +697,11 @@ function SportsBasePublic() {
             }}>
               Date de contact
             </h2>
-            <div style={{
+              <div style={{
               background: 'white',
               padding: isMobile ? '1.5rem' : '2.5rem',
               borderRadius: isMobile ? '16px' : '20px',
-              border: '1px solid #e2e8f0',
+                border: '1px solid #e2e8f0',
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
               height: isMobile ? 'auto' : '100%',
               display: 'flex',
@@ -1116,8 +1116,8 @@ function SportsBasePublic() {
               </div>
             )}
               </div>
-            </div>
           </div>
+        </div>
 
           {/* Map - Second on mobile */}
           <div style={{
@@ -1208,7 +1208,8 @@ function SportsBasePublic() {
             <div style={{
               display: 'grid',
               gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-              gap: isMobile ? '1rem' : '1.5rem'
+              gap: isMobile ? '1rem' : '1.5rem',
+              alignItems: 'start'
             }}>
               {facility.sportsFields.map((field, idx) => (
                 <div
@@ -1217,7 +1218,10 @@ function SportsBasePublic() {
                     background: '#f8fafc',
                     padding: isMobile ? '1rem' : '1.5rem',
                     borderRadius: '12px',
-                    border: '1px solid #e2e8f0'
+                    border: '1px solid #e2e8f0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%'
                   }}
                 >
                   <h3 style={{
@@ -1253,7 +1257,8 @@ function SportsBasePublic() {
                     <div style={{
                       marginTop: '1.5rem',
                       paddingTop: '1.5rem',
-                      borderTop: '1px solid #e2e8f0'
+                      borderTop: '1px solid #e2e8f0',
+                      flexShrink: 0
                     }}>
                       <div style={{
                         display: 'grid',
@@ -1346,9 +1351,10 @@ function SportsBasePublic() {
                     
                     return (
                       <div style={{
-                        marginTop: '1rem',
-                        paddingTop: '1rem',
-                        borderTop: '1px solid #e2e8f0'
+                        marginTop: 'auto',
+                        paddingTop: '1.5rem',
+                        borderTop: '1px solid #e2e8f0',
+                        flexShrink: 0
                       }}>
                         <h4 style={{
                           fontSize: '1.125rem',
@@ -1572,7 +1578,7 @@ function SportsBasePublic() {
                     onError={(e) => {
                       // Hide broken images
                       e.currentTarget.style.display = 'none'
-                    }}
+                  }}
                 />
                 )
               })}
@@ -1584,7 +1590,7 @@ function SportsBasePublic() {
       
       {/* Sticky Contact Buttons - Mobile Only */}
       {isMobile && (phones.length > 0 || whatsapps.length > 0 || emails.length > 0 || facility.website) && (
-        <div style={{
+            <div style={{
           position: 'fixed',
           bottom: 0,
           left: 0,
@@ -1592,7 +1598,7 @@ function SportsBasePublic() {
           background: 'white',
           borderTop: '1px solid #e2e8f0',
           padding: '0.75rem',
-          display: 'flex',
+              display: 'flex',
           justifyContent: 'center',
           gap: '0.75rem',
           boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06)',
@@ -1604,15 +1610,15 @@ function SportsBasePublic() {
             <a
               key={`sticky-phone-${idx}`}
               href={`tel:${phone}`}
-              style={{
+                  style={{
                 width: '56px',
                 height: '56px',
                 borderRadius: '16px',
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                display: 'flex',
-                alignItems: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
                 justifyContent: 'center',
-                textDecoration: 'none',
+                    textDecoration: 'none',
                 boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3), 0 2px 4px -1px rgba(16, 185, 129, 0.2)',
                 transition: 'all 0.2s ease',
                 flexShrink: 0
@@ -1638,15 +1644,15 @@ function SportsBasePublic() {
             <a
               key={`sticky-whatsapp-${idx}`}
               href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
                 width: '56px',
                 height: '56px',
                 borderRadius: '16px',
                 background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
-                display: 'flex',
-                alignItems: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
                 justifyContent: 'center',
                 textDecoration: 'none',
                 boxShadow: '0 4px 6px -1px rgba(37, 211, 102, 0.3), 0 2px 4px -1px rgba(37, 211, 102, 0.2)',
@@ -1674,13 +1680,13 @@ function SportsBasePublic() {
             <a
               key={`sticky-email-${idx}`}
               href={`mailto:${email}`}
-              style={{
+                  style={{
                 width: '56px',
                 height: '56px',
                 borderRadius: '16px',
                 background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                display: 'flex',
-                alignItems: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
                 justifyContent: 'center',
                 textDecoration: 'none',
                 boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3), 0 2px 4px -1px rgba(99, 102, 241, 0.2)',
@@ -1708,15 +1714,15 @@ function SportsBasePublic() {
           {facility.website && (
             <a
               href={facility.website.startsWith('http') ? facility.website : `https://${facility.website}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
                 width: '56px',
                 height: '56px',
                 borderRadius: '16px',
                 background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                display: 'flex',
-                alignItems: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
                 justifyContent: 'center',
                 textDecoration: 'none',
                 boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.3), 0 2px 4px -1px rgba(139, 92, 246, 0.2)',
@@ -1740,10 +1746,10 @@ function SportsBasePublic() {
                 <line x1="2" y1="12" x2="22" y2="12"></line>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               </svg>
-            </a>
-          )}
-        </div>
-      )}
+                </a>
+              )}
+          </div>
+        )}
     </div>
   )
 }
