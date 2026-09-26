@@ -121,16 +121,17 @@ export default function CookieNotice() {
       {mode === 'banner' && (
         <div style={bannerWrap}>
           <div style={bannerCard}>
-            <div style={{ flex: '1 1 280px' }}>
-              <p style={{ margin: '0 0 0.35rem', fontWeight: 800, fontSize: '1.05rem' }}>Cookies pe Sportisia</p>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.82)', fontSize: '0.92rem', lineHeight: 1.55 }}>
-                Folosim cookies necesare ca să meargă sesiunea. Cele funcționale, de statistici și de marketing pornesc doar dacă le accepți. Poți alege fiecare categorie.
+            <div style={{ flex: '1 1 460px', minWidth: 0 }}>
+              <p style={{ margin: '0 0 0.2rem', color: '#059669', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Confidențialitate</p>
+              <p style={{ margin: 0, color: '#0f172a', fontWeight: 800, fontSize: '1.05rem' }}>Cookies pe Sportisia</p>
+              <p style={{ margin: '0.35rem 0 0', color: '#64748b', fontSize: '0.92rem', lineHeight: 1.55 }}>
+                Folosim cookies necesare pentru sesiune. Statisticile și marketingul pornesc doar dacă le accepți.{' '}
+                <Link to="/politica-cookies" style={{ color: '#059669', fontWeight: 700 }}>Politica de cookies</Link>
               </p>
-              <Link to="/politica-cookies" style={{ color: '#6ee7b7', fontWeight: 700, fontSize: '0.9rem' }}>Politica de cookies</Link>
             </div>
             <div style={buttonRow}>
-              <button type="button" onClick={() => apply(emptyOptional)} style={ghostBtn}>Refuză opționale</button>
-              <button type="button" onClick={() => setMode('preferences')} style={ghostBtn}>Personalizează</button>
+              <button type="button" onClick={() => apply(emptyOptional)} style={outlineBtn}>Refuză opționale</button>
+              <button type="button" onClick={() => setMode('preferences')} style={outlineBtn}>Personalizează</button>
               <button type="button" onClick={() => apply(allOptional)} style={primaryBtn}>Acceptă tot</button>
             </div>
           </div>
@@ -237,28 +238,24 @@ function Toggle({ on, disabled, label, onClick }: { on: boolean; disabled?: bool
 
 const bannerWrap: CSSProperties = {
   position: 'fixed',
-  left: '1rem',
-  right: '1rem',
-  bottom: '1rem',
+  left: 0,
+  right: 0,
+  bottom: 0,
   zIndex: 1200,
-  display: 'flex',
-  justifyContent: 'center',
-  pointerEvents: 'none'
+  background: '#ffffff',
+  borderTop: '3px solid #10b981',
+  boxShadow: '0 -8px 30px rgba(15, 23, 42, 0.08)'
 }
 
 const bannerCard: CSSProperties = {
-  pointerEvents: 'auto',
-  width: 'min(920px, 100%)',
-  background: '#0f172a',
-  color: 'white',
-  borderRadius: '18px',
-  padding: '1.1rem 1.15rem',
+  maxWidth: '1400px',
+  margin: '0 auto',
+  padding: '1rem 1.5rem calc(1rem + env(safe-area-inset-bottom))',
   display: 'flex',
-  gap: '1rem',
+  gap: '1.5rem',
   alignItems: 'center',
   justifyContent: 'space-between',
-  flexWrap: 'wrap',
-  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.28)'
+  flexWrap: 'wrap'
 }
 
 const buttonRow: CSSProperties = {
@@ -273,19 +270,21 @@ const primaryBtn: CSSProperties = {
   background: '#10b981',
   color: 'white',
   borderRadius: '999px',
-  padding: '0.62rem 1rem',
+  padding: '0.65rem 1.05rem',
   fontWeight: 700,
-  cursor: 'pointer'
+  cursor: 'pointer',
+  fontFamily: 'inherit'
 }
 
-const ghostBtn: CSSProperties = {
-  border: '1px solid rgba(255,255,255,0.28)',
-  background: 'transparent',
-  color: 'white',
+const outlineBtn: CSSProperties = {
+  border: '1px solid #e2e8f0',
+  background: '#ffffff',
+  color: '#0f172a',
   borderRadius: '999px',
-  padding: '0.62rem 0.95rem',
+  padding: '0.65rem 1rem',
   fontWeight: 700,
-  cursor: 'pointer'
+  cursor: 'pointer',
+  fontFamily: 'inherit'
 }
 
 const ghostDark: CSSProperties = {
