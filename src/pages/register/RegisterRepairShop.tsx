@@ -5,6 +5,7 @@ import { ROMANIAN_CITIES } from '../../data/romanian-cities'
 import { ROMANIAN_COUNTIES } from '../../data/romanian-counties'
 import MapSelector from '../../components/MapSelector'
 import { readProfile, sendProfile, type ProfileCompletion } from './completion'
+import ShopHours, { defaultShopHours, formatShopHours, shopHoursFromText } from '../../components/ShopHours'
 
 const REPAIR_CATEGORIES = [
   'Rachete tenis',
@@ -75,6 +76,7 @@ function RegisterRepairShop({ completion }: { completion?: ProfileCompletion }) 
 
   // Step 4: Repair Categories
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [shopHours, setShopHours] = useState(defaultShopHours())
   const profileApplied = useRef(false)
 
   useEffect(() => {
@@ -96,6 +98,7 @@ function RegisterRepairShop({ completion }: { completion?: ProfileCompletion }) 
     setWebsite(profile.website)
     setSocialMedia(profile.socialMedia)
     if (profile.repairCategories.length > 0) setSelectedCategories(profile.repairCategories)
+    setShopHours(shopHoursFromText(completion.facility.opening_hours))
   }, [completion])
 
   useEffect(() => {
@@ -299,7 +302,8 @@ function RegisterRepairShop({ completion }: { completion?: ProfileCompletion }) 
         website,
         socialMedia: JSON.stringify(socialMedia),
         gallery: JSON.stringify(galleryBase64),
-        repairCategories: selectedCategories
+        repairCategories: selectedCategories,
+        openingHours: formatShopHours(shopHours)
       }
 
       const data = completion
@@ -1944,6 +1948,7 @@ function RegisterRepairShop({ completion }: { completion?: ProfileCompletion }) 
                   Te rugăm să selectezi cel puțin o categorie
                 </p>
               )}
+              <ShopHours hours={shopHours} onChange={setShopHours} isMobile={isMobile} />
             </div>
           )}
 

@@ -77,19 +77,6 @@ function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
   const [pricePerLesson, setPricePerLesson] = useState('')
   const [certifications, setCertifications] = useState('')
   const [languages, setLanguages] = useState('')
-  const [openingHours, setOpeningHours] = useState<Record<string, {
-    isOpen: boolean | null,
-    openTime: string,
-    closeTime: string
-  }>>({
-    monday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-    tuesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-    wednesday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-    thursday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-    friday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-    saturday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
-    sunday: { isOpen: null, openTime: '09:00', closeTime: '18:00' }
-  })
   const profileApplied = useRef(false)
 
   useEffect(() => {
@@ -116,7 +103,6 @@ function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
     setPricePerLesson(profile.pricePerLesson)
     setCertifications(profile.certifications)
     setLanguages(profile.languages)
-    if (profile.openingHours) setOpeningHours(profile.openingHours)
   }, [completion])
 
   useEffect(() => {
@@ -319,12 +305,6 @@ function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
         })
       )
 
-      const formattedOpeningHours = Object.entries(openingHours).map(([day, data]) => {
-        if (data.isOpen === null) return null
-        if (data.isOpen === false) return `${day}: closed`
-        return `${day}: ${data.openTime}-${data.closeTime}`
-      }).filter(Boolean).join('; ')
-
       // Filter out empty values
       const validPhones = phones.filter(p => p.trim() !== '')
       const validWhatsapps = whatsapps.filter(w => w.trim() !== '')
@@ -350,7 +330,6 @@ function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
         website: website || null,
         socialMedia: JSON.stringify(socialMedia),
         gallery: JSON.stringify(galleryBase64),
-        openingHours: formattedOpeningHours || null,
         sport,
         specialization,
         experienceYears: experienceYears ? parseInt(experienceYears) : null,
@@ -2425,20 +2404,6 @@ function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
                     e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                   }}
                 />
-              </div>
-              <div style={{ marginBottom: '2.5rem' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '0.75rem',
-                  color: '#0f172a',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  letterSpacing: '0.01em'
-                }}>Program</label>
-                {/* Opening Hours - Same as Register.tsx */}
-                <p style={{ textAlign: 'center', color: '#64748b', padding: '2rem 0' }}>
-                  Implementarea completă va include programul pentru fiecare zi (similar cu Register.tsx Step 5).
-                </p>
               </div>
             </div>
           )}

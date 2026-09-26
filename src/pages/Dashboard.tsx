@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 import MapSelector from '../components/MapSelector'
+import ShopHours, { formatShopHours, shopHoursFromText } from '../components/ShopHours'
 
 interface TimeSlot {
   day: string
@@ -764,6 +765,14 @@ function Dashboard() {
                     />
                   </div>
 
+                  {(facility.facility_type === 'repair_shop' || facility.facility_type === 'equipment_shop') && (
+                    <ShopHours
+                      hours={shopHoursFromText(formData.opening_hours)}
+                      onChange={(next) => setFormData({ ...formData, opening_hours: formatShopHours(next) })}
+                      isMobile={isMobile}
+                    />
+                  )}
+                  {facility.facility_type === 'field' && (
                   <div>
                     <label style={{
                       display: 'block',
@@ -796,6 +805,7 @@ function Dashboard() {
                       }}
                     />
                   </div>
+                  )}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>

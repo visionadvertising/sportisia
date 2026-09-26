@@ -5,6 +5,7 @@ import { ROMANIAN_CITIES } from '../../data/romanian-cities'
 import { ROMANIAN_COUNTIES } from '../../data/romanian-counties'
 import MapSelector from '../../components/MapSelector'
 import { readProfile, sendProfile, type ProfileCompletion } from './completion'
+import ShopHours, { defaultShopHours, formatShopHours, shopHoursFromText } from '../../components/ShopHours'
 
 const KNOWN_SPORTS = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans']
 
@@ -73,6 +74,7 @@ function RegisterEquipmentShop({ completion }: { completion?: ProfileCompletion 
   const [productsCategories, setProductsCategories] = useState('')
   const [brandsAvailable, setBrandsAvailable] = useState('')
   const [deliveryAvailable, setDeliveryAvailable] = useState(false)
+  const [shopHours, setShopHours] = useState(defaultShopHours())
   const profileApplied = useRef(false)
 
   useEffect(() => {
@@ -97,6 +99,7 @@ function RegisterEquipmentShop({ completion }: { completion?: ProfileCompletion 
     setProductsCategories(profile.productsCategories)
     setBrandsAvailable(profile.brandsAvailable)
     setDeliveryAvailable(profile.deliveryAvailable)
+    setShopHours(shopHoursFromText(completion.facility.opening_hours))
   }, [completion])
 
   useEffect(() => {
@@ -312,7 +315,8 @@ function RegisterEquipmentShop({ completion }: { completion?: ProfileCompletion 
         sport: sport === 'general' ? 'general' : sport,
         productsCategories,
         brandsAvailable,
-        deliveryAvailable
+        deliveryAvailable,
+        openingHours: formatShopHours(shopHours)
       }
 
       const data = completion
@@ -1317,6 +1321,7 @@ function RegisterEquipmentShop({ completion }: { completion?: ProfileCompletion 
                 />
                 <span>Livrare disponibilă</span>
               </label>
+              <ShopHours hours={shopHours} onChange={setShopHours} isMobile={isMobile} />
             </div>
           )}
 
