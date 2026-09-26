@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { openCookieSettings } from './CookieNotice'
 
 function Footer() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -320,7 +321,7 @@ function Footer() {
                   fontSize: '0.875rem',
                   lineHeight: '1.6'
                 }}>
-                  România
+                  Str. Mărgeanului nr. 15, Baia Mare
                 </p>
               </div>
               <div style={{
@@ -363,40 +364,37 @@ function Footer() {
             color: 'rgba(255, 255, 255, 0.6)',
             fontSize: '0.8125rem'
           }}>
-            © {currentYear} SPORTISIA. Toate drepturile rezervate.
+            © {currentYear} SPORTISIA · INSPISERZ SRL. Toate drepturile rezervate.
           </p>
           <div style={{
             display: 'flex',
             gap: isMobile ? '1.5rem' : '2rem',
             flexWrap: 'wrap'
           }}>
-            <Link to="/" style={{
-              color: 'rgba(255, 255, 255, 0.6)',
-              textDecoration: 'none',
-              fontSize: '0.8125rem',
-              transition: 'color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}
-            >
+            <Link to="/termeni-si-conditii" style={legalLink} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>
               Termeni și condiții
             </Link>
-            <Link to="/" style={{
-              color: 'rgba(255, 255, 255, 0.6)',
-              textDecoration: 'none',
-              fontSize: '0.8125rem',
-              transition: 'color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}
-            >
+            <Link to="/politica-de-confidentialitate" style={legalLink} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>
               Politica de confidențialitate
             </Link>
+            <Link to="/politica-cookies" style={legalLink} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>
+              Politica cookies
+            </Link>
+            <button type="button" onClick={openCookieSettings} style={{ ...legalLink, background: 'transparent', border: 0, padding: 0, cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.color = '#10b981'} onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'}>
+              Setări cookies
+            </button>
           </div>
         </div>
       </div>
     </footer>
   )
+}
+
+const legalLink = {
+  color: 'rgba(255, 255, 255, 0.6)',
+  textDecoration: 'none',
+  fontSize: '0.8125rem',
+  transition: 'color 0.2s ease'
 }
 
 export default Footer

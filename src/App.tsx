@@ -38,6 +38,10 @@ import BlogPostEdit from './pages/admin/BlogPostEdit'
 import BlogCategories from './pages/admin/BlogCategories'
 import BlogComments from './pages/admin/BlogComments'
 import Contact from './pages/Contact'
+import Terms from './pages/legal/Terms'
+import Privacy from './pages/legal/Privacy'
+import Cookies from './pages/legal/Cookies'
+import CookieNotice from './components/CookieNotice'
 
 function AppContent() {
   const location = useLocation()
@@ -355,6 +359,9 @@ function AppContent() {
         <Route path="/magazine-articole" element={<FacilitiesList type="equipment_shop" title="Magazine Articole Sportive" />} />
         <Route path="/toate" element={<AllFacilities />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/termeni-si-conditii" element={<Terms />} />
+        <Route path="/politica-de-confidentialitate" element={<Privacy />} />
+        <Route path="/politica-cookies" element={<Cookies />} />
         <Route path="/blog" element={<BlogList />} />
         <Route path="/blog/categorie/:slug" element={<BlogList />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
@@ -366,6 +373,7 @@ function AppContent() {
       
       {/* Footer - doar pentru rute non-admin */}
       {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <CookieNotice />}
     </div>
   )
 }
