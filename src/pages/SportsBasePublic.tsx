@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useState, useEffect, type ReactNode } from 'react'
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import PublicMap from '../components/PublicMap'
+import { slugify } from '../utils/seo'
 
 interface TimeSlot {
   day: string
@@ -66,6 +67,23 @@ interface Facility {
   website?: string
   opening_hours?: string
   status: string
+  is_verified?: boolean | number
+  can_claim?: boolean
+  profile_tier?: 'recommended' | 'verified' | 'unverified'
+  subscription_ends_at?: string | null
+  sport?: string
+  specialization?: string
+  experience_years?: number
+  price_per_lesson?: number
+  certifications?: string
+  languages?: string
+  services_offered?: string
+  brands_serviced?: string
+  average_repair_time?: string
+  repair_categories?: string[] | string
+  products_categories?: string
+  brands_available?: string
+  delivery_available?: boolean | number
   sportsFields?: SportsField[]
 }
 
@@ -90,12 +108,51 @@ function createSlug(name: string, city: string): string {
     .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
 }
 
+function SocialRow({ href, label, background, children }: { href: string; label: string; background: string; children: ReactNode }) {
+  const text = href.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '')
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div style={{
+        width: '36px',
+        height: '36px',
+        borderRadius: '10px',
+        background,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0
+      }}>
+        {children}
+      </div>
+      <div>
+        <div style={{ color: '#0f172a', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.125rem' }}>{label}</div>
+        <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#64748b', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500, wordBreak: 'break-all' }}>
+          {text}
+        </a>
+      </div>
+    </div>
+  )
+}
+
 function SportsBasePublic() {
-  const { slug } = useParams<{ slug: string }>()
+  const { slug, id } = useParams<{ slug?: string; id?: string }>()
+  const facilityKey = id || slug || ''
+  const navigate = useNavigate()
+  const location = useLocation()
   const [facility, setFacility] = useState<Facility | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const sectionTitle = {
+    fontSize: isMobile ? '1.25rem' : '1.5rem',
+    fontWeight: 600,
+    marginTop: 0,
+    marginBottom: isMobile ? '1rem' : '1.5rem',
+    color: '#0f172a',
+    textAlign: isMobile ? 'center' as const : 'left' as const
+  }
+  const [resolvedCoords, setResolvedCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [mapZoom, setMapZoom] = useState(15)
 
   useEffect(() => {
     const handleResize = () => {
@@ -106,15 +163,74 @@ function SportsBasePublic() {
   }, [])
 
   useEffect(() => {
-    if (slug) {
+    if (facilityKey) {
       fetchFacility()
     }
-  }, [slug])
+  }, [facilityKey])
+
+  useEffect(() => {
+    if (!facility) {
+      setResolvedCoords(null)
+      return
+    }
+
+    const raw = facility.map_coordinates
+    let parsed: { lat?: number; lng?: number; lon?: number } | null = null
+    if (raw && typeof raw === 'object') {
+      parsed = raw as { lat?: number; lng?: number; lon?: number }
+    } else if (typeof raw === 'string') {
+      try {
+        parsed = JSON.parse(raw)
+      } catch {
+        parsed = null
+      }
+    }
+    const lat = Number(parsed?.lat)
+    const lng = Number(parsed?.lng ?? parsed?.lon)
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      setResolvedCoords({ lat, lng })
+      setMapZoom(facility.location ? 15 : 12)
+      return
+    }
+
+    const hasAddress = Boolean(facility.location && facility.location.trim())
+    const query = (hasAddress ? facility.location : facility.city || '').trim()
+    if (!query) {
+      setResolvedCoords(null)
+      return
+    }
+
+    let cancelled = false
+    const city = facility.city || ''
+    fetch(`${API_BASE_URL}/geocode?q=${encodeURIComponent(query)}${city ? `&city=${encodeURIComponent(city)}` : ''}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (cancelled) return
+        const hit = Array.isArray(data) ? data[0] : null
+        if (hit?.lat && hit?.lon) {
+          setResolvedCoords({ lat: Number(hit.lat), lng: Number(hit.lon) })
+          setMapZoom(hasAddress ? 15 : 12)
+        }
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [facility])
+
+  useEffect(() => {
+    if (!facility || !location.pathname.startsWith('/facility/')) return
+    const canonical = `/facility/${facility.id}/${slugify(facility.name)}`
+    if (location.pathname !== canonical) {
+      navigate(canonical, { replace: true })
+    }
+  }, [facility, location.pathname, navigate])
 
   const fetchFacility = async () => {
     try {
-      console.log(`[Frontend] Fetching facility with slug: "${slug}"`)
-      const response = await fetch(`${API_BASE_URL}/facilities/${encodeURIComponent(slug)}`)
+      console.log(`[Frontend] Fetching facility with slug: "${facilityKey}"`)
+      const response = await fetch(`${API_BASE_URL}/facilities/${encodeURIComponent(facilityKey)}`)
       const data = await response.json()
       
       console.log(`[Frontend] Response:`, data)
@@ -174,6 +290,13 @@ function SportsBasePublic() {
             facilityData.map_coordinates = JSON.parse(facilityData.map_coordinates)
           } catch (e) {
             facilityData.map_coordinates = null
+          }
+        }
+        if (facilityData.repair_categories && typeof facilityData.repair_categories === 'string') {
+          try {
+            facilityData.repair_categories = JSON.parse(facilityData.repair_categories)
+          } catch (e) {
+            facilityData.repair_categories = []
           }
         }
         if (facilityData.sportsFields && typeof facilityData.sportsFields === 'string') {
@@ -463,13 +586,13 @@ function SportsBasePublic() {
           background: 'white',
           padding: '2rem',
           borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #eef2f6',
           textAlign: 'center',
           maxWidth: '500px'
         }}>
           <h2 style={{ color: '#ef4444', marginBottom: '1rem' }}>Eroare</h2>
           <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-            {error || 'Baza sportivă nu a fost găsită'}
+            {error || 'Profilul nu a fost găsit'}
           </p>
           <Link
             to="/"
@@ -495,8 +618,8 @@ function SportsBasePublic() {
   const emails = facility.emails || (facility.email ? [facility.email] : [])
   const gallery = Array.isArray(facility.gallery) ? facility.gallery : (facility.gallery || [])
   const socialMedia = facility.social_media || {}
-  const mapCoords = facility.map_coordinates || null
   const logoUrl = facility.logo_url || null
+  const isRecommended = facility.profile_tier === 'recommended'
 
   // Debug logging
   console.log('[Frontend] Facility data:', {
@@ -538,7 +661,9 @@ function SportsBasePublic() {
 
   // Get first gallery image or default
   // Get hero images: first 3 on desktop, first 1 on mobile
-  const heroImages = gallery.slice(0, isMobile ? 1 : 3).map(img => getImageUrl(img)).filter(Boolean)
+  const heroImages = isRecommended
+    ? gallery.slice(0, isMobile ? 1 : 3).map(img => getImageUrl(img)).filter(Boolean)
+    : []
   const hasHeroImages = heroImages.length > 0
 
   return (
@@ -550,7 +675,11 @@ function SportsBasePublic() {
       {/* Hero Section */}
       <div style={{
         position: 'relative',
-        height: isMobile ? '300px' : '500px',
+        height: hasHeroImages
+          ? (isMobile ? '220px' : '320px')
+          : logoUrl
+            ? (isMobile ? '220px' : '280px')
+            : (isMobile ? '140px' : '180px'),
         display: 'flex',
         overflow: 'hidden'
       }}>
@@ -609,7 +738,7 @@ function SportsBasePublic() {
           width: '100%'
         }}>
           {/* Logo */}
-          {logoUrl && getImageUrl(logoUrl) && (
+          {isRecommended && logoUrl && getImageUrl(logoUrl) && (
             <div style={{
               marginBottom: '1.5rem',
               display: 'flex',
@@ -640,17 +769,17 @@ function SportsBasePublic() {
           )}
           <div style={{ width: '100%' }}>
           <h1 style={{
-            fontSize: isMobile ? '2rem' : '3.5rem',
+            fontSize: isMobile ? '1.75rem' : '2.5rem',
             fontWeight: '700',
-            marginBottom: '1rem',
+            marginBottom: '0.35rem',
             textShadow: '0 2px 4px rgba(0,0,0,0.3)'
           }}>
             {facility.name}
           </h1>
-          {facility.location && (
+          {(facility.location || facility.city) && (
             <div style={{
               fontSize: isMobile ? '1rem' : '1.25rem',
-              marginTop: '1rem',
+              marginTop: '0.5rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -660,7 +789,7 @@ function SportsBasePublic() {
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
-              <span>{facility.location}</span>
+              <span>{facility.location || facility.city}</span>
             </div>
             )}
           </div>
@@ -672,7 +801,7 @@ function SportsBasePublic() {
         maxWidth: '1400px',
         margin: '0 auto',
         padding: isMobile ? '1.5rem 1rem' : '3rem 2rem',
-        paddingBottom: isMobile ? '6rem' : '3rem' // Extra padding for sticky buttons
+        paddingBottom: isMobile ? '5.5rem' : '3rem'
       }}>
         {/* Location and Contact */}
         <div style={{
@@ -689,20 +818,14 @@ function SportsBasePublic() {
             flexDirection: 'column',
             height: isMobile ? 'auto' : '100%'
           }}>
-            <h2 style={{
-              fontSize: isMobile ? '1.25rem' : '1.5rem',
-              fontWeight: '600',
-              marginBottom: isMobile ? '1rem' : '1.5rem',
-              color: '#0f172a'
-            }}>
+            <h2 style={sectionTitle}>
               Date de contact
             </h2>
               <div style={{
               background: 'white',
-              padding: isMobile ? '1.5rem' : '2.5rem',
-              borderRadius: isMobile ? '16px' : '20px',
-                border: '1px solid #e2e8f0',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+              padding: isMobile ? '1.25rem' : '1.5rem',
+              borderRadius: '16px',
+              border: '1px solid #eef2f6',
               height: isMobile ? 'auto' : '100%',
               display: 'flex',
               flexDirection: 'column'
@@ -710,13 +833,19 @@ function SportsBasePublic() {
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: isMobile ? '1.25rem' : '1.75rem'
+                gap: isMobile ? '1.25rem' : '1.75rem',
+                alignItems: 'stretch',
+                textAlign: 'left',
+                width: '100%'
               }}>
                 {/* Contact Methods */}
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '1rem'
+                  gap: '1rem',
+                  alignItems: 'stretch',
+                  width: '100%',
+                  textAlign: 'left'
                 }}>
                   {/* Phones - each with its own icon */}
                   {phones.map((phone, idx) => (
@@ -729,17 +858,16 @@ function SportsBasePublic() {
                       }}
                     >
                       <div style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                        flexShrink: 0,
-                        boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        background: '#ecfdf5',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
                       }}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2">
                           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                   </svg>
                 </div>
@@ -774,17 +902,16 @@ function SportsBasePublic() {
                       }}
                     >
               <div style={{
-                        width: '44px',
-                        height: '44px',
-                borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        background: '#f0fdf4',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0,
-                        boxShadow: '0 2px 4px rgba(37, 211, 102, 0.2)'
+                        flexShrink: 0
                       }}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#16a34a">
                           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                         </svg>
                       </div>
@@ -821,17 +948,16 @@ function SportsBasePublic() {
                       }}
                     >
                       <div style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        background: '#eef2ff',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0,
-                        boxShadow: '0 2px 4px rgba(99, 102, 241, 0.2)'
+                        flexShrink: 0
                       }}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="2">
                           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                           <polyline points="22,6 12,13 2,6"></polyline>
                         </svg>
@@ -864,17 +990,16 @@ function SportsBasePublic() {
                       gap: '0.75rem'
                     }}>
                       <div style={{
-                        width: '44px',
-                        height: '44px',
-                borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        background: '#f5f3ff',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0,
-                        boxShadow: '0 2px 4px rgba(139, 92, 246, 0.2)'
+                        flexShrink: 0
                       }}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2">
                           <circle cx="12" cy="12" r="10"></circle>
                           <line x1="2" y1="12" x2="22" y2="12"></line>
                           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
@@ -908,209 +1033,68 @@ function SportsBasePublic() {
         <div style={{
                     paddingTop: '1.75rem', 
                     borderTop: '1px solid #e2e8f0',
-                    marginTop: '0.5rem'
+                    marginTop: '0.5rem',
+                    width: '100%',
+                    textAlign: 'left'
                   }}>
                     <h3 style={{
                       color: '#0f172a',
-                      fontSize: '0.875rem',
-            fontWeight: '600',
-                      marginBottom: '1rem',
-                      marginTop: 0
-          }}>
+                      fontSize: isMobile ? '1.25rem' : '1.5rem',
+                      fontWeight: 600,
+                      marginBottom: isMobile ? '1rem' : '1.5rem',
+                      marginTop: 0,
+                      textAlign: 'left'
+                    }}>
                       Rețele sociale
                     </h3>
           <div style={{
                       display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '0.75rem'
+                      flexDirection: 'column',
+                      gap: '1rem'
                     }}>
                       {socialMedia.facebook && (
-                        <a
-                          href={socialMedia.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '12px',
-                            background: '#1877f2',
-                  display: 'flex',
-                  alignItems: 'center',
-                            justifyContent: 'center',
-                            textDecoration: 'none',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            boxShadow: '0 2px 4px rgba(24, 119, 242, 0.2)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(24, 119, 242, 0.4)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(24, 119, 242, 0.2)'
-                          }}
-                        >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <SocialRow href={socialMedia.facebook} label="Facebook" background="#eff6ff">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2">
                             <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                  </svg>
-                        </a>
+                          </svg>
+                        </SocialRow>
                       )}
                       {socialMedia.instagram && (
-                        <a
-                          href={socialMedia.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '12px',
-                            background: 'linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                            justifyContent: 'center',
-                            textDecoration: 'none',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            boxShadow: '0 2px 4px rgba(225, 48, 108, 0.2)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(225, 48, 108, 0.4)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(225, 48, 108, 0.2)'
-                          }}
-                        >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <SocialRow href={socialMedia.instagram} label="Instagram" background="#fdf2f8">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#db2777" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                             <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                             <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                  </svg>
-                        </a>
+                          </svg>
+                        </SocialRow>
                       )}
                       {socialMedia.x && (
-                        <a
-                          href={socialMedia.x}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                    style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '12px',
-                            background: '#000000',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                      textDecoration: 'none',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.4)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)'
-                          }}
-                        >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <SocialRow href={socialMedia.x} label="X" background="#f1f5f9">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="#0f172a">
                             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
                           </svg>
-                        </a>
+                        </SocialRow>
                       )}
                       {socialMedia.tiktok && (
-                        <a
-                          href={socialMedia.tiktok}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '12px',
-                            background: '#000000',
-                  display: 'flex',
-                  alignItems: 'center',
-                            justifyContent: 'center',
-                            textDecoration: 'none',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.4)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)'
-                          }}
-                        >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <SocialRow href={socialMedia.tiktok} label="TikTok" background="#f1f5f9">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="#0f172a">
                             <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"></path>
-                  </svg>
-                        </a>
+                          </svg>
+                        </SocialRow>
                       )}
                       {socialMedia.youtube && (
-                        <a
-                          href={socialMedia.youtube}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                    style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '12px',
-                            background: '#ff0000',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                      textDecoration: 'none',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            boxShadow: '0 2px 4px rgba(255, 0, 0, 0.2)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 0, 0, 0.4)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(255, 0, 0, 0.2)'
-                          }}
-                        >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <SocialRow href={socialMedia.youtube} label="YouTube" background="#fef2f2">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="#dc2626">
                             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path>
                           </svg>
-                        </a>
+                        </SocialRow>
                       )}
                       {socialMedia.linkedin && (
-                        <a
-                          href={socialMedia.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '12px',
-                            background: '#0077b5',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            textDecoration: 'none',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            boxShadow: '0 2px 4px rgba(0, 119, 181, 0.2)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 119, 181, 0.4)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 119, 181, 0.2)'
-                          }}
-                        >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <SocialRow href={socialMedia.linkedin} label="LinkedIn" background="#eff6ff">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="#0077b5">
                             <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path>
                           </svg>
-                        </a>
+                        </SocialRow>
                       )}
                     </div>
               </div>
@@ -1126,12 +1110,7 @@ function SportsBasePublic() {
             flexDirection: 'column',
             height: isMobile ? 'auto' : '100%'
           }}>
-            <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: '600',
-              marginBottom: '1rem',
-              color: '#0f172a'
-            }}>
+            <h2 style={sectionTitle}>
               Locație
             </h2>
             <div style={{
@@ -1139,55 +1118,79 @@ function SportsBasePublic() {
               minHeight: isMobile ? '300px' : '400px',
               flex: isMobile ? 'none' : '1'
             }}>
-              {mapCoords && (
+              {resolvedCoords ? (
                 <PublicMap
-                  coordinates={mapCoords}
-                  location={facility.location || undefined}
+                  coordinates={resolvedCoords}
+                  location={facility.location || facility.city}
+                  zoom={mapZoom}
                 />
-              )}
-              {!mapCoords && facility.location && (
+              ) : (
                 <div style={{
                   width: '100%',
                   height: '100%',
-                  borderRadius: '12px',
+                  minHeight: isMobile ? '300px' : '400px',
+                  borderRadius: '16px',
                   background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #eef2f6',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#64748b',
                   fontSize: '0.875rem'
                 }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ margin: '0 auto 1rem' }}>
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                      <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                    <p style={{ margin: 0 }}>{facility.location}</p>
-                  </div>
+                  {facility.city || 'Se încarcă harta...'}
                 </div>
               )}
             </div>
           </div>
         </div>
 
+        {isRecommended && facility.facility_type !== 'field' && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+            gap: '0.75rem 1.5rem',
+            marginBottom: isMobile ? '2rem' : '3rem',
+            padding: '1.25rem',
+            background: '#f8fafc',
+            borderRadius: '12px',
+            border: '1px solid #eef2f6',
+            color: '#0f172a',
+            textAlign: isMobile ? 'center' : 'left'
+          }}>
+            {facility.sport && <div><strong>Sport:</strong> {facility.sport}</div>}
+            {facility.specialization && <div><strong>Specializare:</strong> {facility.specialization}</div>}
+            {facility.experience_years != null && <div><strong>Experiență:</strong> {facility.experience_years} ani</div>}
+            {facility.price_per_lesson != null && <div><strong>Preț / lecție:</strong> {facility.price_per_lesson} lei</div>}
+            {facility.certifications && <div><strong>Certificări:</strong> {facility.certifications}</div>}
+            {facility.languages && <div><strong>Limbi:</strong> {facility.languages}</div>}
+            {facility.services_offered && <div><strong>Servicii:</strong> {facility.services_offered}</div>}
+            {facility.brands_serviced && <div><strong>Branduri:</strong> {facility.brands_serviced}</div>}
+            {facility.average_repair_time && <div><strong>Timp mediu:</strong> {facility.average_repair_time}</div>}
+            {Array.isArray(facility.repair_categories) && facility.repair_categories.length > 0 && (
+              <div><strong>Categorii:</strong> {facility.repair_categories.join(', ')}</div>
+            )}
+            {facility.products_categories && <div><strong>Produse:</strong> {facility.products_categories}</div>}
+            {facility.brands_available && <div><strong>Branduri:</strong> {facility.brands_available}</div>}
+            {facility.facility_type === 'equipment_shop' && (
+              <div><strong>Livrare:</strong> {facility.delivery_available ? 'Da' : 'Nu'}</div>
+            )}
+          </div>
+        )}
+
         {/* Description */}
-        {facility.description && (
+        {isRecommended && facility.description && (
           <div style={{
             marginBottom: isMobile ? '2rem' : '3rem'
           }}>
-            <h2 style={{
-              fontSize: isMobile ? '1.25rem' : '1.5rem',
-              fontWeight: '600',
-              marginBottom: isMobile ? '0.75rem' : '1rem',
-              color: '#0f172a'
-            }}>
+            <h2 style={sectionTitle}>
               Despre
             </h2>
             <p style={{
               color: '#64748b',
               lineHeight: '1.8',
-              fontSize: '1rem'
+              fontSize: '1rem',
+              textAlign: isMobile ? 'center' : 'left'
             }}>
               {facility.description}
             </p>
@@ -1195,14 +1198,9 @@ function SportsBasePublic() {
         )}
 
         {/* Sports Fields */}
-        {facility.sportsFields && facility.sportsFields.length > 0 && (
+        {isRecommended && facility.sportsFields && facility.sportsFields.length > 0 && (
           <div style={{ marginBottom: isMobile ? '2rem' : '3rem' }}>
-            <h2 style={{
-              fontSize: isMobile ? '1.25rem' : '1.5rem',
-              fontWeight: '600',
-              marginBottom: isMobile ? '1rem' : '1.5rem',
-              color: '#0f172a'
-            }}>
+            <h2 style={sectionTitle}>
               Terenuri disponibile
             </h2>
             <div style={{
@@ -1218,7 +1216,7 @@ function SportsBasePublic() {
                     background: '#f8fafc',
                     padding: isMobile ? '1rem' : '1.5rem',
                     borderRadius: '12px',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid #eef2f6',
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100%'
@@ -1226,21 +1224,14 @@ function SportsBasePublic() {
                 >
                   <h3 style={{
                     fontSize: '1.25rem',
-                    fontWeight: '600',
+                    fontWeight: 600,
+                    marginTop: 0,
                     marginBottom: '0.75rem',
-                    color: '#0f172a'
+                    color: '#0f172a',
+                    textAlign: isMobile ? 'center' : 'left'
                   }}>
                     {field.fieldName}
                   </h3>
-                  {field.description && (
-                    <p style={{
-                      color: '#64748b',
-                      marginBottom: '1rem',
-                      lineHeight: '1.6'
-                    }}>
-                      {field.description}
-                    </p>
-                  )}
                   {getFeatureLabels(field.features).length > 0 && (
                     <div style={{
                       marginTop: '1.5rem',
@@ -1263,7 +1254,7 @@ function SportsBasePublic() {
                               padding: '0.625rem 0.875rem',
                               background: '#f8fafc',
                               borderRadius: '8px',
-                              border: '1px solid #e2e8f0',
+                              border: '1px solid #eef2f6',
                               transition: 'all 0.2s ease'
                             }}
                             onMouseEnter={(e) => {
@@ -1486,7 +1477,7 @@ function SportsBasePublic() {
                             padding: '0.75rem',
                             background: '#f8fafc',
                             borderRadius: '6px',
-                            border: '1px solid #e2e8f0'
+                            border: '1px solid #eef2f6'
                           }}>
                             {legendItems.map((item, idx) => (
                               <div
@@ -1525,14 +1516,9 @@ function SportsBasePublic() {
         )}
 
         {/* Gallery */}
-        {gallery.length > 0 && (
+        {isRecommended && gallery.length > 0 && (
           <div style={{ marginBottom: isMobile ? '2rem' : '3rem' }}>
-            <h2 style={{
-              fontSize: isMobile ? '1.25rem' : '1.5rem',
-              fontWeight: '600',
-              marginBottom: isMobile ? '1rem' : '1.5rem',
-              color: '#0f172a'
-            }}>
+            <h2 style={sectionTitle}>
               Galerie
             </h2>
             <div style={{
@@ -1553,7 +1539,7 @@ function SportsBasePublic() {
                     height: '200px',
                     objectFit: 'cover',
                     borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid #eef2f6',
                     cursor: 'pointer',
                     transition: 'transform 0.2s'
                   }}
@@ -1576,168 +1562,77 @@ function SportsBasePublic() {
 
       </div>
       
-      {/* Sticky Contact Buttons - Mobile Only */}
-      {isMobile && (phones.length > 0 || whatsapps.length > 0 || emails.length > 0 || facility.website) && (
-            <div style={{
+      <div style={{
           position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: 'white',
-          borderTop: '1px solid #e2e8f0',
-          padding: '0.75rem',
-              display: 'flex',
-          justifyContent: 'center',
-          gap: '0.75rem',
-          boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06)',
-          zIndex: 1000,
-          backdropFilter: 'blur(10px)',
-          background: 'rgba(255, 255, 255, 0.95)'
+          zIndex: 40,
+          ...(isMobile
+            ? { left: '0.75rem', right: '0.75rem', bottom: '0.75rem' }
+            : { right: '1.5rem', bottom: '1.5rem' })
         }}>
-          {phones.length > 0 && phones.map((phone, idx) => (
-            <a
-              key={`sticky-phone-${idx}`}
-              href={`tel:${phone}`}
-                  style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
+          {facility.profile_tier === 'recommended' ? (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#ecfdf5',
+              color: '#047857',
+              border: '1px solid #a7f3d0',
+              borderRadius: '12px',
+              padding: isMobile ? '0.75rem 0.9rem' : '0.9rem 1.15rem',
+              fontWeight: 700,
+              fontSize: isMobile ? '0.85rem' : '0.95rem',
+              boxShadow: 'none',
+              whiteSpace: 'nowrap',
+              width: isMobile ? '100%' : undefined,
+              boxSizing: 'border-box'
+            }}>
+              Facilitate recomandată
+            </div>
+          ) : facility.profile_tier === 'verified' ? (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#fff7ed',
+              color: '#c2410c',
+              border: '1px solid #fed7aa',
+              borderRadius: '12px',
+              padding: isMobile ? '0.75rem 0.9rem' : '0.9rem 1.15rem',
+              fontWeight: 700,
+              fontSize: isMobile ? '0.85rem' : '0.95rem',
+              boxShadow: 'none',
+              whiteSpace: 'nowrap',
+              width: isMobile ? '100%' : undefined,
+              boxSizing: 'border-box'
+            }}>
+              Facilitate verificată
+            </div>
+          ) : (
+            <Link
+              to={`/revendica/${facility.id}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
                 justifyContent: 'center',
-                    textDecoration: 'none',
-                boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3), 0 2px 4px -1px rgba(16, 185, 129, 0.2)',
-                transition: 'all 0.2s ease',
-                flexShrink: 0
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                e.currentTarget.style.boxShadow = '0 6px 12px -1px rgba(16, 185, 129, 0.4), 0 4px 6px -1px rgba(16, 185, 129, 0.3)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(16, 185, 129, 0.3), 0 2px 4px -1px rgba(16, 185, 129, 0.2)'
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-              }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-              </svg>
-            </a>
-          ))}
-          {whatsapps.length > 0 && whatsapps.map((whatsapp, idx) => (
-            <a
-              key={`sticky-whatsapp-${idx}`}
-              href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                justifyContent: 'center',
+                background: '#fef2f2',
+                color: '#b91c1c',
+                border: '1px solid #fecaca',
                 textDecoration: 'none',
-                boxShadow: '0 4px 6px -1px rgba(37, 211, 102, 0.3), 0 2px 4px -1px rgba(37, 211, 102, 0.2)',
-                transition: 'all 0.2s ease',
-                flexShrink: 0
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                e.currentTarget.style.boxShadow = '0 6px 12px -1px rgba(37, 211, 102, 0.4), 0 4px 6px -1px rgba(37, 211, 102, 0.3)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(37, 211, 102, 0.3), 0 2px 4px -1px rgba(37, 211, 102, 0.2)'
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
+                borderRadius: '12px',
+                padding: isMobile ? '0.75rem 0.9rem' : '0.9rem 1.15rem',
+                fontWeight: 700,
+                fontSize: isMobile ? '0.85rem' : '0.95rem',
+                boxShadow: 'none',
+                whiteSpace: 'nowrap',
+                width: isMobile ? '100%' : undefined,
+                boxSizing: 'border-box'
               }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-              </svg>
-            </a>
-          ))}
-          {emails.length > 0 && emails.map((email, idx) => (
-            <a
-              key={`sticky-email-${idx}`}
-              href={`mailto:${email}`}
-                  style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                justifyContent: 'center',
-                textDecoration: 'none',
-                boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.3), 0 2px 4px -1px rgba(99, 102, 241, 0.2)',
-                transition: 'all 0.2s ease',
-                flexShrink: 0
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                e.currentTarget.style.boxShadow = '0 6px 12px -1px rgba(99, 102, 241, 0.4), 0 4px 6px -1px rgba(99, 102, 241, 0.3)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(99, 102, 241, 0.3), 0 2px 4px -1px rgba(99, 102, 241, 0.2)'
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-              }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
-            </a>
-          ))}
-          {facility.website && (
-            <a
-              href={facility.website.startsWith('http') ? facility.website : `https://${facility.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                justifyContent: 'center',
-                textDecoration: 'none',
-                boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.3), 0 2px 4px -1px rgba(139, 92, 246, 0.2)',
-                transition: 'all 0.2s ease',
-                flexShrink: 0
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                e.currentTarget.style.boxShadow = '0 6px 12px -1px rgba(139, 92, 246, 0.4), 0 4px 6px -1px rgba(139, 92, 246, 0.3)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(139, 92, 246, 0.3), 0 2px 4px -1px rgba(139, 92, 246, 0.2)'
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-              }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              </svg>
-                </a>
-              )}
-          </div>
-        )}
+              Revendică profilul
+            </Link>
+          )}
+        </div>
+
     </div>
   )
 }

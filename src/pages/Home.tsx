@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug, repairCategoryToSlug } from '../utils/seo'
+import BusinessScrollCards from '../components/BusinessScrollCards'
 
 
 function Home() {
@@ -178,7 +179,8 @@ function Home() {
         textAlign: 'center',
         color: 'white',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'visible',
+        zIndex: 5
       }}>
         <div style={{
           textAlign: 'center',
@@ -220,7 +222,9 @@ function Home() {
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
           gap: isMobile ? '1rem' : '1.25rem',
-          position: 'relative'
+          position: 'relative',
+          zIndex: 6,
+          overflow: 'visible'
         }}>
           {/* Type Searchable Dropdown - FIRST */}
           <div style={{ position: 'relative' }}>
@@ -249,7 +253,7 @@ function Home() {
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = '#e2e8f0'
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                e.target.style.boxShadow = 'none'
                 setTimeout(() => setShowTypeDropdown(false), 250)
               }}
               placeholder="Caută sau selectează tip"
@@ -266,7 +270,7 @@ function Home() {
                 transition: 'all 0.2s ease',
                 fontWeight: '400',
                 lineHeight: '1.5',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                boxShadow: 'none'
               }}
             />
             <div style={{
@@ -358,7 +362,7 @@ function Home() {
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = '#e2e8f0'
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                e.target.style.boxShadow = 'none'
                 setTimeout(() => setShowCityDropdown(false), 250)
               }}
               placeholder="Caută sau selectează oraș"
@@ -375,7 +379,7 @@ function Home() {
                 transition: 'all 0.2s ease',
                 fontWeight: '400',
                 lineHeight: '1.5',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                boxShadow: 'none'
               }}
             />
             <div style={{
@@ -473,7 +477,7 @@ function Home() {
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = '#e2e8f0'
-                  e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  e.target.style.boxShadow = 'none'
                   setTimeout(() => setShowSportDropdown(false), 250)
                 }}
                 placeholder="Caută sau selectează sport"
@@ -490,7 +494,7 @@ function Home() {
                   transition: 'all 0.2s ease',
                   fontWeight: '400',
                   lineHeight: '1.5',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  boxShadow: 'none'
                 }}
               />
               <div style={{
@@ -583,7 +587,7 @@ function Home() {
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = '#e2e8f0'
-                  e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  e.target.style.boxShadow = 'none'
                   setTimeout(() => setShowRepairCategoryDropdown(false), 250)
                 }}
                 placeholder="Caută sau selectează categorie"
@@ -600,7 +604,7 @@ function Home() {
                   transition: 'all 0.2s ease',
                   fontWeight: '400',
                   lineHeight: '1.5',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  boxShadow: 'none'
                 }}
               />
               <div style={{
@@ -971,161 +975,9 @@ function Home() {
             </div>
           </div>
 
-          {/* Main Content */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: isMobile ? '3rem' : '4rem',
-            alignItems: 'start'
-          }}>
-            {/* Left: Title */}
-            <div>
-              <p style={{
-                color: '#10b981',
-                fontSize: '1rem',
-                fontWeight: '600',
-                marginBottom: '0.75rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>Pentru afaceri sportive</p>
-              <h2 style={{
-                fontSize: isMobile ? '2rem' : '2.5rem',
-                fontWeight: '700',
-                color: 'white',
-                lineHeight: '1.2',
-                marginBottom: isMobile ? '2rem' : '3rem'
-              }}>Fii acolo unde caută sportivii</h2>
-            </div>
-
-            {/* Right: Benefits List */}
-            <div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '1.5rem' : '2rem' }}>
-                <div>
-                  <h3 style={{
-                    color: '#10b981',
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    marginBottom: '0.5rem'
-                  }}>Crește-ți vizibilitatea</h3>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    lineHeight: '1.6',
-                    fontSize: '0.9375rem',
-                    margin: 0
-                  }}>Prezintă-ți facilitățile, serviciile de antrenament sau magazinul tău în fața a mii de clienți potențiali.</p>
-                </div>
-
-                <div>
-                  <h3 style={{
-                    color: '#10b981',
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    marginBottom: '0.5rem'
-                  }}>Conectează-te cu sportivii locali</h3>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    lineHeight: '1.6',
-                    fontSize: '0.9375rem',
-                    margin: 0
-                  }}>Sportisia te aduce mai aproape de publicul țintă, de la amatori la sportivi semi-profesioniști.</p>
-                </div>
-
-                <div>
-                  <h3 style={{
-                    color: '#10b981',
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    marginBottom: '0.5rem'
-                  }}>Prezintă-ți expertiza</h3>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    lineHeight: '1.6',
-                    fontSize: '0.9375rem',
-                    margin: 0
-                  }}>Evidențiază serviciile, expertiza și ofertele tale unice cu un profil dedicat.</p>
-                </div>
-
-                <div>
-                  <h3 style={{
-                    color: '#10b981',
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    marginBottom: '0.5rem'
-                  }}>Extinde-ți baza de clienți</h3>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    lineHeight: '1.6',
-                    fontSize: '0.9375rem',
-                    margin: 0
-                  }}>Platforma noastră permite sportivilor să te descopere și să te contacteze ușor, ducând la mai multe solicitări.</p>
-                </div>
-
-                <div>
-                  <h3 style={{
-                    color: '#10b981',
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    marginBottom: '0.5rem'
-                  }}>Este gratuit</h3>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    lineHeight: '1.6',
-                    fontSize: '0.9375rem',
-                    margin: 0
-                  }}>Nu există costuri pentru a-ți lista serviciile. Înregistrează-te și începe să-ți prezinți oferta.</p>
-                </div>
-              </div>
-
-              <Link
-                to="/register"
-                style={{
-                  marginTop: '2rem',
-                  padding: isMobile ? '1rem 1.5rem' : '1.125rem 2rem',
-                  background: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  width: '100%',
-                  display: 'block',
-                  textAlign: 'center',
-                  textDecoration: 'none',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#059669'
-                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(16, 185, 129, 0.3)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#10b981'
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.2)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                }}
-              >
-                Devino membru
-              </Link>
-            </div>
-          </div>
+          <BusinessScrollCards isMobile={isMobile} />
         </div>
       </div>
-
-      {/* Footer */}
-      <footer style={{
-        background: '#0f172a',
-        padding: isMobile ? '2rem 1rem' : '3rem 2rem',
-        textAlign: 'center',
-        color: 'rgba(255, 255, 255, 0.8)',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-      }}>
-        <p style={{
-          margin: 0,
-          fontSize: '0.9375rem'
-        }}>©2024 Sportisia. Toate drepturile rezervate.</p>
-      </footer>
     </>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type CSSProperties } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
@@ -72,6 +72,19 @@ const DAYS_OF_WEEK = [
   { value: 'sunday', label: 'Duminică' }
 ]
 
+const SPORT_OPTIONS = ['Tenis', 'Fotbal', 'Baschet', 'Volei', 'Handbal', 'Badminton', 'Squash', 'Înot', 'Fitness', 'Atletism']
+const REPAIR_CATEGORIES = ['Rachete tenis', 'Biciclete', 'Echipamente ski', 'Echipamente snowboard', 'Echipamente fitness', 'Echipamente fotbal', 'Echipamente baschet', 'Echipamente volei', 'Echipamente handbal', 'Altele']
+const AMENITIES = [
+  { key: 'has_parking', label: 'Parcare' },
+  { key: 'has_shower', label: 'Duș' },
+  { key: 'has_changing_room', label: 'Vestiar' },
+  { key: 'has_air_conditioning', label: 'Aer condiționat' },
+  { key: 'has_lighting', label: 'Iluminat' }
+]
+
+const dashLabel: CSSProperties = { display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }
+const dashInput: CSSProperties = { width: '100%', padding: '0.75rem', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '0.9375rem', outline: 'none', boxSizing: 'border-box' }
+
 function Dashboard() {
   const navigate = useNavigate()
   const [user, setUser] = useState<any>(null)
@@ -100,7 +113,7 @@ function Dashboard() {
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
-    if (!storedUser) {
+    if (!storedUser || !localStorage.getItem('userToken')) {
       navigate('/login')
       return
     }
@@ -157,6 +170,14 @@ function Dashboard() {
           } catch { facilityData.gallery = [] }
         } else {
           facilityData.gallery = []
+        }
+
+        if (facilityData.repair_categories) {
+          try {
+            facilityData.repair_categories = typeof facilityData.repair_categories === 'string' ? JSON.parse(facilityData.repair_categories) : facilityData.repair_categories
+          } catch { facilityData.repair_categories = [] }
+        } else {
+          facilityData.repair_categories = []
         }
 
         if (facilityData.map_coordinates) {
@@ -282,6 +303,7 @@ function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('user')
+    localStorage.removeItem('userToken')
     navigate('/')
   }
 
@@ -610,7 +632,7 @@ function Dashboard() {
                       color: '#374151',
                       fontWeight: '500',
                       fontSize: '0.875rem'
-                    }}>Nume baza sportivă *</label>
+                    }}>{facility.facility_type === 'coach' ? 'Nume antrenor *' : facility.facility_type === 'field' ? 'Nume bază sportivă *' : 'Nume magazin *'}</label>
                     <input
                       type="text"
                       value={formData.name || ''}
@@ -774,6 +796,88 @@ function Dashboard() {
                       }}
                     />
                   </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>
+                  <div>
+                    <label style={dashLabel}>Județ</label>
+                    <input value={formData.county || ''} onChange={(e) => setFormData({ ...formData, county: e.target.value })} style={dashInput} />
+                  </div>
+                  {(facility.facility_type === 'field' || facility.facility_type === 'coach') && (
+                    <div>
+                      <label style={dashLabel}>{facility.facility_type === 'coach' ? 'Preț / lecție (lei)' : 'Preț / oră (lei)'}</label>
+                      <input type="number" value={facility.facility_type === 'coach' ? (formData.price_per_lesson ?? '') : (formData.price_per_hour ?? '')} onChange={(e) => setFormData({ ...formData, [facility.facility_type === 'coach' ? 'price_per_lesson' : 'price_per_hour']: e.target.value })} style={dashInput} />
+                    </div>
+                  )}
+                </div>
+
+                {(facility.facility_type === 'field' || facility.facility_type === 'equipment_shop') && (
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <label style={dashLabel}>Sport</label>
+                    <select value={formData.sport || ''} onChange={(e) => setFormData({ ...formData, sport: e.target.value })} style={dashInput}>
+                      <option value="">Alege sportul</option>
+                      {SPORT_OPTIONS.map((sport) => <option key={sport} value={sport}>{sport}</option>)}
+                      {formData.sport && !SPORT_OPTIONS.includes(formData.sport) && <option value={formData.sport}>{formData.sport}</option>}
+                    </select>
+                  </div>
+                )}
+
+                {facility.facility_type === 'field' && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem' }}>
+                    {AMENITIES.map((item) => (
+                      <button key={item.key} type="button" onClick={() => setFormData({ ...formData, [item.key]: formData[item.key] ? 0 : 1 })} style={{ border: '1px solid #e5e7eb', borderRadius: '999px', padding: '0.45rem 0.8rem', background: formData[item.key] ? '#ecfdf5' : 'white', color: formData[item.key] ? '#047857' : '#475569', fontWeight: 600, cursor: 'pointer' }}>{item.label}</button>
+                    ))}
+                  </div>
+                )}
+
+                {facility.facility_type === 'coach' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>
+                    <div><label style={dashLabel}>Specializare</label><input value={formData.specialization || ''} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} style={dashInput} /></div>
+                    <div><label style={dashLabel}>Ani de experiență</label><input type="number" value={formData.experience_years ?? ''} onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })} style={dashInput} /></div>
+                    <div><label style={dashLabel}>Certificări</label><input value={formData.certifications || ''} onChange={(e) => setFormData({ ...formData, certifications: e.target.value })} style={dashInput} /></div>
+                    <div><label style={dashLabel}>Limbi</label><input value={formData.languages || ''} onChange={(e) => setFormData({ ...formData, languages: e.target.value })} style={dashInput} /></div>
+                  </div>
+                )}
+
+                {facility.facility_type === 'repair_shop' && (
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '1.5rem' }}>
+                      <div><label style={dashLabel}>Servicii</label><input value={formData.services_offered || ''} onChange={(e) => setFormData({ ...formData, services_offered: e.target.value })} style={dashInput} /></div>
+                      <div><label style={dashLabel}>Mărci</label><input value={formData.brands_serviced || ''} onChange={(e) => setFormData({ ...formData, brands_serviced: e.target.value })} style={dashInput} /></div>
+                      <div><label style={dashLabel}>Timp mediu</label><input value={formData.average_repair_time || ''} onChange={(e) => setFormData({ ...formData, average_repair_time: e.target.value })} style={dashInput} /></div>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem' }}>
+                      {REPAIR_CATEGORIES.map((category) => {
+                        const selected = (formData.repair_categories || []).includes(category)
+                        return (
+                          <button key={category} type="button" onClick={() => {
+                            const current = formData.repair_categories || []
+                            setFormData({ ...formData, repair_categories: selected ? current.filter((item: string) => item !== category) : [...current, category] })
+                          }} style={{ border: '1px solid #e5e7eb', borderRadius: '999px', padding: '0.45rem 0.8rem', background: selected ? '#ecfdf5' : 'white', color: selected ? '#047857' : '#475569', fontWeight: 600, cursor: 'pointer' }}>{category}</button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {facility.facility_type === 'equipment_shop' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>
+                    <div><label style={dashLabel}>Categorii de produse</label><input value={formData.products_categories || ''} onChange={(e) => setFormData({ ...formData, products_categories: e.target.value })} style={dashInput} /></div>
+                    <div><label style={dashLabel}>Mărci</label><input value={formData.brands_available || ''} onChange={(e) => setFormData({ ...formData, brands_available: e.target.value })} style={dashInput} /></div>
+                    <div style={{ alignSelf: 'end' }}>
+                      <button type="button" onClick={() => setFormData({ ...formData, delivery_available: formData.delivery_available ? 0 : 1 })} style={{ border: '1px solid #e5e7eb', borderRadius: '999px', padding: '0.7rem 0.9rem', background: formData.delivery_available ? '#ecfdf5' : 'white', color: formData.delivery_available ? '#047857' : '#475569', fontWeight: 600, cursor: 'pointer' }}>Livrare</button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #e5e7eb' }}>
+                  <button type="button" onClick={() => setFormData({ ...formData, is_company: formData.is_company ? 0 : 1 })} style={{ border: '1px solid #e5e7eb', borderRadius: '999px', padding: '0.45rem 0.8rem', background: formData.is_company ? '#ecfdf5' : 'white', color: formData.is_company ? '#047857' : '#475569', fontWeight: 600, cursor: 'pointer', marginBottom: '1rem' }}>Facturare pe firmă</button>
+                  {!!formData.is_company && (
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '0.6fr 1.4fr', gap: '1.5rem' }}>
+                      <div><label style={dashLabel}>CUI</label><input value={formData.cui || ''} onChange={(e) => setFormData({ ...formData, cui: e.target.value })} style={dashInput} /></div>
+                      <div><label style={dashLabel}>Adresă de facturare</label><input value={formData.billing_address || ''} onChange={(e) => setFormData({ ...formData, billing_address: e.target.value })} style={dashInput} /></div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

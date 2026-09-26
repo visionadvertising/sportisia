@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES } from '../../data/romanian-cities'
 import { ROMANIAN_COUNTIES } from '../../data/romanian-counties'
 import MapSelector from '../../components/MapSelector'
+import { readProfile, sendProfile, type ProfileCompletion } from './completion'
 
 const REPAIR_CATEGORIES = [
   'Rachete tenis',
@@ -18,7 +19,7 @@ const REPAIR_CATEGORIES = [
   'Altele'
 ]
 
-function RegisterRepairShop() {
+function RegisterRepairShop({ completion }: { completion?: ProfileCompletion }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [currentStep, setCurrentStep] = useState(1)
@@ -74,6 +75,28 @@ function RegisterRepairShop() {
 
   // Step 4: Repair Categories
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const profileApplied = useRef(false)
+
+  useEffect(() => {
+    if (!completion || profileApplied.current) return
+    if (!completion.facility || Object.keys(completion.facility).length === 0) return
+    profileApplied.current = true
+    const profile = readProfile(completion.facility)
+    setContactPerson(profile.contactPerson)
+    setPhones(profile.phones)
+    setWhatsapps(profile.whatsapps)
+    setEmails(profile.emails)
+    setCity(profile.city)
+    setCounty(profile.county)
+    setLocation(profile.location)
+    setLocationNotSpecified(profile.locationNotSpecified)
+    setMapCoordinates(profile.mapCoordinates)
+    setName(profile.name)
+    setDescription(profile.description)
+    setWebsite(profile.website)
+    setSocialMedia(profile.socialMedia)
+    if (profile.repairCategories.length > 0) setSelectedCategories(profile.repairCategories)
+  }, [completion])
 
   useEffect(() => {
     const loadCities = async () => {
@@ -279,16 +302,19 @@ function RegisterRepairShop() {
         repairCategories: selectedCategories
       }
 
-      const response = await fetch(`${API_BASE_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
+      const data = completion
+        ? await sendProfile(completion, formData)
+        : await fetch(`${API_BASE_URL}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        }).then((response) => response.json())
 
-      const data = await response.json()
-      console.log('Registration response:', data)
-      
       if (data.success) {
+        if (completion) {
+          completion.onDone()
+          return
+        }
         // Backend returns credentials in data.credentials object
         const username = data.credentials?.username || data.username
         const password = data.credentials?.password || data.password
@@ -305,7 +331,7 @@ function RegisterRepairShop() {
       }
     } catch (err) {
       console.error('Registration error:', err)
-      setError('Eroare la conectarea la server')
+      setError(err instanceof Error ? err.message : 'Eroare la conectarea la server')
     } finally {
       setLoading(false)
     }
@@ -324,9 +350,9 @@ function RegisterRepairShop() {
   
   return (
     <div style={{
-      minHeight: '100vh',
-      background: '#fafafa',
-      padding: isMobile ? '2rem 1rem' : '5rem 2rem'
+      minHeight: completion ? 'auto' : '100vh',
+      background: completion ? 'transparent' : '#fafafa',
+      padding: completion ? 0 : (isMobile ? '2rem 1rem' : '5rem 2rem')
     }}>
       <div style={{
         maxWidth: '1400px',
@@ -438,13 +464,13 @@ function RegisterRepairShop() {
             marginBottom: '0.5rem',
             letterSpacing: '-0.02em',
             lineHeight: '1.2'
-          }}>Înregistrare Magazin Reparații</h1>
+          }}>{completion ? 'Completează profilul' : 'Înregistrare Magazin Reparații'}</h1>
           <p style={{
             fontSize: isMobile ? '0.875rem' : '1rem',
             color: '#64748b',
             marginTop: '0.75rem',
             fontWeight: '400'
-          }}>Completează formularul pentru a-ți înregistra magazinul de reparații</p>
+          }}>{completion ? 'Contact, brand, poze și categoriile de reparații.' : 'Completează formularul pentru a-ți înregistra magazinul de reparații'}</p>
         </div>
 
         {error && (

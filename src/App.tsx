@@ -3,10 +3,6 @@ import { useState, useEffect } from 'react'
 import Home from './pages/Home'
 import Register from './pages/Register'
 import RegisterTypeSelector from './pages/RegisterTypeSelector'
-import RegisterSportsBase from './pages/register/RegisterSportsBase'
-import RegisterRepairShop from './pages/register/RegisterRepairShop'
-import RegisterEquipmentShop from './pages/register/RegisterEquipmentShop'
-import RegisterCoach from './pages/register/RegisterCoach'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AdminLogin from './pages/AdminLogin'
@@ -33,7 +29,15 @@ import FacilitiesList from './pages/FacilitiesList'
 import AllFacilities from './pages/AllFacilities'
 import SuggestFacility from './pages/SuggestFacility'
 import SportsBasePublic from './pages/SportsBasePublic'
+import ClaimFacility from './pages/ClaimFacility'
 import Footer from './components/Footer'
+import BlogList from './pages/BlogList'
+import BlogPost from './pages/BlogPost'
+import BlogPosts from './pages/admin/BlogPosts'
+import BlogPostEdit from './pages/admin/BlogPostEdit'
+import BlogCategories from './pages/admin/BlogCategories'
+import BlogComments from './pages/admin/BlogComments'
+import Contact from './pages/Contact'
 
 function AppContent() {
   const location = useLocation()
@@ -174,6 +178,14 @@ function AppContent() {
                     e.currentTarget.style.color = '#64748b'
                   }}
                 >Magazine Articole</Link>
+                <Link to="/blog" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 0' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#0f172a'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#64748b'
+                  }}
+                >Blog</Link>
                 <div style={{ marginLeft: isMobile ? '0' : '1.5rem', paddingLeft: isMobile ? '0' : '1.5rem', borderLeft: isMobile ? 'none' : '1px solid #e2e8f0', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                   <Link to="/register" style={{ 
                     textDecoration: 'none', 
@@ -207,7 +219,7 @@ function AppContent() {
                     borderRadius: '8px', 
                     background: 'white',
                     border: '1.5px solid #e2e8f0',
-                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                    boxShadow: 'none'
                   }} 
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = '#f8fafc'
@@ -219,7 +231,7 @@ function AppContent() {
                       e.currentTarget.style.background = 'white'
                       e.currentTarget.style.borderColor = '#e2e8f0'
                       e.currentTarget.style.color = '#0f172a'
-                      e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      e.currentTarget.style.boxShadow = 'none'
                     }}
                   >Login</Link>
                 </div>
@@ -240,6 +252,7 @@ function AppContent() {
               <Link to="/antrenori" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Antrenori</Link>
               <Link to="/magazine-reparatii" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Reparații</Link>
               <Link to="/magazine-articole" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Articole</Link>
+              <Link to="/blog" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Blog</Link>
               <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <Link to="/register" onClick={() => setMenuOpen(false)} style={{ 
                   textDecoration: 'none', 
@@ -273,7 +286,7 @@ function AppContent() {
                   border: '1.5px solid #e2e8f0',
                   textAlign: 'center',
                   transition: 'all 0.2s',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                  boxShadow: 'none'
                 }} 
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = '#f8fafc'
@@ -295,43 +308,26 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<RegisterTypeSelector />} />
-        <Route path="/register/baze-sportive" element={<RegisterSportsBase />} />
-        <Route path="/register/antrenori" element={<RegisterCoach />} />
-        <Route path="/register/magazine-reparatii" element={<RegisterRepairShop />} />
-        <Route path="/register/magazine-articole" element={<RegisterEquipmentShop />} />
+        <Route path="/register/baze-sportive" element={<ClaimFacility />} />
+        <Route path="/register/antrenori" element={<ClaimFacility />} />
+        <Route path="/register/magazine-reparatii" element={<ClaimFacility />} />
+        <Route path="/register/magazine-articole" element={<ClaimFacility />} />
         <Route path="/sugereaza" element={<SuggestFacility />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        {/* Specific routes - must be before generic routes */}
-        <Route path="/baza-sportiva/:slug" element={<SportsBasePublic />} />
-        <Route path="/terenuri" element={<FacilitiesList type="field" title="Terenuri Sportive" />} />
-        <Route path="/antrenori" element={<FacilitiesList type="coach" title="Antrenori" />} />
-        <Route path="/magazine-reparatii" element={<FacilitiesList type="repair_shop" title="Magazine Reparații Articole Sportive" />} />
-        <Route path="/magazine-articole" element={<FacilitiesList type="equipment_shop" title="Magazine Articole Sportive" />} />
-        <Route path="/toate" element={<AllFacilities />} />
-        {/* Generic route for all listings - handles all combinations - MUST BE LAST */}
-        <Route path="/:param1/:param2/:param3" element={<AllFacilities />} />
-        <Route path="/:param1/:param2" element={<AllFacilities />} />
-        <Route path="/:param1" element={<AllFacilities />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/*" element={<AdminLayout />}>
-          <Route index element={<PendingSportsBases />} /> {/* Default admin route */}
-          {/* Baze Sportive */}
+          <Route index element={<PendingSportsBases />} />
           <Route path="pending-sports-bases" element={<PendingSportsBases />} />
           <Route path="approved-sports-bases" element={<ApprovedSportsBases />} />
-          {/* Antrenori */}
           <Route path="pending-coaches" element={<PendingCoaches />} />
           <Route path="approved-coaches" element={<ApprovedCoaches />} />
-          {/* Magazine Reparații */}
           <Route path="pending-repair-shops" element={<PendingRepairShops />} />
           <Route path="approved-repair-shops" element={<ApprovedRepairShops />} />
-          {/* Magazine Articole */}
           <Route path="pending-equipment-shops" element={<PendingEquipmentShops />} />
           <Route path="approved-equipment-shops" element={<ApprovedEquipmentShops />} />
-          {/* Legacy routes - kept for backward compatibility */}
           <Route path="pending" element={<PendingFacilities />} />
           <Route path="approved" element={<ApprovedFacilities />} />
-          {/* Common routes */}
           <Route path="facilities/:id" element={<FacilityDetails />} />
           <Route path="suggestions" element={<Suggestions />} />
           <Route path="seo-pages" element={<SEOPages />} />
@@ -340,7 +336,32 @@ function AppContent() {
           <Route path="users" element={<Users />} />
           <Route path="settings" element={<SiteSettings />} />
           <Route path="smtp-config" element={<SMTPConfig />} />
+          <Route path="blog" element={<BlogPosts />} />
+          <Route path="blog/nou" element={<BlogPostEdit />} />
+          <Route path="blog/categorii" element={<BlogCategories />} />
+          <Route path="blog/comentarii" element={<BlogComments />} />
+          <Route path="blog/:id" element={<BlogPostEdit />} />
         </Route>
+        {/* Specific routes - must be before generic routes */}
+        <Route path="/revendica/:facilityId/plata/:claimId" element={<ClaimFacility />} />
+        <Route path="/revendica/:facilityId/completare/:claimId" element={<ClaimFacility />} />
+        <Route path="/revendica/:facilityId" element={<ClaimFacility />} />
+        <Route path="/baza-sportiva/:slug" element={<SportsBasePublic />} />
+        <Route path="/facility/:id/:name" element={<SportsBasePublic />} />
+        <Route path="/facility/:slug" element={<SportsBasePublic />} />
+        <Route path="/terenuri" element={<FacilitiesList type="field" title="Terenuri Sportive" />} />
+        <Route path="/antrenori" element={<FacilitiesList type="coach" title="Antrenori" />} />
+        <Route path="/magazine-reparatii" element={<FacilitiesList type="repair_shop" title="Magazine Reparații Articole Sportive" />} />
+        <Route path="/magazine-articole" element={<FacilitiesList type="equipment_shop" title="Magazine Articole Sportive" />} />
+        <Route path="/toate" element={<AllFacilities />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/blog" element={<BlogList />} />
+        <Route path="/blog/categorie/:slug" element={<BlogList />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
+        {/* Generic route for all listings - handles all combinations - MUST BE LAST */}
+        <Route path="/:param1/:param2/:param3" element={<AllFacilities />} />
+        <Route path="/:param1/:param2" element={<AllFacilities />} />
+        <Route path="/:param1" element={<AllFacilities />} />
       </Routes>
       
       {/* Footer - doar pentru rute non-admin */}

@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES } from '../../data/romanian-cities'
 import { ROMANIAN_COUNTIES } from '../../data/romanian-counties'
 import MapSelector from '../../components/MapSelector'
+import { readProfile, sendProfile, type ProfileCompletion } from './completion'
 
 interface PricingDetail {
   title: string
@@ -52,7 +53,7 @@ interface SportsField {
   timeSlots: TimeSlot[] // Selected time slots with prices and status
 }
 
-function RegisterSportsBase() {
+function RegisterSportsBase({ completion }: { completion?: ProfileCompletion }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [currentStep, setCurrentStep] = useState(1)
@@ -172,6 +173,28 @@ function RegisterSportsBase() {
   const [hasChangingRoom, setHasChangingRoom] = useState(false)
   const [hasAirConditioning, setHasAirConditioning] = useState(false)
   const [hasLighting, setHasLighting] = useState(false)
+  const profileApplied = useRef(false)
+
+  useEffect(() => {
+    if (!completion || profileApplied.current) return
+    if (!completion.facility || Object.keys(completion.facility).length === 0) return
+    profileApplied.current = true
+    const profile = readProfile(completion.facility)
+    setContactPerson(profile.contactPerson)
+    setPhones(profile.phones)
+    setWhatsapps(profile.whatsapps)
+    setEmails(profile.emails)
+    setCity(profile.city)
+    setCounty(profile.county)
+    setLocation(profile.location)
+    setLocationNotSpecified(profile.locationNotSpecified)
+    setMapCoordinates(profile.mapCoordinates)
+    setName(profile.name)
+    setDescription(profile.description)
+    setWebsite(profile.website)
+    setSocialMedia(profile.socialMedia)
+    if (profile.sportsFields.length > 0) setSportsFields(profile.sportsFields as SportsField[])
+  }, [completion])
 
   useEffect(() => {
     const loadCities = async () => {
@@ -777,34 +800,29 @@ function RegisterSportsBase() {
         gallery: galleryFiles.length > 0 ? `${galleryFiles.length} files` : null 
       })
       
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        body: formData
-        // Don't set Content-Type header - browser will set it automatically with boundary for FormData
-      })
+      const response = completion
+        ? await sendProfile(completion, formData).then((data) => ({ ok: true, data })).catch((error: Error) => ({ ok: false, data: { success: false, error: error.message } }))
+        : await fetch('/api/register', {
+          method: 'POST',
+          body: formData
+        }).then(async (result) => {
+          const payload = await result.json().catch(() => ({ success: false, error: 'Răspuns invalid de la server' }))
+          return { ok: result.ok, data: payload }
+        })
 
-      console.log('Response status:', response.status, response.statusText)
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Registration failed - HTTP error:', response.status, errorText)
-        try {
-          const errorData = JSON.parse(errorText)
-          const errorMessage = errorData.error || `Eroare la înregistrare (${response.status})`
-          setError(errorMessage)
-          setShowErrorModal(true)
-        } catch {
-          const errorMessage = `Eroare la înregistrare: ${errorText || response.statusText}`
-          setError(errorMessage)
-          setShowErrorModal(true)
-        }
+      const data = response.data
+      if (!response.ok || !data.success) {
+        const errorMessage = data.error || 'Nu am putut salva profilul.'
+        setError(errorMessage)
+        setShowErrorModal(true)
         return
       }
 
-      const data = await response.json()
-      console.log('Registration response:', data)
-      
       if (data.success) {
+        if (completion) {
+          completion.onDone()
+          return
+        }
         // Backend returns credentials in data.credentials object
         const username = data.credentials?.username || data.username
         const password = data.credentials?.password || data.password
@@ -849,9 +867,9 @@ function RegisterSportsBase() {
   
   return (
     <div style={{
-      minHeight: '100vh',
-      background: '#fafafa',
-      padding: isMobile ? '2rem 1rem' : '5rem 2rem'
+      minHeight: completion ? 'auto' : '100vh',
+      background: completion ? 'transparent' : '#fafafa',
+      padding: completion ? 0 : (isMobile ? '2rem 1rem' : '5rem 2rem')
     }}>
       <div style={{
         maxWidth: '1400px',
@@ -878,13 +896,13 @@ function RegisterSportsBase() {
             marginBottom: '0.5rem',
             letterSpacing: '-0.02em',
             lineHeight: '1.2'
-          }}>Înregistrare Baze Sportive</h1>
+          }}>{completion ? 'Completează profilul' : 'Înregistrare Baze Sportive'}</h1>
           <p style={{
             fontSize: isMobile ? '0.875rem' : '1rem',
             color: '#64748b',
             marginTop: '0.75rem',
             fontWeight: '400'
-          }}>Completează formularul pentru a-ți înregistra baza sportivă</p>
+          }}>{completion ? 'Contact, locație, brand, poze, apoi terenurile cu program și prețuri.' : 'Completează formularul pentru a-ți înregistra baza sportivă'}</p>
         </div>
 
         {/* Progress Steps */}

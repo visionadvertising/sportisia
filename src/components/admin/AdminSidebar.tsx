@@ -41,6 +41,9 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
     if (currentPath.includes('seo-pages')) {
       groups.push('seo-pages')
     }
+    if (currentPath.includes('/admin/blog')) {
+      groups.push('Blog')
+    }
     
     setExpandedGroups(new Set(groups))
   }, [location.pathname])
@@ -92,6 +95,15 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
         { path: '/admin/seo-pages?category=equipment_shop', label: 'SEO - Magazine Articole', icon: '' },
         { path: '/admin/seo-pages', label: 'SEO - Toate', icon: '' }
       ]
+    },
+    {
+      label: 'Blog',
+      icon: '',
+      submenu: [
+        { path: '/admin/blog', label: 'Articole', icon: '' },
+        { path: '/admin/blog/categorii', label: 'Categorii', icon: '' },
+        { path: '/admin/blog/comentarii', label: 'Comentarii', icon: '' }
+      ]
     }
   ]
 
@@ -123,6 +135,9 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
     }
     if (path === '/admin/suggestions') {
       return location.pathname === path
+    }
+    if (path === '/admin/blog') {
+      return location.pathname === '/admin/blog' || location.pathname === '/admin/blog/nou' || /^\/admin\/blog\/\d+$/.test(location.pathname)
     }
     return location.pathname === path
   }

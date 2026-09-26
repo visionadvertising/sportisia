@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import { ROMANIAN_CITIES } from '../../data/romanian-cities'
 import { ROMANIAN_COUNTIES } from '../../data/romanian-counties'
 import MapSelector from '../../components/MapSelector'
+import { readProfile, sendProfile, type ProfileCompletion } from './completion'
 
 const KNOWN_SPORTS = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans']
 
-function RegisterCoach() {
+function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [currentStep, setCurrentStep] = useState(1)
@@ -89,6 +90,34 @@ function RegisterCoach() {
     saturday: { isOpen: null, openTime: '09:00', closeTime: '18:00' },
     sunday: { isOpen: null, openTime: '09:00', closeTime: '18:00' }
   })
+  const profileApplied = useRef(false)
+
+  useEffect(() => {
+    if (!completion || profileApplied.current) return
+    if (!completion.facility || Object.keys(completion.facility).length === 0) return
+    profileApplied.current = true
+    const profile = readProfile(completion.facility)
+    setContactPerson(profile.contactPerson)
+    setPhones(profile.phones)
+    setWhatsapps(profile.whatsapps)
+    setEmails(profile.emails)
+    setCity(profile.city)
+    setCounty(profile.county)
+    setLocation(profile.location)
+    setLocationNotSpecified(profile.locationNotSpecified)
+    setMapCoordinates(profile.mapCoordinates)
+    setName(profile.name)
+    setDescription(profile.description)
+    setWebsite(profile.website)
+    setSocialMedia(profile.socialMedia)
+    if (profile.sport) setSport(profile.sport)
+    setSpecialization(profile.specialization)
+    setExperienceYears(profile.experienceYears)
+    setPricePerLesson(profile.pricePerLesson)
+    setCertifications(profile.certifications)
+    setLanguages(profile.languages)
+    if (profile.openingHours) setOpeningHours(profile.openingHours)
+  }, [completion])
 
   useEffect(() => {
     const loadCities = async () => {
@@ -330,16 +359,19 @@ function RegisterCoach() {
         languages: languages || null
       }
 
-      const response = await fetch(`${API_BASE_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
+      const data = completion
+        ? await sendProfile(completion, formData)
+        : await fetch(`${API_BASE_URL}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        }).then((response) => response.json())
 
-      const data = await response.json()
-      console.log('Registration response:', data)
-      
       if (data.success) {
+        if (completion) {
+          completion.onDone()
+          return
+        }
         // Backend returns credentials in data.credentials object
         const username = data.credentials?.username || data.username
         const password = data.credentials?.password || data.password
@@ -356,7 +388,7 @@ function RegisterCoach() {
       }
     } catch (err) {
       console.error('Registration error:', err)
-      setError('Eroare la conectarea la server')
+      setError(err instanceof Error ? err.message : 'Eroare la conectarea la server')
     } finally {
       setLoading(false)
     }
@@ -373,9 +405,9 @@ function RegisterCoach() {
 
   return (
     <div style={{
-      minHeight: '100vh',
-      background: '#fafafa',
-      padding: isMobile ? '2rem 1rem' : '5rem 2rem'
+      minHeight: completion ? 'auto' : '100vh',
+      background: completion ? 'transparent' : '#fafafa',
+      padding: completion ? 0 : (isMobile ? '2rem 1rem' : '5rem 2rem')
     }}>
       <div style={{
         maxWidth: '1400px',
@@ -487,13 +519,13 @@ function RegisterCoach() {
             marginBottom: '0.5rem',
             letterSpacing: '-0.02em',
             lineHeight: '1.2'
-          }}>Înregistrare Antrenor</h1>
+          }}>{completion ? 'Completează profilul' : 'Înregistrare Antrenor'}</h1>
           <p style={{
             fontSize: isMobile ? '0.875rem' : '1rem',
             color: '#64748b',
             marginTop: '0.75rem',
             fontWeight: '400'
-          }}>Completează formularul pentru a-ți înregistra profilul de antrenor</p>
+          }}>{completion ? 'Contact, brand, poze, sport și detaliile de antrenor.' : 'Completează formularul pentru a-ți înregistra profilul de antrenor'}</p>
         </div>
 
         {error && (

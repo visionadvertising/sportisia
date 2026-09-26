@@ -442,17 +442,8 @@ function SEOFacilityPage() {
                   background: 'white',
                   borderRadius: '12px',
                   overflow: 'hidden',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  border: '1px solid #eef2f6',
                   cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)'
-                  e.currentTarget.style.boxShadow = '0 8px 12px rgba(0,0,0,0.15)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)'
                 }}
               >
                 {(facility.image_url || facility.logo_url) && (

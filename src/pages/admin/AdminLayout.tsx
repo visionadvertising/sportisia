@@ -9,7 +9,8 @@ function AdminLayout() {
   useEffect(() => {
     // Check if admin is logged in
     const storedAdmin = localStorage.getItem('admin')
-    if (!storedAdmin) {
+    const adminToken = localStorage.getItem('adminToken')
+    if (!storedAdmin || !adminToken) {
       console.log('AdminLayout: No admin token, redirecting to login')
       navigate('/admin/login', { replace: true })
       return
@@ -19,6 +20,7 @@ function AdminLayout() {
 
   const handleLogout = () => {
     localStorage.removeItem('admin')
+    localStorage.removeItem('adminToken')
     navigate('/admin/login')
   }
 

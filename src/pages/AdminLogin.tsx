@@ -31,6 +31,7 @@ function AdminLogin() {
       if (data.success) {
         // Salvează admin în localStorage
         localStorage.setItem('admin', JSON.stringify(data.admin))
+        if (data.token) localStorage.setItem('adminToken', data.token)
         // Redirect la dashboard
         navigate('/admin')
       } else {

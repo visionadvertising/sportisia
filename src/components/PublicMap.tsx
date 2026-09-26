@@ -20,9 +20,10 @@ L.Marker.prototype.options.icon = DefaultIcon
 interface PublicMapProps {
   coordinates: { lat: number; lng: number } | null
   location?: string
+  zoom?: number
 }
 
-function PublicMap({ coordinates, location }: PublicMapProps) {
+function PublicMap({ coordinates, location, zoom }: PublicMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
   const markerRef = useRef<L.Marker | null>(null)
@@ -38,7 +39,7 @@ function PublicMap({ coordinates, location }: PublicMapProps) {
     if (coordinates) {
       initialLat = coordinates.lat
       initialLng = coordinates.lng
-      initialZoom = 15
+      initialZoom = zoom || 15
     }
 
     const map = L.map(mapRef.current).setView([initialLat, initialLng], initialZoom)
@@ -66,7 +67,7 @@ function PublicMap({ coordinates, location }: PublicMapProps) {
         mapInstanceRef.current.remove()
       }
     }
-  }, [coordinates, location])
+  }, [coordinates, location, zoom])
 
   return (
     <div
@@ -75,9 +76,9 @@ function PublicMap({ coordinates, location }: PublicMapProps) {
         width: '100%',
         height: '100%',
         minHeight: '400px',
-        borderRadius: '12px',
+        borderRadius: '16px',
         overflow: 'hidden',
-        border: '1px solid #e2e8f0',
+        border: '1px solid #eef2f6',
         position: 'relative',
         zIndex: 1
       }}

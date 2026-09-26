@@ -7,6 +7,7 @@ interface SMTPConfig {
   secure: boolean
   user: string
   password: string
+  passwordSet?: boolean
   from: string
 }
 
@@ -85,7 +86,7 @@ function SMTPConfig() {
         return
       }
 
-      if (!config.host || !config.port || !config.user || !config.password) {
+      if (!config.host || !config.port || !config.user || (!config.password && !config.passwordSet)) {
         setError('Toate câmpurile sunt obligatorii (Host, Port, User, Password)')
         setSaving(false)
         return

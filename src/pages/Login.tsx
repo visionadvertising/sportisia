@@ -26,13 +26,29 @@ function Login() {
       const data = await response.json()
 
       if (data.success) {
-        // Salvează user în localStorage
         localStorage.setItem('user', JSON.stringify(data.user))
-        // Redirect la dashboard
+        if (data.token) localStorage.setItem('userToken', data.token)
         navigate('/dashboard')
-      } else {
-        setError(data.error || 'Credențiale invalide')
+        return
       }
+
+      const adminResponse = await fetch(`${API_BASE_URL}/admin/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      })
+      const adminData = await adminResponse.json()
+
+      if (adminData.success) {
+        localStorage.setItem('admin', JSON.stringify(adminData.admin))
+        if (adminData.token) localStorage.setItem('adminToken', adminData.token)
+        navigate('/admin')
+        return
+      }
+
+      setError(data.error || adminData.error || 'Credențiale invalide')
     } catch (err) {
       setError('Eroare la conectarea la server')
       console.error('Login error:', err)

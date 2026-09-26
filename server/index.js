@@ -4,7 +4,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
+import { existsSync, readFileSync, mkdirSync, writeFileSync, appendFileSync } from 'fs'
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
 import multer from 'multer'
@@ -49,16 +49,105 @@ const app = express()
 // Folosește PORT din environment sau 3001
 const PORT = process.env.PORT || process.env.NODE_PORT || 3001
 
-// CORS - permite requests de la același domeniu
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173,http://127.0.0.1:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
+    return callback(null, false)
+  },
   credentials: true
 }))
 
-// Parse JSON and URL-encoded bodies (for non-file fields in FormData)
-// Increased limits to handle file uploads via FormData
-app.use(express.json({ limit: '50mb' }))
-app.use(express.urlencoded({ extended: true, limit: '50mb' }))
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN')
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  next()
+})
+
+app.use(express.json({ limit: '2mb' }))
+app.use(express.urlencoded({ extended: true, limit: '2mb' }))
+
+function loadAuthSecret() {
+  if (process.env.AUTH_SECRET && process.env.AUTH_SECRET.length >= 32) return process.env.AUTH_SECRET
+  const secret = crypto.randomBytes(32).toString('hex')
+  appendFileSync(envPath, `\nAUTH_SECRET=${secret}\n`)
+  process.env.AUTH_SECRET = secret
+  console.log('✅ AUTH_SECRET was created in server/.env')
+  return secret
+}
+
+const AUTH_SECRET = loadAuthSecret()
+const rateBuckets = new Map()
+
+function clientIp(req) {
+  return req.socket?.remoteAddress || 'unknown'
+}
+
+function rateLimit(req, res, bucket, limit, windowMs) {
+  const now = Date.now()
+  const key = `${bucket}:${clientIp(req)}`
+  const recent = (rateBuckets.get(key) || []).filter((stamp) => now - stamp < windowMs)
+  if (recent.length >= limit) {
+    res.status(429).json({ success: false, error: 'Prea multe cereri. Încearcă din nou mai târziu.' })
+    return false
+  }
+  recent.push(now)
+  rateBuckets.set(key, recent)
+  return true
+}
+
+function signToken(payload, ttlSeconds) {
+  const body = Buffer.from(JSON.stringify({ ...payload, exp: Date.now() + ttlSeconds * 1000 })).toString('base64url')
+  const signature = crypto.createHmac('sha256', AUTH_SECRET).update(body).digest('base64url')
+  return `${body}.${signature}`
+}
+
+function verifyToken(token, role) {
+  if (!token || !token.includes('.')) return null
+  const [body, signature] = token.split('.')
+  const expected = crypto.createHmac('sha256', AUTH_SECRET).update(body).digest('base64url')
+  const left = Buffer.from(signature)
+  const right = Buffer.from(expected)
+  if (left.length !== right.length || !crypto.timingSafeEqual(left, right)) return null
+  try {
+    const data = JSON.parse(Buffer.from(body, 'base64url').toString())
+    if (!data.exp || data.exp < Date.now()) return null
+    if (role && data.role !== role) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+function bearerToken(req) {
+  const header = req.headers.authorization || ''
+  return header.startsWith('Bearer ') ? header.slice(7).trim() : ''
+}
+
+function requireAdmin(req, res, next) {
+  const session = verifyToken(bearerToken(req), 'admin')
+  if (!session) {
+    res.status(401).json({ success: false, error: 'Neautorizat' })
+    return
+  }
+  req.admin = session
+  next()
+}
+
+function requireUser(req, res) {
+  const session = verifyToken(bearerToken(req), 'user')
+  if (!session) {
+    res.status(401).json({ success: false, error: 'Neautorizat' })
+    return null
+  }
+  return session
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -66,17 +155,21 @@ const storage = multer.diskStorage({
     const uploadDir = path.join(__dirname, 'uploads')
     const logoDir = path.join(uploadDir, 'logos')
     const galleryDir = path.join(uploadDir, 'gallery')
+    const blogDir = path.join(uploadDir, 'blog')
     
     // Create directories if they don't exist
     if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true })
     if (!existsSync(logoDir)) mkdirSync(logoDir, { recursive: true })
     if (!existsSync(galleryDir)) mkdirSync(galleryDir, { recursive: true })
+    if (!existsSync(blogDir)) mkdirSync(blogDir, { recursive: true })
     
     // Determine destination based on field name
     if (file.fieldname === 'logo') {
       cb(null, logoDir)
     } else if (file.fieldname === 'gallery') {
       cb(null, galleryDir)
+    } else if (file.fieldname === 'image' || file.fieldname === 'cover') {
+      cb(null, blogDir)
     } else {
       cb(null, uploadDir)
     }
@@ -379,6 +472,86 @@ async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `)
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS blog_categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        parent_id INT NULL,
+        description TEXT,
+        meta_title VARCHAR(255),
+        meta_description TEXT,
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_parent (parent_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS blog_posts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        category_id INT NULL,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        excerpt TEXT,
+        content LONGTEXT,
+        cover_image VARCHAR(500),
+        status ENUM('draft', 'published') DEFAULT 'draft',
+        published_at DATETIME NULL,
+        author_name VARCHAR(255),
+        tags JSON,
+        meta_title VARCHAR(255),
+        meta_description TEXT,
+        canonical_url VARCHAR(500),
+        og_image VARCHAR(500),
+        robots VARCHAR(50) DEFAULT 'index,follow',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_status (status),
+        INDEX idx_category (category_id),
+        INDEX idx_published (published_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS blog_comments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        post_id INT NOT NULL,
+        author_name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        body TEXT NOT NULL,
+        rating TINYINT NULL,
+        status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_post (post_id),
+        INDEX idx_status (status),
+        FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    try {
+      await pool.query('ALTER TABLE blog_comments ADD COLUMN parent_id INT NULL')
+    } catch (error) {
+      if (error.code !== 'ER_DUP_FIELDNAME') throw error
+    }
+    try {
+      await pool.query('ALTER TABLE blog_comments ADD INDEX idx_comment_parent (parent_id)')
+    } catch (error) {
+      if (error.code !== 'ER_DUP_KEYNAME') throw error
+    }
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS contact_messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(120) NOT NULL,
+        email VARCHAR(180) NOT NULL,
+        subject VARCHAR(180) NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
     // Create facility suggestions table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS facility_suggestions (
@@ -394,15 +567,26 @@ async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `)
 
-    // Create default admin user if it doesn't exist
-    const [adminExists] = await pool.query('SELECT id FROM admin_users WHERE username = ?', ['admin'])
-    if (adminExists.length === 0) {
-      const defaultPassword = hashPassword('admin123') // Default password - CHANGE THIS!
-      await pool.query(
-        'INSERT INTO admin_users (username, password, email) VALUES (?, ?, ?)',
-        ['admin', defaultPassword, 'admin@sportisia.ro']
-      )
-      console.log('✅ Default admin user created (username: admin, password: admin123 - CHANGE THIS!)')
+    const weakAdminHash = hashPassword('admin123')
+    const [adminExists] = await pool.query('SELECT id, password FROM admin_users WHERE username = ?', ['admin'])
+    if (adminExists.length === 0 || adminExists[0].password === weakAdminHash) {
+      let password = process.env.ADMIN_PASSWORD
+      if (!password || password === 'admin123') {
+        password = crypto.randomBytes(18).toString('base64url')
+        appendFileSync(envPath, `\nADMIN_PASSWORD=${password}\n`)
+        process.env.ADMIN_PASSWORD = password
+      }
+      const hashed = hashPassword(password)
+      if (adminExists.length === 0) {
+        await pool.query(
+          'INSERT INTO admin_users (username, password, email) VALUES (?, ?, ?)',
+          ['admin', hashed, 'admin@sportisia.ro']
+        )
+        console.log('✅ Admin user created. Password saved in server/.env as ADMIN_PASSWORD')
+      } else {
+        await pool.query('UPDATE admin_users SET password = ? WHERE id = ?', [hashed, adminExists[0].id])
+        console.log('⚠️ Default admin password replaced. New password is in server/.env as ADMIN_PASSWORD')
+      }
     }
 
     // Initialize site settings
@@ -412,6 +596,37 @@ async function initDatabase() {
         'INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?)',
         ['site_logo', '']
       )
+    }
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS facility_claims (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        facility_id INT NOT NULL,
+        owner_name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        phone VARCHAR(30) NOT NULL,
+        username VARCHAR(100) NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        status ENUM('awaiting_payment', 'paid', 'completed') NOT NULL DEFAULT 'awaiting_payment',
+        plan_code VARCHAR(50) NOT NULL DEFAULT 'owner_monthly',
+        amount DECIMAL(10, 2) NOT NULL,
+        currency VARCHAR(10) NOT NULL DEFAULT 'RON',
+        payment_provider VARCHAR(50) NOT NULL DEFAULT 'netopia',
+        payment_status ENUM('pending', 'simulated', 'paid') NOT NULL DEFAULT 'pending',
+        payment_reference VARCHAR(100),
+        user_id INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        paid_at TIMESTAMP NULL,
+        INDEX idx_claim_facility (facility_id),
+        INDEX idx_claim_status (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    try {
+      await pool.query('ALTER TABLE facility_claims ADD COLUMN claim_token_hash CHAR(64) NULL')
+    } catch (error) {
+      if (error.code !== 'ER_DUP_FIELDNAME') throw error
     }
 
     console.log('✅ Tables created or already exist')
@@ -513,12 +728,51 @@ async function addMissingColumns() {
       await pool.query(`ALTER TABLE facilities ADD COLUMN emails JSON AFTER email`)
       console.log('✅ Added emails column')
     }
+
+    if (!existingColumns.includes('is_verified')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN is_verified TINYINT(1) NOT NULL DEFAULT 0`)
+      console.log('✅ Added is_verified column')
+    }
     
     // Add repair_categories for repair shops
     if (!existingColumns.includes('repair_categories')) {
       await pool.query(`ALTER TABLE facilities ADD COLUMN repair_categories JSON AFTER average_repair_time`)
       console.log('✅ Added repair_categories column')
     }
+    if (!existingColumns.includes('is_company')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN is_company TINYINT(1) NOT NULL DEFAULT 0`)
+    }
+    if (!existingColumns.includes('cui')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN cui VARCHAR(20) NULL`)
+    }
+    if (!existingColumns.includes('billing_address')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN billing_address VARCHAR(255) NULL`)
+    }
+    await pool.query(`
+      UPDATE facilities f
+      INNER JOIN facility_claims c ON c.facility_id = f.id
+      INNER JOIN (
+        SELECT facility_id, MAX(id) AS id
+        FROM facility_claims
+        WHERE status = 'completed'
+        GROUP BY facility_id
+      ) latest ON latest.id = c.id
+      SET f.is_company = c.is_company,
+          f.cui = COALESCE(f.cui, c.cui),
+          f.billing_address = COALESCE(f.billing_address, c.billing_address)
+    `)
+    await pool.query(`
+      UPDATE facilities
+      SET phones = JSON_ARRAY(phone)
+      WHERE (phones IS NULL OR JSON_LENGTH(phones) = 0)
+        AND phone IS NOT NULL AND phone != '' AND phone != '0000000000'
+    `)
+    await pool.query(`
+      UPDATE facilities
+      SET emails = JSON_ARRAY(email)
+      WHERE (emails IS NULL OR JSON_LENGTH(emails) = 0)
+        AND email IS NOT NULL AND email != ''
+    `)
 
     // Check pending_cities table for county column
     const [pendingCitiesColumns] = await pool.query(`
@@ -534,6 +788,44 @@ async function addMissingColumns() {
       await pool.query(`ALTER TABLE pending_cities ADD COLUMN county VARCHAR(100) AFTER city`)
       console.log('✅ Added county column to pending_cities')
     }
+
+    const [claimColumns] = await pool.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'facility_claims'
+    `)
+    const existingClaimColumns = claimColumns.map((col) => col.COLUMN_NAME)
+    if (!existingClaimColumns.includes('is_company')) {
+      await pool.query(`ALTER TABLE facility_claims ADD COLUMN is_company TINYINT(1) NOT NULL DEFAULT 0`)
+    }
+    if (!existingClaimColumns.includes('cui')) {
+      await pool.query(`ALTER TABLE facility_claims ADD COLUMN cui VARCHAR(20) NULL`)
+    }
+    if (!existingClaimColumns.includes('billing_address')) {
+      await pool.query(`ALTER TABLE facility_claims ADD COLUMN billing_address VARCHAR(255) NULL`)
+    }
+
+    if (!existingColumns.includes('subscription_ends_at')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN subscription_ends_at DATETIME NULL`)
+      console.log('✅ Added subscription_ends_at column')
+    }
+    await pool.query(`
+      UPDATE facilities f
+      INNER JOIN (
+        SELECT c.facility_id, c.paid_at, c.plan_code
+        FROM facility_claims c
+        INNER JOIN (
+          SELECT facility_id, MAX(id) AS max_id
+          FROM facility_claims
+          WHERE status IN ('paid', 'completed') AND paid_at IS NOT NULL
+          GROUP BY facility_id
+        ) latest ON latest.max_id = c.id
+      ) src ON src.facility_id = f.id
+      SET f.subscription_ends_at = DATE_ADD(src.paid_at, INTERVAL IF(src.plan_code = 'owner_yearly', 12, 1) MONTH),
+          f.is_verified = 1
+      WHERE f.subscription_ends_at IS NULL
+    `)
   } catch (error) {
     console.error('❌ Error adding missing columns:', error)
     // Don't throw, just log the error
@@ -625,8 +917,9 @@ initDatabase()
 // Geocoding endpoints - proxy pentru Nominatim (evită CORS)
 app.get('/api/geocode', async (req, res) => {
   try {
+    if (!rateLimit(req, res, 'geocode', 30, 60 * 1000)) return
     const { q, city } = req.query
-    if (!q) {
+    if (!q || String(q).length > 180) {
       return res.status(400).json({ error: 'Query parameter "q" is required' })
     }
 
@@ -663,14 +956,16 @@ app.get('/api/geocode', async (req, res) => {
     res.json(Array.isArray(data) ? data : [])
   } catch (error) {
     console.error('Geocoding error:', error)
-    res.status(500).json({ error: 'Geocoding failed', details: error.message })
+    res.status(500).json({ error: 'Geocoding failed' })
   }
 })
 
 app.get('/api/reverse-geocode', async (req, res) => {
   try {
-    const { lat, lon } = req.query
-    if (!lat || !lon) {
+    if (!rateLimit(req, res, 'geocode', 30, 60 * 1000)) return
+    const lat = Number(req.query.lat)
+    const lon = Number(req.query.lon)
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
       return res.status(400).json({ error: 'Query parameters "lat" and "lon" are required' })
     }
 
@@ -696,22 +991,407 @@ app.get('/api/reverse-geocode', async (req, res) => {
     res.json(data)
   } catch (error) {
     console.error('Reverse geocoding error:', error)
-    res.status(500).json({ error: 'Reverse geocoding failed', details: error.message })
+    res.status(500).json({ error: 'Reverse geocoding failed' })
   }
 })
 
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'API is running', 
-    timestamp: new Date().toISOString(),
-    port: PORT,
-    env: process.env.NODE_ENV || 'development',
-    database: dbInitialized && pool ? 'connected' : 'not initialized'
-  })
+function slugifyRo(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 180)
+}
+
+async function uniqueBlogSlug(table, base, ignoreId) {
+  const root = slugifyRo(base) || 'articol'
+  for (let n = 0; n < 200; n += 1) {
+    const candidate = n === 0 ? root : `${root}-${n}`
+    const [rows] = await pool.query(`SELECT id FROM ${table} WHERE slug = ?`, [candidate])
+    if (rows.length === 0 || (ignoreId && Number(rows[0].id) === Number(ignoreId))) return candidate
+  }
+  return `${root}-${Date.now()}`
+}
+
+function parseTags(value) {
+  if (!value) return []
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean)
+  try {
+    const parsed = JSON.parse(value)
+    if (Array.isArray(parsed)) return parsed.map((item) => String(item).trim()).filter(Boolean)
+  } catch {
+    return String(value).split(',').map((item) => item.trim()).filter(Boolean)
+  }
+  return []
+}
+
+app.get('/api/blog/categories', async (_req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM blog_categories ORDER BY sort_order ASC, name ASC')
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.get('/api/blog/posts', async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1)
+    const limit = Math.min(24, Math.max(1, parseInt(req.query.limit, 10) || 12))
+    const offset = (page - 1) * limit
+    const q = String(req.query.q || '').trim()
+    const categorySlug = String(req.query.category || '').trim()
+    const params = []
+    let where = `p.status = 'published' AND (p.published_at IS NULL OR p.published_at <= NOW())`
+    if (q) {
+      where += ' AND (p.title LIKE ? OR p.excerpt LIKE ?)'
+      params.push(`%${q}%`, `%${q}%`)
+    }
+    if (categorySlug) {
+      const [cats] = await pool.query('SELECT id FROM blog_categories WHERE slug = ?', [categorySlug])
+      if (cats.length === 0) {
+        return res.json({ success: true, data: [], pagination: { page, limit, total: 0, pages: 1 } })
+      }
+      const [children] = await pool.query('SELECT id FROM blog_categories WHERE parent_id = ?', [cats[0].id])
+      const ids = [cats[0].id, ...children.map((row) => row.id)]
+      where += ` AND p.category_id IN (${ids.map(() => '?').join(',')})`
+      params.push(...ids)
+    }
+    const [countRows] = await pool.query(
+      `SELECT COUNT(*) AS total FROM blog_posts p WHERE ${where}`,
+      params
+    )
+    const [rows] = await pool.query(
+      `SELECT p.id, p.title, p.slug, p.excerpt, p.cover_image, p.published_at, p.author_name, p.tags,
+              c.name AS category_name, c.slug AS category_slug
+       FROM blog_posts p
+       LEFT JOIN blog_categories c ON c.id = p.category_id
+       WHERE ${where}
+       ORDER BY COALESCE(p.published_at, p.created_at) DESC
+       LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    )
+    const total = countRows[0].total
+    res.json({
+      success: true,
+      data: rows.map((row) => ({ ...row, tags: parseTags(row.tags) })),
+      pagination: { page, limit, total, pages: Math.max(1, Math.ceil(total / limit)) }
+    })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.get('/api/blog/posts/:slug', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT p.*, c.name AS category_name, c.slug AS category_slug
+       FROM blog_posts p
+       LEFT JOIN blog_categories c ON c.id = p.category_id
+       WHERE p.slug = ? AND p.status = 'published' AND (p.published_at IS NULL OR p.published_at <= NOW())`,
+      [req.params.slug]
+    )
+    if (rows.length === 0) return res.status(404).json({ success: false, error: 'Articolul nu există.' })
+    const post = rows[0]
+    post.tags = parseTags(post.tags)
+    const [comments] = await pool.query(
+      `SELECT id, parent_id, author_name, body, rating, created_at FROM blog_comments
+       WHERE post_id = ? AND status = 'approved' ORDER BY created_at ASC`,
+      [post.id]
+    )
+    const [related] = await pool.query(
+      `SELECT id, title, slug, excerpt, cover_image, published_at
+       FROM blog_posts
+       WHERE status = 'published' AND id != ? AND category_id <=> ?
+       ORDER BY COALESCE(published_at, created_at) DESC LIMIT 3`,
+      [post.id, post.category_id]
+    )
+    res.json({ success: true, data: { ...post, comments, related } })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.post('/api/blog/posts/:slug/comments', async (req, res) => {
+  try {
+    if (!rateLimit(req, res, 'blog-comment', 5, 60 * 60 * 1000)) return
+    const name = String(req.body.authorName || '').trim().slice(0, 80)
+    const email = String(req.body.email || '').trim().toLowerCase().slice(0, 180)
+    const body = String(req.body.body || '').trim().slice(0, 2000)
+    let rating = req.body.rating ? parseInt(req.body.rating, 10) : null
+    const parentId = req.body.parentId ? parseInt(req.body.parentId, 10) : null
+    if (!name || !email || body.length < 5) {
+      return res.status(400).json({ success: false, error: 'Completează numele, emailul și un mesaj de cel puțin 5 caractere.' })
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, error: 'Email invalid.' })
+    }
+    if (rating !== null && (rating < 1 || rating > 5)) {
+      return res.status(400).json({ success: false, error: 'Nota trebuie să fie între 1 și 5.' })
+    }
+    const [posts] = await pool.query('SELECT id FROM blog_posts WHERE slug = ? AND status = \'published\'', [req.params.slug])
+    if (posts.length === 0) return res.status(404).json({ success: false, error: 'Articolul nu există.' })
+    if (parentId) {
+      const [parents] = await pool.query('SELECT id, parent_id, post_id, status FROM blog_comments WHERE id = ?', [parentId])
+      if (parents.length === 0 || parents[0].post_id !== posts[0].id || parents[0].status !== 'approved' || parents[0].parent_id) {
+        return res.status(400).json({ success: false, error: 'Poți răspunde doar la un comentariu deja publicat.' })
+      }
+      rating = null
+    }
+    await pool.query(
+      'INSERT INTO blog_comments (post_id, parent_id, author_name, email, body, rating, status) VALUES (?, ?, ?, ?, ?, ?, \'pending\')',
+      [posts[0].id, parentId, name, email, body, rating]
+    )
+    res.json({ success: true, message: 'Comentariul a fost trimis și așteaptă aprobarea.' })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.post('/api/contact', async (req, res) => {
+  try {
+    if (!rateLimit(req, res, 'contact', 5, 60 * 60 * 1000)) return
+    const name = String(req.body.name || '').trim().slice(0, 120)
+    const email = String(req.body.email || '').trim().toLowerCase().slice(0, 180)
+    const subject = String(req.body.subject || '').trim().slice(0, 180)
+    const message = String(req.body.message || '').trim().slice(0, 4000)
+    if (!name || !subject || message.length < 10) {
+      return res.status(400).json({ success: false, error: 'Completează numele, subiectul și un mesaj de cel puțin 10 caractere.' })
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, error: 'Email invalid.' })
+    }
+    await pool.query(
+      'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)',
+      [name, email, subject, message]
+    )
+    const escape = (value) => value.replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[char]))
+    await sendEmail(
+      'contact@sportisia.ro',
+      `Contact Sportisia: ${subject}`,
+      `<p><strong>${escape(name)}</strong> (${escape(email)})</p><p>${escape(message).replace(/\n/g, '<br>')}</p>`
+    )
+    res.json({ success: true, message: 'Mesajul a fost trimis. Îți răspundem pe email.' })
+  } catch (error) {
+    console.error('Error saving contact message:', error)
+    res.status(500).json({ success: false, error: 'Nu am putut trimite mesajul.' })
+  }
+})
+
+app.use('/api/admin', (req, res, next) => {
+  if (req.method === 'POST' && req.path === '/login') return next()
+  return requireAdmin(req, res, next)
+})
+
+app.post('/api/admin/blog/upload', upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, error: 'Lipsește imaginea.' })
+  res.json({ success: true, data: { url: `/uploads/blog/${req.file.filename}` } })
+})
+
+app.get('/api/admin/blog/categories', async (_req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM blog_categories ORDER BY sort_order ASC, name ASC')
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.post('/api/admin/blog/categories', async (req, res) => {
+  try {
+    const name = String(req.body.name || '').trim()
+    if (!name) return res.status(400).json({ success: false, error: 'Numele este obligatoriu.' })
+    const parentId = req.body.parentId ? parseInt(req.body.parentId, 10) : null
+    if (parentId) {
+      const [parent] = await pool.query('SELECT parent_id FROM blog_categories WHERE id = ?', [parentId])
+      if (parent.length === 0) return res.status(400).json({ success: false, error: 'Categoria părinte nu există.' })
+      if (parent[0].parent_id) return res.status(400).json({ success: false, error: 'Subcategoriile nu pot avea la rândul lor copii.' })
+    }
+    const slug = await uniqueBlogSlug('blog_categories', req.body.slug || name)
+    const [result] = await pool.query(
+      `INSERT INTO blog_categories (name, slug, parent_id, description, meta_title, meta_description, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [name, slug, parentId, req.body.description || null, req.body.metaTitle || null, req.body.metaDescription || null, parseInt(req.body.sortOrder, 10) || 0]
+    )
+    res.json({ success: true, data: { id: result.insertId, slug } })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.put('/api/admin/blog/categories/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10)
+    const name = String(req.body.name || '').trim()
+    if (!name) return res.status(400).json({ success: false, error: 'Numele este obligatoriu.' })
+    const parentId = req.body.parentId ? parseInt(req.body.parentId, 10) : null
+    if (parentId === id) return res.status(400).json({ success: false, error: 'O categorie nu poate fi părintele ei.' })
+    if (parentId) {
+      const [parent] = await pool.query('SELECT parent_id FROM blog_categories WHERE id = ?', [parentId])
+      if (parent.length === 0 || parent[0].parent_id) {
+        return res.status(400).json({ success: false, error: 'Poți alege doar o categorie principală ca părinte.' })
+      }
+    }
+    const slug = await uniqueBlogSlug('blog_categories', req.body.slug || name, id)
+    await pool.query(
+      `UPDATE blog_categories SET name = ?, slug = ?, parent_id = ?, description = ?, meta_title = ?, meta_description = ?, sort_order = ? WHERE id = ?`,
+      [name, slug, parentId, req.body.description || null, req.body.metaTitle || null, req.body.metaDescription || null, parseInt(req.body.sortOrder, 10) || 0, id]
+    )
+    res.json({ success: true, data: { slug } })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.delete('/api/admin/blog/categories/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10)
+    await pool.query('UPDATE blog_categories SET parent_id = NULL WHERE parent_id = ?', [id])
+    await pool.query('UPDATE blog_posts SET category_id = NULL WHERE category_id = ?', [id])
+    await pool.query('DELETE FROM blog_categories WHERE id = ?', [id])
+    res.json({ success: true })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.get('/api/admin/blog/posts', async (req, res) => {
+  try {
+    const status = String(req.query.status || '')
+    const q = String(req.query.q || '').trim()
+    const params = []
+    let where = '1=1'
+    if (status === 'draft' || status === 'published') {
+      where += ' AND p.status = ?'
+      params.push(status)
+    }
+    if (q) {
+      where += ' AND p.title LIKE ?'
+      params.push(`%${q}%`)
+    }
+    const [rows] = await pool.query(
+      `SELECT p.id, p.title, p.slug, p.status, p.published_at, p.updated_at, p.cover_image, c.name AS category_name
+       FROM blog_posts p
+       LEFT JOIN blog_categories c ON c.id = p.category_id
+       WHERE ${where}
+       ORDER BY p.updated_at DESC`,
+      params
+    )
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.get('/api/admin/blog/posts/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM blog_posts WHERE id = ?', [req.params.id])
+    if (rows.length === 0) return res.status(404).json({ success: false, error: 'Articolul nu există.' })
+    const post = rows[0]
+    post.tags = parseTags(post.tags)
+    res.json({ success: true, data: post })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+async function saveBlogPost(req, res, id) {
+  const title = String(req.body.title || '').trim()
+  if (!title) return res.status(400).json({ success: false, error: 'Titlul este obligatoriu.' })
+  const status = req.body.status === 'published' ? 'published' : 'draft'
+  const slug = await uniqueBlogSlug('blog_posts', req.body.slug || title, id)
+  const tags = JSON.stringify(parseTags(req.body.tags))
+  const categoryId = req.body.categoryId ? parseInt(req.body.categoryId, 10) : null
+  const publishedAt = req.body.publishedAt || (status === 'published' ? new Date() : null)
+  const values = [
+    categoryId,
+    title,
+    slug,
+    req.body.excerpt || null,
+    req.body.content || '',
+    req.body.coverImage || null,
+    status,
+    publishedAt,
+    req.body.authorName || 'Admin',
+    tags,
+    req.body.metaTitle || null,
+    req.body.metaDescription || null,
+    req.body.canonicalUrl || null,
+    req.body.ogImage || null,
+    req.body.robots || 'index,follow'
+  ]
+  if (id) {
+    await pool.query(
+      `UPDATE blog_posts SET category_id = ?, title = ?, slug = ?, excerpt = ?, content = ?, cover_image = ?, status = ?, published_at = ?, author_name = ?, tags = ?, meta_title = ?, meta_description = ?, canonical_url = ?, og_image = ?, robots = ? WHERE id = ?`,
+      [...values, id]
+    )
+    return res.json({ success: true, data: { id: Number(id), slug } })
+  }
+  const [result] = await pool.query(
+    `INSERT INTO blog_posts (category_id, title, slug, excerpt, content, cover_image, status, published_at, author_name, tags, meta_title, meta_description, canonical_url, og_image, robots)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    values
+  )
+  res.json({ success: true, data: { id: result.insertId, slug } })
+}
+
+app.post('/api/admin/blog/posts', (req, res) => saveBlogPost(req, res))
+app.put('/api/admin/blog/posts/:id', (req, res) => saveBlogPost(req, res, req.params.id))
+
+app.delete('/api/admin/blog/posts/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM blog_posts WHERE id = ?', [req.params.id])
+    res.json({ success: true })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.get('/api/admin/blog/comments', async (req, res) => {
+  try {
+    const status = String(req.query.status || '')
+    const params = []
+    let where = '1=1'
+    if (['pending', 'approved', 'rejected'].includes(status)) {
+      where += ' AND c.status = ?'
+      params.push(status)
+    }
+    const [rows] = await pool.query(
+      `SELECT c.*, p.title AS post_title, p.slug AS post_slug
+       FROM blog_comments c
+       JOIN blog_posts p ON p.id = c.post_id
+       WHERE ${where}
+       ORDER BY c.created_at DESC`,
+      params
+    )
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.put('/api/admin/blog/comments/:id', async (req, res) => {
+  try {
+    const status = String(req.body.status || '')
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ success: false, error: 'Status invalid.' })
+    }
+    await pool.query('UPDATE blog_comments SET status = ? WHERE id = ?', [status, req.params.id])
+    res.json({ success: true })
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.get('/api/health', (_req, res) => {
+  res.json({ success: true })
 })
 
 // API Routes
+
+app.use('/api/fields', requireAdmin)
 
 // GET all fields
 app.get('/api/fields', async (req, res) => {
@@ -808,6 +1488,7 @@ app.post('/api/register', upload.fields([
   { name: 'gallery', maxCount: 10 }
 ]), async (req, res) => {
   try {
+    if (!rateLimit(req, res, 'legacy-register', 5, 60 * 60 * 1000)) return
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
@@ -1238,6 +1919,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
+    if (!rateLimit(req, res, 'login', 10, 15 * 60 * 1000)) return
     const { username, password } = req.body
 
     if (!username || !password) {
@@ -1252,8 +1934,8 @@ app.post('/api/login', async (req, res) => {
       `SELECT u.id, u.username, u.email, u.facility_id, u.facility_type, f.*
        FROM users u
        LEFT JOIN facilities f ON u.facility_id = f.id AND u.facility_type = f.facility_type
-       WHERE u.username = ? AND u.password = ?`,
-      [username, hashedPassword]
+       WHERE (u.username = ? OR u.email = ?) AND u.password = ?`,
+      [username, String(username).trim().toLowerCase(), hashedPassword]
     )
 
     if (rows.length === 0) {
@@ -1270,6 +1952,7 @@ app.post('/api/login', async (req, res) => {
     res.json({
       success: true,
       message: 'Autentificare reușită',
+      token: signToken({ role: 'user', id: user.id, username: user.username, facilityId: user.facility_id }, 14 * 24 * 60 * 60),
       user: {
         id: user.id,
         username: user.username,
@@ -1300,20 +1983,15 @@ app.get('/api/my-facility', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const { username } = req.query
-    if (!username) {
-      return res.status(400).json({
-        success: false,
-        error: 'Username este obligatoriu'
-      })
-    }
+    const session = requireUser(req, res)
+    if (!session) return
 
     const [rows] = await pool.query(
       `SELECT f.*, u.username, u.email as user_email
        FROM facilities f
        INNER JOIN users u ON f.id = u.facility_id AND f.facility_type = u.facility_type
        WHERE u.username = ?`,
-      [username]
+      [session.username]
     )
 
     if (rows.length === 0) {
@@ -1337,20 +2015,16 @@ app.post('/api/users/reset-password', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const { username } = req.body
-    if (!username) {
-      return res.status(400).json({
-        success: false,
-        error: 'Username este obligatoriu'
-      })
-    }
+    if (!rateLimit(req, res, 'reset-password', 5, 60 * 60 * 1000)) return
+    const session = requireUser(req, res)
+    if (!session) return
 
     const newPassword = crypto.randomBytes(8).toString('hex')
     const hashedPassword = hashPassword(newPassword)
 
     const [result] = await pool.query(
-      'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE username = ?',
-      [hashedPassword, username]
+      'UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND username = ?',
+      [hashedPassword, session.id, session.username]
     )
 
     if (result.affectedRows === 0) {
@@ -1379,16 +2053,57 @@ app.put('/api/facilities/:id', async (req, res) => {
     }
 
     const facilityId = req.params.id
-    const {
-      name, city, county, location, locationNotSpecified, mapCoordinates, contactPerson,
-      phone, phones, whatsapp, whatsapps, email, emails, description, imageUrl,
-      logoUrl, socialMedia, gallery,
-      sport, pricePerHour, pricingDetails, hasParking, hasShower, hasChangingRoom, hasAirConditioning, hasLighting,
-      specialization, experienceYears, pricePerLesson, certifications, languages,
-      servicesOffered, brandsServiced, averageRepairTime,
-      productsCategories, brandsAvailable, deliveryAvailable,
-      website, openingHours, status
-    } = req.body
+    const auth = verifyToken(bearerToken(req))
+    const isAdmin = auth?.role === 'admin'
+    const isOwner = auth?.role === 'user' && Number(auth.facilityId) === Number(facilityId)
+    if (!isAdmin && !isOwner) {
+      return res.status(401).json({ success: false, error: 'Neautorizat' })
+    }
+    const body = req.body
+    const name = body.name
+    const city = body.city
+    const county = body.county
+    const location = body.location
+    const locationNotSpecified = body.locationNotSpecified ?? body.location_not_specified
+    const mapCoordinates = body.mapCoordinates ?? body.map_coordinates
+    const contactPerson = body.contactPerson ?? body.contact_person
+    const phone = body.phone
+    const phones = body.phones
+    const whatsapp = body.whatsapp
+    const whatsapps = body.whatsapps
+    const email = body.email
+    const emails = body.emails
+    const description = body.description
+    const imageUrl = body.imageUrl ?? body.image_url
+    const logoUrl = body.logoUrl ?? body.logo_url
+    const socialMedia = body.socialMedia ?? body.social_media
+    const gallery = body.gallery
+    const sport = body.sport
+    const pricePerHour = body.pricePerHour ?? body.price_per_hour
+    const pricingDetails = body.pricingDetails ?? body.pricing_details
+    const hasParking = body.hasParking ?? body.has_parking
+    const hasShower = body.hasShower ?? body.has_shower
+    const hasChangingRoom = body.hasChangingRoom ?? body.has_changing_room
+    const hasAirConditioning = body.hasAirConditioning ?? body.has_air_conditioning
+    const hasLighting = body.hasLighting ?? body.has_lighting
+    const specialization = body.specialization
+    const experienceYears = body.experienceYears ?? body.experience_years
+    const pricePerLesson = body.pricePerLesson ?? body.price_per_lesson
+    const certifications = body.certifications
+    const languages = body.languages
+    const servicesOffered = body.servicesOffered ?? body.services_offered
+    const brandsServiced = body.brandsServiced ?? body.brands_serviced
+    const averageRepairTime = body.averageRepairTime ?? body.average_repair_time
+    const repairCategories = body.repairCategories ?? body.repair_categories
+    const productsCategories = body.productsCategories ?? body.products_categories
+    const brandsAvailable = body.brandsAvailable ?? body.brands_available
+    const deliveryAvailable = body.deliveryAvailable ?? body.delivery_available
+    const website = body.website
+    const openingHours = body.openingHours ?? body.opening_hours
+    const status = body.status
+    const isCompany = body.isCompany ?? body.is_company
+    const cui = body.cui
+    const billingAddress = body.billingAddress ?? body.billing_address
 
     // Build update query dynamically based on facility type
     const updates = []
@@ -1401,11 +2116,27 @@ app.put('/api/facilities/:id', async (req, res) => {
     if (locationNotSpecified !== undefined) { updates.push('location_not_specified = ?'); values.push(locationNotSpecified) }
     if (mapCoordinates !== undefined) { updates.push('map_coordinates = ?'); values.push(JSON.stringify(mapCoordinates)) }
     if (contactPerson !== undefined) { updates.push('contact_person = ?'); values.push(contactPerson) }
-    if (phone) { updates.push('phone = ?'); values.push(phone) }
+    const parseList = (value) => {
+      if (Array.isArray(value)) return value
+      if (typeof value !== 'string' || !value) return null
+      try {
+        const parsed = JSON.parse(value)
+        return Array.isArray(parsed) ? parsed : null
+      } catch {
+        return null
+      }
+    }
+    const phoneList = parseList(phones)
+    const primaryPhone = Array.isArray(phoneList) ? String(phoneList.find((item) => String(item || '').trim()) || '').trim() : ''
+    if (primaryPhone) { updates.push('phone = ?'); values.push(primaryPhone) }
+    else if (phone) { updates.push('phone = ?'); values.push(phone) }
     if (phones !== undefined) { updates.push('phones = ?'); values.push(typeof phones === 'string' ? phones : JSON.stringify(phones)) }
     if (whatsapp !== undefined) { updates.push('whatsapp = ?'); values.push(whatsapp) }
     if (whatsapps !== undefined) { updates.push('whatsapps = ?'); values.push(typeof whatsapps === 'string' ? whatsapps : JSON.stringify(whatsapps)) }
-    if (email !== undefined) { updates.push('email = ?'); values.push(email) }
+    const emailList = parseList(emails)
+    const primaryEmail = Array.isArray(emailList) ? String(emailList.find((item) => String(item || '').trim()) || '').trim() : ''
+    if (primaryEmail) { updates.push('email = ?'); values.push(primaryEmail) }
+    else if (email !== undefined) { updates.push('email = ?'); values.push(email) }
     if (emails !== undefined) { updates.push('emails = ?'); values.push(typeof emails === 'string' ? emails : JSON.stringify(emails)) }
     if (description !== undefined) { updates.push('description = ?'); values.push(description) }
     if (imageUrl !== undefined) { updates.push('image_url = ?'); values.push(imageUrl) }
@@ -1414,11 +2145,14 @@ app.put('/api/facilities/:id', async (req, res) => {
     if (gallery !== undefined) { updates.push('gallery = ?'); values.push(typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) }
     if (website !== undefined) { updates.push('website = ?'); values.push(website) }
     if (openingHours !== undefined) { updates.push('opening_hours = ?'); values.push(openingHours) }
-    if (status) { updates.push('status = ?'); values.push(status) }
+    if (status && isAdmin) { updates.push('status = ?'); values.push(status) }
 
     // Field specific
     if (sport !== undefined) { updates.push('sport = ?'); values.push(sport) }
-    if (pricePerHour !== undefined) { updates.push('price_per_hour = ?'); values.push(parseFloat(pricePerHour)) }
+    if (pricePerHour !== undefined && pricePerHour !== '') {
+      const parsedPrice = parseFloat(pricePerHour)
+      if (!Number.isNaN(parsedPrice)) { updates.push('price_per_hour = ?'); values.push(parsedPrice) }
+    }
     if (pricingDetails !== undefined) { updates.push('pricing_details = ?'); values.push(JSON.stringify(pricingDetails)) }
     if (hasParking !== undefined) { updates.push('has_parking = ?'); values.push(hasParking) }
     if (hasShower !== undefined) { updates.push('has_shower = ?'); values.push(hasShower) }
@@ -1428,8 +2162,14 @@ app.put('/api/facilities/:id', async (req, res) => {
 
     // Coach specific
     if (specialization !== undefined) { updates.push('specialization = ?'); values.push(specialization) }
-    if (experienceYears !== undefined) { updates.push('experience_years = ?'); values.push(experienceYears) }
-    if (pricePerLesson !== undefined) { updates.push('price_per_lesson = ?'); values.push(parseFloat(pricePerLesson)) }
+    if (experienceYears !== undefined && experienceYears !== '') {
+      const parsedYears = parseInt(experienceYears, 10)
+      if (!Number.isNaN(parsedYears)) { updates.push('experience_years = ?'); values.push(parsedYears) }
+    }
+    if (pricePerLesson !== undefined && pricePerLesson !== '') {
+      const parsedLesson = parseFloat(pricePerLesson)
+      if (!Number.isNaN(parsedLesson)) { updates.push('price_per_lesson = ?'); values.push(parsedLesson) }
+    }
     if (certifications !== undefined) { updates.push('certifications = ?'); values.push(certifications) }
     if (languages !== undefined) { updates.push('languages = ?'); values.push(languages) }
 
@@ -1437,11 +2177,18 @@ app.put('/api/facilities/:id', async (req, res) => {
     if (servicesOffered !== undefined) { updates.push('services_offered = ?'); values.push(servicesOffered) }
     if (brandsServiced !== undefined) { updates.push('brands_serviced = ?'); values.push(brandsServiced) }
     if (averageRepairTime !== undefined) { updates.push('average_repair_time = ?'); values.push(averageRepairTime) }
+    if (repairCategories !== undefined) {
+      updates.push('repair_categories = ?')
+      values.push(typeof repairCategories === 'string' ? repairCategories : JSON.stringify(repairCategories))
+    }
 
     // Equipment shop specific
     if (productsCategories !== undefined) { updates.push('products_categories = ?'); values.push(productsCategories) }
     if (brandsAvailable !== undefined) { updates.push('brands_available = ?'); values.push(brandsAvailable) }
-    if (deliveryAvailable !== undefined) { updates.push('delivery_available = ?'); values.push(deliveryAvailable) }
+    if (deliveryAvailable !== undefined) { updates.push('delivery_available = ?'); values.push(deliveryAvailable ? 1 : 0) }
+    if (isCompany !== undefined) { updates.push('is_company = ?'); values.push(isCompany ? 1 : 0) }
+    if (cui !== undefined) { updates.push('cui = ?'); values.push(String(cui || '').replace(/\s/g, '').toUpperCase() || null) }
+    if (billingAddress !== undefined) { updates.push('billing_address = ?'); values.push(billingAddress || null) }
 
     if (updates.length === 0) {
       return res.status(400).json({
@@ -1457,6 +2204,28 @@ app.put('/api/facilities/:id', async (req, res) => {
       values
     )
 
+    if (isOwner && primaryEmail) {
+      await pool.query('UPDATE users SET email = ? WHERE id = ?', [primaryEmail, auth.id])
+    }
+    const [typeRows] = await pool.query('SELECT facility_type, name FROM facilities WHERE id = ?', [facilityId])
+    if (typeRows[0]?.facility_type === 'field' && (sport !== undefined || pricePerHour !== undefined)) {
+      const nextPrice = pricePerHour !== undefined && pricePerHour !== '' ? parseFloat(pricePerHour) : null
+      if (nextPrice !== null && !Number.isNaN(nextPrice)) {
+        await pool.query('UPDATE facility_sports_fields SET price_per_hour = ? WHERE facility_id = ?', [nextPrice, facilityId])
+      }
+      if (sport) {
+        const [fields] = await pool.query('SELECT id FROM facility_sports_fields WHERE facility_id = ?', [facilityId])
+        if (fields.length === 1) {
+          await pool.query('UPDATE facility_sports_fields SET sport_type = ? WHERE id = ?', [sport, fields[0].id])
+        } else if (fields.length === 0) {
+          await pool.query(
+            'INSERT INTO facility_sports_fields (facility_id, field_name, sport_type, price_per_hour) VALUES (?, ?, ?, ?)',
+            [facilityId, name || typeRows[0].name || 'Teren', sport, nextPrice]
+          )
+        }
+      }
+    }
+
     res.json({
       success: true,
       message: 'Facilitatea a fost actualizată cu succes'
@@ -1464,6 +2233,602 @@ app.put('/api/facilities/:id', async (req, res) => {
   } catch (error) {
     console.error('Error updating facility:', error)
     res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+const SUBSCRIPTION_PLANS = [
+  {
+    code: 'owner_monthly',
+    name: 'Lunar',
+    amount: 49,
+    currency: 'RON',
+    interval: 'lună',
+    discountPercent: 0
+  },
+  {
+    code: 'owner_yearly',
+    name: 'Anual',
+    amount: 394,
+    compareAt: 588,
+    currency: 'RON',
+    interval: 'an',
+    discountPercent: 33
+  }
+]
+
+function getPlan(code) {
+  return SUBSCRIPTION_PLANS.find((plan) => plan.code === code) || SUBSCRIPTION_PLANS[0]
+}
+
+function subscriptionMonths(planCode) {
+  return planCode === 'owner_yearly' ? 12 : 1
+}
+
+function attachProfileTier(facility) {
+  const ends = facility.subscription_ends_at ? new Date(facility.subscription_ends_at) : null
+  const active = ends && !Number.isNaN(ends.getTime()) && ends.getTime() > Date.now()
+  if (active) facility.profile_tier = 'recommended'
+  else if (Number(facility.is_verified) === 1) facility.profile_tier = 'verified'
+  else facility.profile_tier = 'unverified'
+  facility.can_claim = facility.profile_tier === 'unverified'
+}
+
+function netopiaIsConfigured() {
+  return Boolean(process.env.NETOPIA_SIGNATURE && process.env.NETOPIA_API_KEY)
+}
+
+app.get('/api/subscription-plan', (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      plans: SUBSCRIPTION_PLANS,
+      paymentMode: netopiaIsConfigured() ? 'netopia' : 'simulation'
+    }
+  })
+})
+
+app.post('/api/registrations', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    if (!rateLimit(req, res, 'register', 8, 60 * 60 * 1000)) return
+    const facilityType = String(req.body.facilityType || '').trim()
+    const name = String(req.body.facilityName || '').trim()
+    const city = String(req.body.city || '').trim()
+    const allowed = ['field', 'coach', 'repair_shop', 'equipment_shop']
+    if (!allowed.includes(facilityType) || !name || !city) {
+      return res.status(400).json({ success: false, error: 'Completează tipul, denumirea și orașul.' })
+    }
+    const phone = String(req.body.phone || '').trim()
+    const email = String(req.body.email || '').trim().toLowerCase()
+    const ownerName = `${String(req.body.firstName || '').trim()} ${String(req.body.lastName || '').trim()}`.trim()
+    const [created] = await pool.query(
+      `INSERT INTO facilities (facility_type, name, city, phone, email, contact_person, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
+      [facilityType, name, city, phone || '0000000000', email || null, ownerName || null]
+    )
+    req.params.id = String(created.insertId)
+    return createFacilityClaim(req, res)
+  } catch (error) {
+    console.error('Error starting registration:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+async function createFacilityClaim(req, res) {
+  try {
+    if (!rateLimit(req, res, 'claim', 8, 60 * 60 * 1000)) return
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const facilityId = parseInt(req.params.id, 10)
+    const firstName = String(req.body.firstName || '').trim()
+    const lastName = String(req.body.lastName || '').trim()
+    const ownerName = String(req.body.ownerName || `${firstName} ${lastName}`).trim()
+    const email = String(req.body.email || '').trim().toLowerCase()
+    const phone = String(req.body.phone || '').trim()
+    const password = String(req.body.password || '')
+    const plan = getPlan(req.body.planCode)
+    const isCompany = req.body.isCompany === true || req.body.isCompany === 1 || req.body.isCompany === 'true'
+    const cui = String(req.body.cui || '').replace(/\s/g, '').toUpperCase()
+    const billingAddress = String(req.body.billingAddress || '').trim()
+
+    if (!firstName || !lastName || !email || !phone || !password) {
+      return res.status(400).json({ success: false, error: 'Completează numele, prenumele, emailul, telefonul și parola.' })
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, error: 'Email invalid.' })
+    }
+    if (!(password.length >= 9 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password))) {
+      return res.status(400).json({ success: false, error: 'Parola trebuie să aibă minim 9 caractere, o literă mică, o literă mare, o cifră și un caracter special.' })
+    }
+    if (isCompany) {
+      if (!/^(RO)?\d{2,10}$/.test(cui)) {
+        return res.status(400).json({ success: false, error: 'CUI invalid. Exemplu: RO12345678.' })
+      }
+      if (billingAddress.length < 5) {
+        return res.status(400).json({ success: false, error: 'Completează adresa de facturare.' })
+      }
+    }
+
+    const [facilities] = await pool.query('SELECT id, name, facility_type, is_verified, status FROM facilities WHERE id = ?', [facilityId])
+    if (facilities.length === 0) {
+      return res.status(404).json({ success: false, error: 'Facilitatea nu există.' })
+    }
+    const facility = facilities[0]
+    if (Number(facility.is_verified) === 1) {
+      return res.status(409).json({ success: false, error: 'Această facilitate este deja revendicată și verificată.' })
+    }
+
+    const [existingClaims] = await pool.query(
+      `SELECT id, status, username, password_hash FROM facility_claims
+       WHERE facility_id = ? AND email = ? AND status IN ('awaiting_payment', 'paid')
+       ORDER BY id DESC LIMIT 1`,
+      [facilityId, email]
+    )
+    let username = existingClaims[0]?.username || ''
+    if (!username) {
+      const base = (email.split('@')[0] || 'proprietar').toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 24) || 'proprietar'
+      username = base.length >= 3 ? base : `${base}user`
+      for (let n = 0; n < 50; n += 1) {
+        const candidate = n === 0 ? username : `${username}${n}`.slice(0, 30)
+        const [taken] = await pool.query('SELECT id FROM users WHERE username = ?', [candidate])
+        if (taken.length === 0) {
+          username = candidate
+          break
+        }
+      }
+    }
+    if (existingClaims.length > 0) {
+      if (existingClaims[0].password_hash !== hashPassword(password)) {
+        return res.status(401).json({ success: false, error: 'Există deja o cerere pentru acest email. Parola nu corespunde.' })
+      }
+      if (existingClaims[0].status === 'awaiting_payment') {
+        await pool.query(
+          'UPDATE facility_claims SET plan_code = ?, amount = ?, is_company = ?, cui = ?, billing_address = ? WHERE id = ?',
+          [plan.code, plan.amount, isCompany ? 1 : 0, isCompany ? cui : null, isCompany ? billingAddress : null, existingClaims[0].id]
+        )
+      }
+      const claimToken = crypto.randomBytes(32).toString('base64url')
+      await pool.query('UPDATE facility_claims SET claim_token_hash = ? WHERE id = ?', [crypto.createHash('sha256').update(claimToken).digest('hex'), existingClaims[0].id])
+      return res.json({
+        success: true,
+        data: {
+          claimId: existingClaims[0].id,
+          facilityId,
+          status: existingClaims[0].status,
+          plan,
+          resumed: true,
+          claimToken
+        }
+      })
+    }
+
+    const claimToken = crypto.randomBytes(32).toString('base64url')
+    const [result] = await pool.query(
+      `INSERT INTO facility_claims
+        (facility_id, owner_name, email, phone, username, password_hash, status, plan_code, amount, currency, payment_provider, is_company, cui, billing_address, claim_token_hash)
+       VALUES (?, ?, ?, ?, ?, ?, 'awaiting_payment', ?, ?, ?, 'netopia', ?, ?, ?, ?)`,
+      [facilityId, ownerName, email, phone, username, hashPassword(password), plan.code, plan.amount, plan.currency, isCompany ? 1 : 0, isCompany ? cui : null, isCompany ? billingAddress : null, crypto.createHash('sha256').update(claimToken).digest('hex')]
+    )
+
+    res.json({
+      success: true,
+      data: {
+        claimId: result.insertId,
+        facilityId,
+        status: 'awaiting_payment',
+        facility: { id: facility.id, name: facility.name, facilityType: facility.facility_type },
+        plan,
+        claimToken
+      }
+    })
+  } catch (error) {
+    console.error('Error creating claim:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+}
+
+app.post('/api/facilities/:id/claim', (req, res) => createFacilityClaim(req, res))
+
+async function claimTokenMatches(req) {
+  const token = String(req.headers['x-claim-token'] || '')
+  if (!token) return false
+  const [rows] = await pool.query('SELECT claim_token_hash FROM facility_claims WHERE id = ?', [req.params.id])
+  if (rows.length === 0 || !rows[0].claim_token_hash) return false
+  const actual = crypto.createHash('sha256').update(token).digest('hex')
+  const left = Buffer.from(rows[0].claim_token_hash)
+  const right = Buffer.from(actual)
+  return left.length === right.length && crypto.timingSafeEqual(left, right)
+}
+
+app.get('/api/claims/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    if (!(await claimTokenMatches(req))) {
+      return res.status(401).json({ success: false, error: 'Cheia revendicării lipsește sau nu este validă.' })
+    }
+    const [rows] = await pool.query(
+      `SELECT c.id, c.facility_id, c.owner_name, c.email, c.phone, c.username, c.status,
+              c.plan_code, c.amount, c.currency, c.payment_provider, c.payment_status, c.payment_reference,
+              f.name AS facility_name, f.facility_type, f.city, f.is_verified
+       FROM facility_claims c
+       JOIN facilities f ON f.id = c.facility_id
+       WHERE c.id = ?`,
+      [req.params.id]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Revendicarea nu există.' })
+    }
+    res.json({
+      success: true,
+      data: {
+        ...rows[0],
+        plans: SUBSCRIPTION_PLANS,
+        plan: getPlan(rows[0].plan_code),
+        paymentMode: netopiaIsConfigured() ? 'netopia' : 'simulation'
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching claim:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+app.post('/api/claims/:id/pay', async (req, res) => {
+  const connection = await pool.getConnection()
+  try {
+    if (!(await claimTokenMatches(req))) {
+      return res.status(401).json({ success: false, error: 'Cheia revendicării lipsește sau nu este validă.' })
+    }
+    const allowSimulate = !netopiaIsConfigured() && process.env.NODE_ENV !== 'production'
+    if (!allowSimulate) {
+      return res.status(403).json({ success: false, error: 'Plata se confirmă doar prin procesatorul de plăți.' })
+    }
+    if (!req.body?.simulate) {
+      return res.status(400).json({ success: false, error: 'Confirmă plata simulată.' })
+    }
+
+    await connection.beginTransaction()
+    const [claims] = await connection.query('SELECT * FROM facility_claims WHERE id = ? FOR UPDATE', [req.params.id])
+    if (claims.length === 0) {
+      await connection.rollback()
+      return res.status(404).json({ success: false, error: 'Revendicarea nu există.' })
+    }
+    const claim = claims[0]
+    if (claim.status === 'completed') {
+      await connection.rollback()
+      return res.status(409).json({ success: false, error: 'Revendicarea este deja finalizată.' })
+    }
+
+    let userId = claim.user_id
+    if (!userId) {
+      const [existingUser] = await connection.query('SELECT id FROM users WHERE username = ?', [claim.username])
+      if (existingUser.length > 0) {
+        userId = existingUser[0].id
+      } else {
+        const [facilityRows] = await connection.query('SELECT facility_type FROM facilities WHERE id = ?', [claim.facility_id])
+        const [userResult] = await connection.query(
+          `INSERT INTO users (username, password, email, facility_id, facility_type) VALUES (?, ?, ?, ?, ?)`,
+          [claim.username, claim.password_hash, claim.email, claim.facility_id, facilityRows[0].facility_type]
+        )
+        userId = userResult.insertId
+      }
+    }
+
+    const plan = getPlan(req.body.planCode || claim.plan_code)
+    const reference = claim.payment_reference || `SIM-${Date.now()}`
+    await connection.query(
+      `UPDATE facility_claims
+       SET status = 'paid', payment_status = 'simulated', payment_reference = ?, user_id = ?,
+           plan_code = ?, amount = ?, paid_at = COALESCE(paid_at, CURRENT_TIMESTAMP)
+       WHERE id = ?`,
+      [reference, userId, plan.code, plan.amount, claim.id]
+    )
+    await connection.query(
+      `UPDATE facilities
+       SET is_verified = 1,
+           status = 'active',
+           subscription_ends_at = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ? MONTH)
+       WHERE id = ?`,
+      [subscriptionMonths(plan.code), claim.facility_id]
+    )
+    await connection.commit()
+
+    res.json({
+      success: true,
+      message: 'Plata a fost simulată. Poți completa profilul.',
+      data: {
+        claimId: claim.id,
+        status: 'paid',
+        paymentReference: reference,
+        paymentMode: 'simulation',
+        token: signToken({ role: 'user', id: userId, username: claim.username, facilityId: claim.facility_id }, 14 * 24 * 60 * 60),
+        user: {
+          id: userId,
+          username: claim.username,
+          email: claim.email,
+          facilityId: claim.facility_id
+        }
+      }
+    })
+  } catch (error) {
+    await connection.rollback()
+    console.error('Error simulating payment:', error)
+    res.status(500).json({ success: false, error: error.message })
+  } finally {
+    connection.release()
+  }
+})
+
+app.post('/api/claims/:id/onboarding', upload.fields([
+  { name: 'logo', maxCount: 1 },
+  { name: 'gallery', maxCount: 12 }
+]), async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+
+    const [claims] = await pool.query(
+      `SELECT c.*, f.facility_type
+       FROM facility_claims c
+       JOIN facilities f ON f.id = c.facility_id
+       WHERE c.id = ?`,
+      [req.params.id]
+    )
+    if (claims.length === 0) {
+      return res.status(404).json({ success: false, error: 'Revendicarea nu există.' })
+    }
+    const claim = claims[0]
+    if (!(await claimTokenMatches(req))) {
+      return res.status(401).json({ success: false, error: 'Cheia revendicării lipsește sau nu este validă.' })
+    }
+    const username = String(req.body.username || '').trim().toLowerCase()
+    if (!username || username !== claim.username) {
+      return res.status(403).json({ success: false, error: 'Revendicarea nu aparține acestui cont.' })
+    }
+    if (claim.status === 'awaiting_payment') {
+      return res.status(402).json({ success: false, error: 'Abonamentul nu este plătit.' })
+    }
+
+    const parseMaybe = (value) => {
+      if (typeof value !== 'string') return value
+      const trimmed = value.trim()
+      if (!trimmed || trimmed === 'null') return null
+      try { return JSON.parse(trimmed) } catch { return value }
+    }
+    const text = (key) => {
+      const value = req.body[key]
+      if (value == null) return ''
+      return String(value).trim()
+    }
+    const has = (key) => Object.prototype.hasOwnProperty.call(req.body, key)
+    const flag = (key) => req.body[key] === 'true' || req.body[key] === true || req.body[key] === '1' || req.body[key] === 1
+    const saveDataImage = (dataUrl, folder) => {
+      if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) return null
+      const buffer = Buffer.from(dataUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64')
+      if (!buffer.length || buffer.length > 8 * 1024 * 1024) return null
+      const filename = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}.jpg`
+      const dir = path.join(__dirname, 'uploads', folder)
+      if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+      writeFileSync(path.join(dir, filename), buffer)
+      return `/uploads/${folder}/${filename}`
+    }
+
+    const phones = parseMaybe(req.body.phones)
+    const whatsapps = parseMaybe(req.body.whatsapps)
+    const emails = parseMaybe(req.body.emails)
+    const socialMedia = parseMaybe(req.body.socialMedia)
+    const sportsFields = parseMaybe(req.body.sportsFields)
+    const mapCoordinates = parseMaybe(req.body.mapCoordinates)
+    const repairCategories = parseMaybe(req.body.repairCategories)
+    const pricingDetails = parseMaybe(req.body.pricingDetails)
+    const phoneList = Array.isArray(phones) ? phones.map((item) => String(item || '').trim()).filter(Boolean) : []
+    const emailList = Array.isArray(emails) ? emails.map((item) => String(item || '').trim()).filter(Boolean) : []
+    const whatsappList = Array.isArray(whatsapps) ? whatsapps.map((item) => String(item || '').trim()).filter(Boolean) : []
+    const primaryPhone = text('phone') || phoneList[0] || ''
+    const primaryEmail = text('email') || emailList[0] || ''
+    const name = text('name') || text('facilityName')
+    const city = text('city')
+    const locationNotSpecified = flag('locationNotSpecified')
+    const location = locationNotSpecified ? '' : text('location')
+    const facilityType = claim.facility_type
+
+    if (!name || !city || !primaryPhone || !primaryEmail || (!location && !locationNotSpecified)) {
+      return res.status(400).json({ success: false, error: 'Completează denumirea, orașul, adresa, un telefon și un email.' })
+    }
+    if (facilityType === 'field' && (!Array.isArray(sportsFields) || sportsFields.length === 0)) {
+      return res.status(400).json({ success: false, error: 'Adaugă cel puțin un teren cu program și preț.' })
+    }
+    if (facilityType === 'coach' && (!text('sport') || !text('specialization'))) {
+      return res.status(400).json({ success: false, error: 'Completează sportul și specializarea.' })
+    }
+    if (facilityType === 'repair_shop' && (!Array.isArray(repairCategories) || repairCategories.length === 0)) {
+      return res.status(400).json({ success: false, error: 'Alege cel puțin o categorie de reparații.' })
+    }
+    if (facilityType === 'equipment_shop' && !text('sport')) {
+      return res.status(400).json({ success: false, error: 'Alege sportul magazinului.' })
+    }
+
+    let logoUrl = null
+    if (req.files && req.files.logo && req.files.logo.length > 0) {
+      logoUrl = `/uploads/logos/${req.files.logo[0].filename}`
+    } else {
+      logoUrl = saveDataImage(req.body.logoUrl || req.body.logo, 'logos')
+    }
+
+    let gallery = null
+    if (req.files && req.files.gallery && req.files.gallery.length > 0) {
+      gallery = req.files.gallery.map((file) => `/uploads/gallery/${file.filename}`)
+    } else {
+      const incoming = parseMaybe(req.body.gallery)
+      if (Array.isArray(incoming) && incoming.length > 0) {
+        gallery = incoming.map((item) => {
+          if (typeof item === 'string' && item.startsWith('/uploads/')) return item
+          return saveDataImage(item, 'gallery')
+        }).filter(Boolean)
+        if (gallery.length === 0) gallery = null
+      }
+    }
+
+    const openingRaw = text('openingHours')
+    const openingHours = !openingRaw || openingRaw === 'null' ? null : openingRaw
+    const pricePerHour = text('pricePerHour') || text('price')
+    const pricePerLesson = text('pricePerLesson')
+    const firstFieldPrice = Array.isArray(sportsFields)
+      ? sportsFields.flatMap((field) => Array.isArray(field.timeSlots) ? field.timeSlots : []).find((slot) => slot && slot.status === 'open' && slot.price)?.price
+      : null
+    const sets = [
+      'name = ?',
+      'city = ?',
+      'county = ?',
+      'location = ?',
+      'location_not_specified = ?',
+      'map_coordinates = ?',
+      'phone = ?',
+      'phones = ?',
+      'whatsapp = ?',
+      'whatsapps = ?',
+      'email = ?',
+      'emails = ?',
+      'contact_person = ?',
+      'description = ?',
+      'website = ?',
+      'opening_hours = ?',
+      'social_media = ?',
+      'is_verified = 1',
+      "status = 'active'"
+    ]
+    const values = [
+      name,
+      city,
+      text('county') || null,
+      location || null,
+      locationNotSpecified ? 1 : 0,
+      mapCoordinates ? JSON.stringify(mapCoordinates) : null,
+      primaryPhone,
+      JSON.stringify(phoneList.length ? phoneList : [primaryPhone]),
+      whatsappList[0] || text('whatsapp') || null,
+      JSON.stringify(whatsappList),
+      primaryEmail,
+      JSON.stringify(emailList.length ? emailList : [primaryEmail]),
+      text('contactPerson') || claim.owner_name,
+      text('description') || null,
+      text('website') || null,
+      openingHours,
+      socialMedia ? JSON.stringify(socialMedia) : null
+    ]
+    if (logoUrl) {
+      sets.push('logo_url = ?')
+      values.push(logoUrl)
+    }
+    if (gallery) {
+      sets.push('gallery = ?')
+      values.push(JSON.stringify(gallery))
+    }
+    if (facilityType === 'field' || facilityType === 'equipment_shop') {
+      const sport = text('sport') || (Array.isArray(sportsFields) && sportsFields[0] ? sportsFields[0].sportType : '')
+      sets.push('sport = ?')
+      values.push(sport || null)
+    }
+    if (pricePerHour || firstFieldPrice) {
+      sets.push('price_per_hour = ?')
+      values.push(parseFloat(pricePerHour || firstFieldPrice))
+    }
+    if (pricePerLesson) {
+      sets.push('price_per_lesson = ?')
+      values.push(parseFloat(pricePerLesson))
+    }
+    if (has('pricingDetails')) {
+      sets.push('pricing_details = ?')
+      values.push(pricingDetails ? JSON.stringify(pricingDetails) : null)
+    }
+    for (const [key, column] of [
+      ['hasParking', 'has_parking'],
+      ['hasShower', 'has_shower'],
+      ['hasChangingRoom', 'has_changing_room'],
+      ['hasAirConditioning', 'has_air_conditioning'],
+      ['hasLighting', 'has_lighting'],
+      ['deliveryAvailable', 'delivery_available']
+    ]) {
+      if (has(key)) {
+        sets.push(`${column} = ?`)
+        values.push(flag(key) ? 1 : 0)
+      }
+    }
+    for (const [key, column] of [
+      ['specialization', 'specialization'],
+      ['certifications', 'certifications'],
+      ['languages', 'languages'],
+      ['servicesOffered', 'services_offered'],
+      ['brandsServiced', 'brands_serviced'],
+      ['averageRepairTime', 'average_repair_time'],
+      ['productsCategories', 'products_categories'],
+      ['brandsAvailable', 'brands_available']
+    ]) {
+      if (has(key)) {
+        sets.push(`${column} = ?`)
+        values.push(text(key) || null)
+      }
+    }
+    if (has('experienceYears')) {
+      sets.push('experience_years = ?')
+      values.push(text('experienceYears') ? parseInt(text('experienceYears'), 10) : null)
+    }
+    if (has('repairCategories')) {
+      sets.push('repair_categories = ?')
+      values.push(JSON.stringify(Array.isArray(repairCategories) ? repairCategories : []))
+    }
+
+    values.push(claim.facility_id)
+    await pool.query(`UPDATE facilities SET ${sets.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, values)
+
+    if (facilityType === 'field' && Array.isArray(sportsFields)) {
+      await pool.query('DELETE FROM facility_sports_fields WHERE facility_id = ?', [claim.facility_id])
+      for (const field of sportsFields) {
+        const legacyPrice = Array.isArray(field.timeSlots)
+          ? field.timeSlots.find((slot) => slot && slot.status === 'open' && slot.price)?.price
+          : null
+        await pool.query(
+          `INSERT INTO facility_sports_fields (facility_id, sport_type, field_name, price_per_hour, description, features, slot_size, time_slots)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            claim.facility_id,
+            field.sportType || null,
+            field.fieldName || null,
+            legacyPrice ? parseFloat(legacyPrice) : null,
+            field.description || null,
+            JSON.stringify(field.features || {}),
+            field.slotSize || 60,
+            JSON.stringify(field.timeSlots || [])
+          ]
+        )
+        if (field.sportType) {
+          const sportName = String(field.sportType).trim().toLowerCase()
+          const [existingSport] = await pool.query('SELECT id FROM pending_sports WHERE sport = ?', [sportName])
+          if (existingSport.length === 0) {
+            await pool.query('INSERT INTO pending_sports (sport, status) VALUES (?, ?)', [sportName, 'pending'])
+          }
+        }
+      }
+    }
+
+    await pool.query('UPDATE users SET email = ? WHERE facility_id = ?', [primaryEmail, claim.facility_id])
+    await pool.query(`UPDATE facility_claims SET status = 'completed' WHERE id = ?`, [claim.id])
+
+    res.json({
+      success: true,
+      message: 'Profilul a fost actualizat și marcat ca verificat.',
+      data: { facilityId: claim.facility_id, isVerified: true }
+    })
+  } catch (error) {
+    console.error('Error completing claim onboarding:', error)
+    res.status(500).json({ success: false, error: 'Nu am putut salva profilul.' })
   }
 })
 
@@ -1745,6 +3110,8 @@ app.get('/api/facilities/:slug', async (req, res) => {
       console.warn(`[API] WARNING: Facility ${facilityId} missing gallery property`)
     }
 
+    attachProfileTier(facility)
+
     res.json({ success: true, data: facility })
   } catch (error) {
     console.error('Error fetching facility:', error)
@@ -1790,7 +3157,7 @@ app.get('/api/facilities', async (req, res) => {
         params.push(status)
       }
 
-      query += ' ORDER BY f.created_at DESC'
+      query += ' ORDER BY (f.subscription_ends_at IS NOT NULL AND f.subscription_ends_at > NOW()) DESC, (f.is_verified = 1) DESC, f.created_at DESC'
     } else {
       // For other types, use the original query
       query = 'SELECT * FROM facilities WHERE 1=1'
@@ -1821,14 +3188,13 @@ app.get('/api/facilities', async (req, res) => {
         params.push(JSON.stringify(repairCategory))
       }
 
-      query += ' ORDER BY created_at DESC'
+      query += ' ORDER BY (subscription_ends_at IS NOT NULL AND subscription_ends_at > NOW()) DESC, (is_verified = 1) DESC, created_at DESC'
     }
 
     console.log('[API /facilities] Query:', query)
     console.log('[API /facilities] Params:', params)
     
     const [rows] = await pool.query(query, params)
-    
     console.log('[API /facilities] Results count:', rows.length)
     if (rows.length > 0) {
       console.log('[API /facilities] First result facility_type:', rows[0].facility_type)
@@ -1836,6 +3202,7 @@ app.get('/api/facilities', async (req, res) => {
 
     // For sports bases, fetch associated sports fields and parse gallery
     const facilitiesWithDetails = await Promise.all(rows.map(async (facility) => {
+      attachProfileTier(facility)
       if (facility.facility_type === 'field') {
         const [sportsFieldsRows] = await pool.query(
           'SELECT * FROM facility_sports_fields WHERE facility_id = ? ORDER BY created_at ASC',
@@ -1906,6 +3273,7 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
+    if (!rateLimit(req, res, 'admin-login', 8, 15 * 60 * 1000)) return
     const { username, password } = req.body
 
     if (!username || !password) {
@@ -1931,6 +3299,7 @@ app.post('/api/admin/login', async (req, res) => {
     res.json({
       success: true,
       message: 'Autentificare reușită',
+      token: signToken({ role: 'admin', id: rows[0].id, username: rows[0].username }, 12 * 60 * 60),
       admin: {
         id: rows[0].id,
         username: rows[0].username,
@@ -2155,6 +3524,7 @@ app.get('/api/admin/site-settings', async (req, res) => {
     
     const settings = {}
     rows.forEach(row => {
+      if (String(row.setting_key).startsWith('smtp_')) return
       settings[row.setting_key] = row.setting_value
     })
 
@@ -2225,7 +3595,12 @@ app.get('/api/admin/smtp-config', async (req, res) => {
     const config = {}
     rows.forEach((row) => {
       const key = row.setting_key.replace('smtp_', '')
-      config[key] = row.setting_value || ''
+      if (key === 'password') {
+        config.passwordSet = Boolean(row.setting_value)
+        config.password = ''
+      } else {
+        config[key] = row.setting_value || ''
+      }
     })
     
     res.json({ success: true, data: config })
@@ -2248,7 +3623,13 @@ app.put('/api/admin/smtp-config', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Neautorizat' })
     }
 
-    const { host, port, secure, user, password, from } = req.body
+    const { host, port, secure, user, from } = req.body
+    let { password } = req.body
+
+    if (!password) {
+      const [existing] = await pool.query('SELECT setting_value FROM site_settings WHERE setting_key = ?', ['smtp_password'])
+      password = existing[0]?.setting_value || ''
+    }
 
     if (!host || !port || !user || !password) {
       return res.status(400).json({
@@ -2381,6 +3762,7 @@ app.use((err, req, res, next) => {
 // POST submit new city for approval
 app.post('/api/pending-cities', async (req, res) => {
   try {
+    if (!rateLimit(req, res, 'pending-city', 10, 60 * 60 * 1000)) return
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
@@ -2425,6 +3807,7 @@ app.post('/api/pending-cities', async (req, res) => {
 // POST submit new sport for approval
 app.post('/api/pending-sports', async (req, res) => {
   try {
+    if (!rateLimit(req, res, 'pending-sport', 10, 60 * 60 * 1000)) return
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
@@ -2717,6 +4100,7 @@ app.put('/api/admin/seo-pages/:id', async (req, res) => {
 // POST facility suggestion
 app.post('/api/suggestions', async (req, res) => {
   try {
+    if (!rateLimit(req, res, 'suggestion', 10, 60 * 60 * 1000)) return
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }

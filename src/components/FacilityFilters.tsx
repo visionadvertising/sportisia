@@ -313,9 +313,8 @@ function FacilityFilters({
       background: 'white',
       borderRadius: '16px',
       padding: isMobile ? '1.5rem' : '2rem',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.1)',
       marginBottom: isMobile ? '2rem' : '3rem',
-      border: '1px solid #f1f5f9'
+      border: '1px solid #eef2f6'
     }}>
       <div style={{
         display: 'grid',
@@ -368,9 +367,9 @@ function FacilityFilters({
                 e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0'
-                e.target.style.background = '#fafafa'
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                e.target.style.borderColor = '#e7eef5'
+                e.target.style.background = '#ffffff'
+                e.target.style.boxShadow = 'none'
                 setTimeout(() => setShowTypeDropdown(false), 250)
               }}
               placeholder="Caută sau selectează tip"
@@ -378,16 +377,16 @@ function FacilityFilters({
                 width: '100%',
                 padding: '0.875rem 1rem',
                 paddingRight: '2.5rem',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '10px',
+                border: '1px solid #e7eef5',
+                borderRadius: '12px',
                 fontSize: '0.9375rem',
                 outline: 'none',
-                background: '#fafafa',
+                background: '#ffffff',
                 color: '#0f172a',
                 transition: 'all 0.2s ease',
                 fontWeight: '400',
                 lineHeight: '1.5',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                boxShadow: 'none'
               }}
             />
             <div style={{
@@ -408,9 +407,9 @@ function FacilityFilters({
                 right: 0,
                 marginTop: '0.5rem',
                 background: '#ffffff',
-                border: '1.5px solid #e2e8f0',
+                border: '1px solid #e7eef5',
                 borderRadius: '12px',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)',
+                boxShadow: '0 10px 28px rgba(15, 23, 42, 0.06)',
                 maxHeight: '300px',
                 overflowY: 'auto',
                 zIndex: 1000
@@ -489,9 +488,9 @@ function FacilityFilters({
               e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = '#e2e8f0'
-              e.target.style.background = '#fafafa'
-              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+              e.target.style.borderColor = '#e7eef5'
+              e.target.style.background = '#ffffff'
+              e.target.style.boxShadow = 'none'
               setTimeout(() => setShowCityDropdown(false), 250)
             }}
             placeholder="Caută sau selectează oraș"
@@ -499,16 +498,16 @@ function FacilityFilters({
               width: '100%',
               padding: '0.875rem 1rem',
               paddingRight: '2.5rem',
-              border: '1.5px solid #e2e8f0',
-              borderRadius: '10px',
+              border: '1px solid #e7eef5',
+              borderRadius: '12px',
               fontSize: '0.9375rem',
               outline: 'none',
-              background: '#fafafa',
+              background: '#ffffff',
               color: '#0f172a',
               transition: 'all 0.2s ease',
               fontWeight: '400',
               lineHeight: '1.5',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+              boxShadow: 'none'
             }}
           />
           <div style={{
@@ -529,9 +528,9 @@ function FacilityFilters({
               right: 0,
               marginTop: '0.5rem',
               background: '#ffffff',
-              border: '1.5px solid #e2e8f0',
+              border: '1px solid #e7eef5',
               borderRadius: '12px',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)',
+              boxShadow: '0 10px 28px rgba(15, 23, 42, 0.06)',
               maxHeight: '300px',
               overflowY: 'auto',
               zIndex: 1000
@@ -642,9 +641,9 @@ function FacilityFilters({
               e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = '#e2e8f0'
-              e.target.style.background = '#fafafa'
-              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+              e.target.style.borderColor = '#e7eef5'
+              e.target.style.background = '#ffffff'
+              e.target.style.boxShadow = 'none'
               setTimeout(() => setShowSportDropdown(false), 250)
             }}
             placeholder="Caută sau selectează sport"
@@ -652,16 +651,16 @@ function FacilityFilters({
               width: '100%',
               padding: '0.875rem 1rem',
               paddingRight: '2.5rem',
-              border: '1.5px solid #e2e8f0',
-              borderRadius: '10px',
+              border: '1px solid #e7eef5',
+              borderRadius: '12px',
               fontSize: '0.9375rem',
               outline: 'none',
-              background: '#fafafa',
+              background: '#ffffff',
               color: '#0f172a',
               transition: 'all 0.2s ease',
               fontWeight: '400',
               lineHeight: '1.5',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+              boxShadow: 'none'
             }}
           />
           <div style={{
@@ -682,9 +681,9 @@ function FacilityFilters({
               right: 0,
               marginTop: '0.5rem',
               background: '#ffffff',
-              border: '1.5px solid #e2e8f0',
+              border: '1px solid #e7eef5',
               borderRadius: '12px',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08)',
+              boxShadow: '0 10px 28px rgba(15, 23, 42, 0.06)',
               maxHeight: '300px',
               overflowY: 'auto',
               zIndex: 1000
@@ -786,9 +785,9 @@ function FacilityFilters({
                 e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e2e8f0'
-                e.target.style.background = '#fafafa'
-                e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
+                e.target.style.borderColor = '#e7eef5'
+                e.target.style.background = '#ffffff'
+                e.target.style.boxShadow = 'none'
                 setTimeout(() => setShowRepairCategoryDropdown(false), 250)
               }}
               placeholder="Caută sau selectează categorie"
@@ -796,8 +795,8 @@ function FacilityFilters({
                 width: '100%',
                 padding: '0.875rem 1rem',
                 paddingRight: '2.5rem',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '8px',
+                border: '1px solid #e7eef5',
+                borderRadius: '12px',
                 fontSize: '1rem',
                 outline: 'none',
                 background: '#ffffff',
@@ -805,7 +804,7 @@ function FacilityFilters({
                 transition: 'all 0.2s ease',
                 fontWeight: '400',
                 lineHeight: '1.5',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                boxShadow: 'none'
               }}
             />
             <div style={{
@@ -824,11 +823,11 @@ function FacilityFilters({
                 top: '100%',
                 left: 0,
                 right: 0,
-                marginTop: '0.25rem',
+                marginTop: '0.5rem',
                 background: '#ffffff',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                border: '1px solid #e7eef5',
+                borderRadius: '12px',
+                boxShadow: '0 10px 28px rgba(15, 23, 42, 0.06)',
                 maxHeight: '300px',
                 overflowY: 'auto',
                 zIndex: 1000
