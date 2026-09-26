@@ -741,6 +741,7 @@ async function addMissingColumns() {
     }
     if (!existingColumns.includes('is_company')) {
       await pool.query(`ALTER TABLE facilities ADD COLUMN is_company TINYINT(1) NOT NULL DEFAULT 0`)
+      console.log('✅ Added facilities.is_company')
     }
     if (!existingColumns.includes('cui')) {
       await pool.query(`ALTER TABLE facilities ADD COLUMN cui VARCHAR(20) NULL`)
@@ -748,6 +749,25 @@ async function addMissingColumns() {
     if (!existingColumns.includes('billing_address')) {
       await pool.query(`ALTER TABLE facilities ADD COLUMN billing_address VARCHAR(255) NULL`)
     }
+
+    const [claimColumns] = await pool.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'facility_claims'
+    `)
+    const existingClaimColumns = claimColumns.map((col) => col.COLUMN_NAME)
+    if (!existingClaimColumns.includes('is_company')) {
+      await pool.query(`ALTER TABLE facility_claims ADD COLUMN is_company TINYINT(1) NOT NULL DEFAULT 0`)
+      console.log('✅ Added facility_claims.is_company')
+    }
+    if (!existingClaimColumns.includes('cui')) {
+      await pool.query(`ALTER TABLE facility_claims ADD COLUMN cui VARCHAR(20) NULL`)
+    }
+    if (!existingClaimColumns.includes('billing_address')) {
+      await pool.query(`ALTER TABLE facility_claims ADD COLUMN billing_address VARCHAR(255) NULL`)
+    }
+
     await pool.query(`
       UPDATE facilities f
       INNER JOIN facility_claims c ON c.facility_id = f.id
@@ -787,23 +807,6 @@ async function addMissingColumns() {
     if (!existingPendingCitiesColumns.includes('county')) {
       await pool.query(`ALTER TABLE pending_cities ADD COLUMN county VARCHAR(100) AFTER city`)
       console.log('✅ Added county column to pending_cities')
-    }
-
-    const [claimColumns] = await pool.query(`
-      SELECT COLUMN_NAME
-      FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'facility_claims'
-    `)
-    const existingClaimColumns = claimColumns.map((col) => col.COLUMN_NAME)
-    if (!existingClaimColumns.includes('is_company')) {
-      await pool.query(`ALTER TABLE facility_claims ADD COLUMN is_company TINYINT(1) NOT NULL DEFAULT 0`)
-    }
-    if (!existingClaimColumns.includes('cui')) {
-      await pool.query(`ALTER TABLE facility_claims ADD COLUMN cui VARCHAR(20) NULL`)
-    }
-    if (!existingClaimColumns.includes('billing_address')) {
-      await pool.query(`ALTER TABLE facility_claims ADD COLUMN billing_address VARCHAR(255) NULL`)
     }
 
     if (!existingColumns.includes('subscription_ends_at')) {
