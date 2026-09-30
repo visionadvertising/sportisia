@@ -1583,76 +1583,57 @@ function SportsBasePublic() {
         )}
 
       </div>
-      <div style={{
+      {facility.profile_tier === 'recommended' || facility.profile_tier === 'verified' ? (
+        <div style={{
           maxWidth: '1400px',
           margin: '0 auto',
           padding: '0 1rem',
           display: 'flex',
           justifyContent: 'flex-end'
         }}>
-          {facility.profile_tier === 'recommended' ? (
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#ecfdf5',
-              color: '#047857',
-              border: '1px solid #a7f3d0',
-              borderRadius: '12px',
-              padding: isMobile ? '0.75rem 0.9rem' : '0.9rem 1.15rem',
-              fontWeight: 700,
-              fontSize: isMobile ? '0.85rem' : '0.95rem',
-              boxShadow: 'none',
-              whiteSpace: 'nowrap',
-              width: isMobile ? '100%' : undefined,
-              boxSizing: 'border-box'
-            }}>
-              Facilitate recomandată
-            </div>
-          ) : facility.profile_tier === 'verified' ? (
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#fff7ed',
-              color: '#c2410c',
-              border: '1px solid #fed7aa',
-              borderRadius: '12px',
-              padding: isMobile ? '0.75rem 0.9rem' : '0.9rem 1.15rem',
-              fontWeight: 700,
-              fontSize: isMobile ? '0.85rem' : '0.95rem',
-              boxShadow: 'none',
-              whiteSpace: 'nowrap',
-              width: isMobile ? '100%' : undefined,
-              boxSizing: 'border-box'
-            }}>
-              Facilitate verificată
-            </div>
-          ) : (
-            <Link
-              to={`/revendica/${facility.id}`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: '#fef2f2',
-                color: '#b91c1c',
-                border: '1px solid #fecaca',
-                textDecoration: 'none',
-                borderRadius: '12px',
-                padding: isMobile ? '0.75rem 0.9rem' : '0.9rem 1.15rem',
-                fontWeight: 700,
-                fontSize: isMobile ? '0.85rem' : '0.95rem',
-                boxShadow: 'none',
-                whiteSpace: 'nowrap',
-                width: isMobile ? '100%' : undefined,
-                boxSizing: 'border-box'
-              }}
-            >
-              Revendică profilul
-            </Link>
-          )}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: facility.profile_tier === 'recommended' ? '#ecfdf5' : '#fff7ed',
+            color: facility.profile_tier === 'recommended' ? '#047857' : '#c2410c',
+            border: facility.profile_tier === 'recommended' ? '1px solid #a7f3d0' : '1px solid #fed7aa',
+            borderRadius: '12px',
+            padding: isMobile ? '0.75rem 0.9rem' : '0.9rem 1.15rem',
+            fontWeight: 700,
+            fontSize: isMobile ? '0.85rem' : '0.95rem',
+            whiteSpace: 'nowrap',
+            boxSizing: 'border-box'
+          }}>
+            {facility.profile_tier === 'recommended' ? 'Facilitate recomandată' : 'Facilitate verificată'}
+          </div>
         </div>
+      ) : (
+        <Link
+          to={`/revendica/${facility.id}`}
+          style={{
+            position: 'fixed',
+            right: '1rem',
+            bottom: '1rem',
+            zIndex: 40,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#fef2f2',
+            color: '#b91c1c',
+            border: '1px solid #fecaca',
+            textDecoration: 'none',
+            borderRadius: '12px',
+            padding: '0.9rem 1.15rem',
+            fontWeight: 700,
+            fontSize: '0.95rem',
+            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.12)',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          Revendică profilul
+        </Link>
+      )}
       <FacilityCommunity
         facilityId={facility.id}
         city={facility.city}
