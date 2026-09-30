@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { slugify } from '../utils/seo'
 import FacilityCardActions from './FacilityCardActions'
@@ -51,21 +51,6 @@ const SPORT_NAMES: Record<string, string> = {
 
 type SortKey = 'recommended' | 'name-asc' | 'name-desc' | 'newest' | 'oldest' | 'price' | 'distance'
 type ViewMode = 'card' | 'grid' | 'map'
-
-const AMENITY_FILTERS = [
-  { key: 'hasLighting', label: 'Iluminat' },
-  { key: 'hasCover', label: 'Acoperiș' },
-  { key: 'hasIndoor', label: 'Interior' },
-  { key: 'hasChangingRoom', label: 'Vestiar' },
-  { key: 'hasParking', label: 'Parcare' },
-  { key: 'hasShower', label: 'Duș' }
-]
-
-const AUDIENCE_FILTERS = [
-  { key: 'copii', label: 'Copii' },
-  { key: 'adulti', label: 'Adulți' },
-  { key: 'incepatori', label: 'Începători' }
-]
 
 function coordsOf(facility: ResultFacility) {
   let coords = facility.map_coordinates
@@ -122,9 +107,6 @@ export default function FacilityResults({ facilities, isMobile }: { facilities: 
   const [sort, setSort] = useState<SortKey>('recommended')
   const [view, setView] = useState<ViewMode>('grid')
   const [page, setPage] = useState(1)
-  const [openOnly, setOpenOnly] = useState(false)
-  const [amenities, setAmenities] = useState<string[]>([])
-  const [audience, setAudience] = useState('')
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null)
   const [savedTick, setSavedTick] = useState(0)
   const topRef = useRef<HTMLDivElement>(null)
@@ -132,7 +114,7 @@ export default function FacilityResults({ facilities, isMobile }: { facilities: 
 
   useEffect(() => {
     setPage(1)
-  }, [facilities, sort, view, openOnly, amenities, audience])
+  }, [facilities, sort, view])
 
   useEffect(() => {
     const refresh = () => setSavedTick((value) => value + 1)
@@ -149,12 +131,7 @@ export default function FacilityResults({ facilities, isMobile }: { facilities: 
   }, [page])
 
   const sorted = useMemo(() => {
-    const list = facilities.filter((facility) => {
-      if (openOnly && facility.openNow !== true) return false
-      if (amenities.length && !amenities.every((key) => (facility.amenities || []).includes(key))) return false
-      if (audience && !(facility.audienceList || []).includes(audience)) return false
-      return true
-    })
+    const list = [...facilities]
     list.sort((a, b) => {
       if (sort === 'name-asc') return a.name.localeCompare(b.name, 'ro')
       if (sort === 'name-desc') return b.name.localeCompare(a.name, 'ro')
@@ -171,7 +148,7 @@ export default function FacilityResults({ facilities, isMobile }: { facilities: 
       return tierRank(a) - tierRank(b) || a.name.localeCompare(b.name, 'ro')
     })
     return list
-  }, [facilities, sort, openOnly, amenities, audience, origin])
+  }, [facilities, sort, origin])
 
   const pageSize = view === 'grid' ? 24 : 12
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize))
@@ -191,34 +168,17 @@ export default function FacilityResults({ facilities, isMobile }: { facilities: 
       url: facilityUrl(facility)
     }]
   })
-  const chip = (active: boolean): CSSProperties => ({
-    border: active ? '1px solid #10b981' : '1px solid #e2e8f0',
-    background: active ? '#ecfdf5' : 'white',
-    color: active ? '#047857' : '#334155',
-    borderRadius: '999px',
-    padding: '0.4rem 0.75rem',
-    fontWeight: 700,
-    cursor: 'pointer'
-  })
+  const chooseSort = (next: SortKey) => {
+    setSort(next)
+    if (next === 'distance' && !origin && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        setOrigin({ lat: position.coords.latitude, lng: position.coords.longitude })
+      })
+    }
+  }
 
   return (
     <div ref={topRef}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '0.9rem' }}>
-        <button type="button" onClick={() => setOpenOnly((value) => !value)} style={chip(openOnly)}>Deschis acum</button>
-        <button type="button" onClick={() => {
-          if (!navigator.geolocation) return
-          navigator.geolocation.getCurrentPosition((position) => {
-            setOrigin({ lat: position.coords.latitude, lng: position.coords.longitude })
-            setSort('distance')
-          })
-        }} style={chip(sort === 'distance')}>Cele mai apropiate</button>
-        {AMENITY_FILTERS.map((item) => (
-          <button key={item.key} type="button" onClick={() => setAmenities((current) => current.includes(item.key) ? current.filter((key) => key !== item.key) : [...current, item.key])} style={chip(amenities.includes(item.key))}>{item.label}</button>
-        ))}
-        {AUDIENCE_FILTERS.map((item) => (
-          <button key={item.key} type="button" onClick={() => setAudience((current) => current === item.key ? '' : item.key)} style={chip(audience === item.key)}>{item.label}</button>
-        ))}
-      </div>
       <div style={{
         display: 'flex',
         flexDirection: isMobile ? 'column' : 'row',
@@ -242,7 +202,7 @@ export default function FacilityResults({ facilities, isMobile }: { facilities: 
             <select
               aria-label="Sortare"
               value={sort}
-              onChange={(event) => setSort(event.target.value as SortKey)}
+              onChange={(event) => chooseSort(event.target.value as SortKey)}
               style={{
                 border: '1px solid #e7eef5',
                 background: 'white',
