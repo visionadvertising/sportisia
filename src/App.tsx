@@ -1,53 +1,73 @@
+import { lazy, Suspense, useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
 import Home from './pages/Home'
-import Register from './pages/Register'
-import RegisterTypeSelector from './pages/RegisterTypeSelector'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import AdminLogin from './pages/AdminLogin'
-import AdminDashboard from './pages/AdminDashboard'
-import PendingFacilities from './pages/admin/PendingFacilities'
-import ApprovedFacilities from './pages/admin/ApprovedFacilities'
-import PendingSportsBases from './pages/admin/PendingSportsBases'
-import ApprovedSportsBases from './pages/admin/ApprovedSportsBases'
-import PendingCoaches from './pages/admin/PendingCoaches'
-import ApprovedCoaches from './pages/admin/ApprovedCoaches'
-import PendingRepairShops from './pages/admin/PendingRepairShops'
-import ApprovedRepairShops from './pages/admin/ApprovedRepairShops'
-import PendingEquipmentShops from './pages/admin/PendingEquipmentShops'
-import ApprovedEquipmentShops from './pages/admin/ApprovedEquipmentShops'
-import FacilityDetails from './pages/admin/FacilityDetails'
-import SEOPages from './pages/admin/SEOPages'
-import SEOPageEdit from './pages/admin/SEOPageEdit'
-import Suggestions from './pages/admin/Suggestions'
-import Users from './pages/admin/Users'
-import SiteSettings from './pages/admin/SiteSettings'
-import SMTPConfig from './pages/admin/SMTPConfig'
-import AdminLayout from './pages/admin/AdminLayout'
-import FacilitiesList from './pages/FacilitiesList'
-import AllFacilities from './pages/AllFacilities'
-import SuggestFacility from './pages/SuggestFacility'
-import SportsBasePublic from './pages/SportsBasePublic'
-import ClaimFacility from './pages/ClaimFacility'
 import Footer from './components/Footer'
-import BlogList from './pages/BlogList'
-import BlogPost from './pages/BlogPost'
-import BlogPosts from './pages/admin/BlogPosts'
-import BlogPostEdit from './pages/admin/BlogPostEdit'
-import BlogCategories from './pages/admin/BlogCategories'
-import BlogComments from './pages/admin/BlogComments'
-import Contact from './pages/Contact'
-import Terms from './pages/legal/Terms'
-import Privacy from './pages/legal/Privacy'
-import Cookies from './pages/legal/Cookies'
 import CookieNotice from './components/CookieNotice'
+import HeaderSessionActions, { useHeaderSession } from './components/HeaderSessionActions'
+import { AUTH_EVENT, isMemberSession } from './utils/memberSession'
+import { refreshMemberSavedIds } from './utils/savedFacilities'
+
+const RegisterTypeSelector = lazy(() => import('./pages/RegisterTypeSelector'))
+const Login = lazy(() => import('./pages/Login'))
+const AuthAccountChoice = lazy(() => import('./pages/AuthAccountChoice'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const AdminLogin = lazy(() => import('./pages/AdminLogin'))
+const PendingFacilities = lazy(() => import('./pages/admin/PendingFacilities'))
+const ApprovedFacilities = lazy(() => import('./pages/admin/ApprovedFacilities'))
+const PendingSportsBases = lazy(() => import('./pages/admin/PendingSportsBases'))
+const ApprovedSportsBases = lazy(() => import('./pages/admin/ApprovedSportsBases'))
+const PendingCoaches = lazy(() => import('./pages/admin/PendingCoaches'))
+const ApprovedCoaches = lazy(() => import('./pages/admin/ApprovedCoaches'))
+const PendingRepairShops = lazy(() => import('./pages/admin/PendingRepairShops'))
+const ApprovedRepairShops = lazy(() => import('./pages/admin/ApprovedRepairShops'))
+const PendingEquipmentShops = lazy(() => import('./pages/admin/PendingEquipmentShops'))
+const ApprovedEquipmentShops = lazy(() => import('./pages/admin/ApprovedEquipmentShops'))
+const FacilityDetails = lazy(() => import('./pages/admin/FacilityDetails'))
+const SEOPages = lazy(() => import('./pages/admin/SEOPages'))
+const SEOPageEdit = lazy(() => import('./pages/admin/SEOPageEdit'))
+const Suggestions = lazy(() => import('./pages/admin/Suggestions'))
+const Users = lazy(() => import('./pages/admin/Users'))
+const SiteSettings = lazy(() => import('./pages/admin/SiteSettings'))
+const SMTPConfig = lazy(() => import('./pages/admin/SMTPConfig'))
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
+const FacilitiesList = lazy(() => import('./pages/FacilitiesList'))
+const AllFacilities = lazy(() => import('./pages/AllFacilities'))
+const SuggestFacility = lazy(() => import('./pages/SuggestFacility'))
+const SportsBasePublic = lazy(() => import('./pages/SportsBasePublic'))
+const ClaimFacility = lazy(() => import('./pages/ClaimFacility'))
+const BlogList = lazy(() => import('./pages/BlogList'))
+const BlogPost = lazy(() => import('./pages/BlogPost'))
+const BlogPosts = lazy(() => import('./pages/admin/BlogPosts'))
+const BlogPostEdit = lazy(() => import('./pages/admin/BlogPostEdit'))
+const BlogCategories = lazy(() => import('./pages/admin/BlogCategories'))
+const BlogComments = lazy(() => import('./pages/admin/BlogComments'))
+const FacilityReviewsAdmin = lazy(() => import('./pages/admin/FacilityReviewsAdmin'))
+const FacilityReportsAdmin = lazy(() => import('./pages/admin/FacilityReportsAdmin'))
+const Contact = lazy(() => import('./pages/Contact'))
+const SavedFacilities = lazy(() => import('./pages/SavedFacilities'))
+const MemberAccount = lazy(() => import('./pages/MemberAccount'))
+const RegisterMember = lazy(() => import('./pages/RegisterMember'))
+const Terms = lazy(() => import('./pages/legal/Terms'))
+const Privacy = lazy(() => import('./pages/legal/Privacy'))
+const Cookies = lazy(() => import('./pages/legal/Cookies'))
 
 function AppContent() {
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith('/admin')
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [menuOpen, setMenuOpen] = useState(false)
+  const { loggedIn } = useHeaderSession()
+
+  useEffect(() => {
+    if (isMemberSession()) {
+      refreshMemberSavedIds().catch(() => {})
+    }
+    const onAuth = () => {
+      if (isMemberSession()) refreshMemberSavedIds().catch(() => {})
+    }
+    window.addEventListener(AUTH_EVENT, onAuth)
+    return () => window.removeEventListener(AUTH_EVENT, onAuth)
+  }, [])
 
   useEffect(() => {
     const handleResize = () => {
@@ -59,6 +79,13 @@ function AppContent() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+    setMenuOpen(false)
+  }, [location.pathname])
 
   return (
     <div style={{
@@ -112,6 +139,8 @@ function AppContent() {
               }}>SPORTISIA</h1>
             </Link>
             {isMobile ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                {loggedIn ? <HeaderSessionActions isMobile onNavigate={() => setMenuOpen(false)} /> : null}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 style={{
@@ -135,6 +164,7 @@ function AppContent() {
                   )}
                 </svg>
               </button>
+              </div>
             ) : (
               <nav style={{
                 display: 'flex',
@@ -182,6 +212,14 @@ function AppContent() {
                     e.currentTarget.style.color = '#64748b'
                   }}
                 >Magazine Articole</Link>
+                <Link to="/recuperare-sportiva" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 0' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#0f172a'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#64748b'
+                  }}
+                >Recuperare sportivă</Link>
                 <Link to="/blog" style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', transition: 'all 0.2s', padding: '0.5rem 0' }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.color = '#0f172a'
@@ -190,55 +228,7 @@ function AppContent() {
                     e.currentTarget.style.color = '#64748b'
                   }}
                 >Blog</Link>
-                <div style={{ marginLeft: isMobile ? '0' : '1.5rem', paddingLeft: isMobile ? '0' : '1.5rem', borderLeft: isMobile ? 'none' : '1px solid #e2e8f0', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                  <Link to="/register" style={{ 
-                    textDecoration: 'none', 
-                    color: 'white', 
-                    fontWeight: '600', 
-                    fontSize: '0.9375rem', 
-                    transition: 'all 0.2s', 
-                    padding: '0.625rem 1.25rem', 
-                    borderRadius: '8px',
-                    background: '#10b981',
-                    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
-                  }} 
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#059669'
-                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
-                      e.currentTarget.style.transform = 'translateY(-1px)'
-                    }} 
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#10b981'
-                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
-                      e.currentTarget.style.transform = 'translateY(0)'
-                    }}
-                  >Înregistrare</Link>
-                  <Link to="/login" style={{ 
-                    textDecoration: 'none', 
-                    color: '#0f172a', 
-                    fontWeight: '600', 
-                    fontSize: '0.9375rem', 
-                    transition: 'all 0.2s', 
-                    padding: '0.625rem 1.25rem', 
-                    borderRadius: '8px', 
-                    background: 'white',
-                    border: '1.5px solid #e2e8f0',
-                    boxShadow: 'none'
-                  }} 
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#f8fafc'
-                      e.currentTarget.style.borderColor = '#10b981'
-                      e.currentTarget.style.color = '#10b981'
-                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'
-                    }} 
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'white'
-                      e.currentTarget.style.borderColor = '#e2e8f0'
-                      e.currentTarget.style.color = '#0f172a'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                  >Login</Link>
-                </div>
+                <HeaderSessionActions isMobile={false} />
               </nav>
             )}
           </div>
@@ -256,68 +246,34 @@ function AppContent() {
               <Link to="/antrenori" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Antrenori</Link>
               <Link to="/magazine-reparatii" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Reparații</Link>
               <Link to="/magazine-articole" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Magazine Articole</Link>
+              <Link to="/recuperare-sportiva" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Recuperare sportivă</Link>
               <Link to="/blog" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', color: '#64748b', fontWeight: '500', fontSize: '0.9375rem', padding: '0.75rem 0', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'} onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}>Blog</Link>
-              <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <Link to="/register" onClick={() => setMenuOpen(false)} style={{ 
-                  textDecoration: 'none', 
-                  color: 'white', 
-                  fontWeight: '600', 
-                  fontSize: '0.9375rem', 
-                  padding: '0.75rem 1.25rem', 
-                  borderRadius: '8px',
-                  background: '#10b981',
-                  textAlign: 'center',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
-                }} 
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#059669'
-                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)'
-                  }} 
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#10b981'
-                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)'
-                  }}
-                >Înregistrare</Link>
-                <Link to="/login" onClick={() => setMenuOpen(false)} style={{ 
-                  textDecoration: 'none', 
-                  color: '#0f172a', 
-                  fontWeight: '600', 
-                  fontSize: '0.9375rem', 
-                  padding: '0.75rem 1.25rem', 
-                  borderRadius: '8px',
-                  background: 'white',
-                  border: '1.5px solid #e2e8f0',
-                  textAlign: 'center',
-                  transition: 'all 0.2s',
-                  boxShadow: 'none'
-                }} 
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f8fafc'
-                    e.currentTarget.style.borderColor = '#10b981'
-                    e.currentTarget.style.color = '#10b981'
-                  }} 
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'white'
-                    e.currentTarget.style.borderColor = '#e2e8f0'
-                    e.currentTarget.style.color = '#0f172a'
-                  }}
-                >Login</Link>
-              </div>
+              {!loggedIn ? (
+                <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <HeaderSessionActions isMobile onNavigate={() => setMenuOpen(false)} />
+                </div>
+              ) : null}
             </nav>
           )}
         </header>
       )}
 
+      <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', color: '#64748b' }}>Se încarcă...</div>}>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/register" element={<RegisterTypeSelector />} />
+        <Route path="/register/cont" element={<RegisterMember />} />
+        <Route path="/register/facilitate" element={<RegisterTypeSelector />} />
+        <Route path="/register" element={<AuthAccountChoice mode="register" />} />
+        <Route path="/cont" element={<MemberAccount />} />
         <Route path="/register/baze-sportive" element={<ClaimFacility />} />
         <Route path="/register/antrenori" element={<ClaimFacility />} />
         <Route path="/register/magazine-reparatii" element={<ClaimFacility />} />
         <Route path="/register/magazine-articole" element={<ClaimFacility />} />
+        <Route path="/register/recuperare-sportiva" element={<ClaimFacility />} />
         <Route path="/sugereaza" element={<SuggestFacility />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login/membru" element={<Login accountKind="member" />} />
+        <Route path="/login/facilitate" element={<Login accountKind="business" />} />
+        <Route path="/login" element={<AuthAccountChoice mode="login" />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/*" element={<AdminLayout />}>
@@ -334,6 +290,8 @@ function AppContent() {
           <Route path="approved" element={<ApprovedFacilities />} />
           <Route path="facilities/:id" element={<FacilityDetails />} />
           <Route path="suggestions" element={<Suggestions />} />
+          <Route path="recenzii" element={<FacilityReviewsAdmin />} />
+          <Route path="sesizari" element={<FacilityReportsAdmin />} />
           <Route path="seo-pages" element={<SEOPages />} />
           <Route path="seo-pages/edit" element={<SEOPageEdit />} />
           <Route path="seo-pages/:id" element={<SEOPageEdit />} />
@@ -357,8 +315,10 @@ function AppContent() {
         <Route path="/antrenori" element={<FacilitiesList type="coach" title="Antrenori" />} />
         <Route path="/magazine-reparatii" element={<FacilitiesList type="repair_shop" title="Magazine Reparații Articole Sportive" />} />
         <Route path="/magazine-articole" element={<FacilitiesList type="equipment_shop" title="Magazine Articole Sportive" />} />
+        <Route path="/recuperare-sportiva" element={<FacilitiesList type="sports_recovery" title="Recuperare sportivă" />} />
         <Route path="/toate" element={<AllFacilities />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/salvate" element={<SavedFacilities />} />
         <Route path="/termeni-si-conditii" element={<Terms />} />
         <Route path="/politica-de-confidentialitate" element={<Privacy />} />
         <Route path="/politica-cookies" element={<Cookies />} />
@@ -370,6 +330,7 @@ function AppContent() {
         <Route path="/:param1/:param2" element={<AllFacilities />} />
         <Route path="/:param1" element={<AllFacilities />} />
       </Routes>
+      </Suspense>
       
       {/* Footer - doar pentru rute non-admin */}
       {!isAdminRoute && <Footer />}

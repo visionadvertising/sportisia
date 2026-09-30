@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
-import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug, repairCategoryToSlug } from '../utils/seo'
+import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug, repairCategoryToSlug, recoveryServiceToSlug } from '../utils/seo'
+import { RECOVERY_SERVICES } from '../data/recovery-services'
 import API_BASE_URL from '../config'
 import './FacilityFilters.css'
 
@@ -10,8 +11,9 @@ interface FacilityFiltersProps {
   selectedSport?: string
   selectedType?: string
   selectedRepairCategory?: string
+  selectedRecoveryService?: string
   showTypeFilter?: boolean
-  onFiltersChange?: (filters: { city: string; sport: string; type: string; repairCategory?: string }) => void
+  onFiltersChange?: (filters: { city: string; sport: string; type: string; repairCategory?: string; recoveryService?: string }) => void
 }
 
 const FACILITY_TYPES = [
@@ -19,8 +21,11 @@ const FACILITY_TYPES = [
   { value: 'field', label: 'Terenuri' },
   { value: 'coach', label: 'Antrenori' },
   { value: 'repair_shop', label: 'Magazine Reparații' },
-  { value: 'equipment_shop', label: 'Magazine Articole' }
+  { value: 'equipment_shop', label: 'Magazine Articole' },
+  { value: 'sports_recovery', label: 'Recuperare sportivă' }
 ]
+
+const RECOVERY_SERVICE_OPTIONS = [{ value: '', label: 'Toate serviciile' }, ...RECOVERY_SERVICES.map((s) => ({ value: s, label: s }))]
 
 const REPAIR_CATEGORIES = [
   { value: '', label: 'Toate categoriile' },
@@ -52,6 +57,7 @@ function FacilityFilters({
   selectedSport = '', 
   selectedType = '',
   selectedRepairCategory = '',
+  selectedRecoveryService = '',
   showTypeFilter = true,
   onFiltersChange 
 }: FacilityFiltersProps) {
@@ -61,6 +67,7 @@ function FacilityFilters({
   const [sport, setSport] = useState(selectedSport)
   const [type, setType] = useState(selectedType)
   const [repairCategory, setRepairCategory] = useState(selectedRepairCategory)
+  const [recoveryService, setRecoveryService] = useState(selectedRecoveryService)
   const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string}>>(ROMANIAN_CITIES)
   const [availableSports, setAvailableSports] = useState<string[]>(['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash'])
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -72,14 +79,19 @@ function FacilityFilters({
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
   const [repairCategorySearch, setRepairCategorySearch] = useState('')
   const [showRepairCategoryDropdown, setShowRepairCategoryDropdown] = useState(false)
+  const [recoveryServiceSearch, setRecoveryServiceSearch] = useState('')
+  const [showRecoveryServiceDropdown, setShowRecoveryServiceDropdown] = useState(false)
   
   // Determine which filters to show based on selectedType
   const isRepairShop = selectedType === 'repair_shop'
+  const isSportsRecovery = selectedType === 'sports_recovery'
   const isEquipmentShop = selectedType === 'equipment_shop'
   const isFieldOrCoach = selectedType === 'field' || selectedType === 'coach'
-  const showSportFilter = !isRepairShop // Sport filter for all except repair shops
-  const showTypeFilterConditional = showTypeFilter && !isRepairShop && !isEquipmentShop && !isFieldOrCoach // Type filter only when no specific type is selected
-  const showRepairCategoryFilter = isRepairShop // Repair category filter only for repair shops
+  const showSportFilter = !isRepairShop
+  const showTypeFilterConditional =
+    showTypeFilter && !isRepairShop && !isEquipmentShop && !isFieldOrCoach && !isSportsRecovery
+  const showRepairCategoryFilter = isRepairShop
+  const showRecoveryServiceFilter = isSportsRecovery
 
   useEffect(() => {
     const handleResize = () => {
@@ -145,7 +157,8 @@ function FacilityFilters({
     setSport(selectedSport)
     setType(selectedType)
     setRepairCategory(selectedRepairCategory)
-  }, [selectedCity, selectedSport, selectedType, selectedRepairCategory])
+    setRecoveryService(selectedRecoveryService)
+  }, [selectedCity, selectedSport, selectedType, selectedRepairCategory, selectedRecoveryService])
 
   const handleCityChange = (newCity: string) => {
     const updatedCity = newCity || ''
@@ -153,7 +166,13 @@ function FacilityFilters({
     setCitySearch('')
     setShowCityDropdown(false)
     // Use current state values, but override with new city
-    updateFilters(updatedCity, sport || selectedSport || '', type || selectedType || '', repairCategory || selectedRepairCategory || '')
+    updateFilters(
+      updatedCity,
+      sport || selectedSport || '',
+      type || selectedType || '',
+      repairCategory || selectedRepairCategory || '',
+      recoveryService || selectedRecoveryService || ''
+    )
   }
 
   const handleSportChange = (newSport: string) => {
@@ -162,7 +181,13 @@ function FacilityFilters({
     setSportSearch('')
     setShowSportDropdown(false)
     // Use current state values, but override with new sport
-    updateFilters(city || selectedCity || '', updatedSport, type || selectedType || '', repairCategory || selectedRepairCategory || '')
+    updateFilters(
+      city || selectedCity || '',
+      updatedSport,
+      type || selectedType || '',
+      repairCategory || selectedRepairCategory || '',
+      recoveryService || selectedRecoveryService || ''
+    )
   }
 
   const handleTypeChange = (newType: string) => {
@@ -171,7 +196,13 @@ function FacilityFilters({
     setTypeSearch('')
     setShowTypeDropdown(false)
     // Use current state values, but override with new type
-    updateFilters(city || selectedCity || '', sport || selectedSport || '', updatedType, repairCategory || selectedRepairCategory || '')
+    updateFilters(
+      city || selectedCity || '',
+      sport || selectedSport || '',
+      updatedType,
+      repairCategory || selectedRepairCategory || '',
+      recoveryService || selectedRecoveryService || ''
+    )
   }
 
   const handleRepairCategoryChange = (newCategory: string) => {
@@ -180,7 +211,27 @@ function FacilityFilters({
     setRepairCategorySearch('')
     setShowRepairCategoryDropdown(false)
     // Use current state values, but override with new category
-    updateFilters(city || selectedCity || '', sport || selectedSport || '', type || selectedType || '', updatedCategory)
+    updateFilters(
+      city || selectedCity || '',
+      sport || selectedSport || '',
+      type || selectedType || '',
+      updatedCategory,
+      recoveryService || selectedRecoveryService || ''
+    )
+  }
+
+  const handleRecoveryServiceChange = (newService: string) => {
+    const updatedService = newService || ''
+    setRecoveryService(updatedService)
+    setRecoveryServiceSearch('')
+    setShowRecoveryServiceDropdown(false)
+    updateFilters(
+      city || selectedCity || '',
+      sport || selectedSport || '',
+      type || selectedType || '',
+      repairCategory || selectedRepairCategory || '',
+      updatedService
+    )
   }
 
   // Simple, deterministic function to generate URL from filters
@@ -193,7 +244,13 @@ function FacilityFilters({
   // - Sport only → /sport
   // - Type only → /type (base URL)
   // - Nothing → /toate
-  const generateURLFromFilters = (city: string, sport: string, type: string, repairCategory: string = ''): string => {
+  const generateURLFromFilters = (
+    city: string,
+    sport: string,
+    type: string,
+    repairCategory: string = '',
+    recoveryServiceFilter: string = ''
+  ): string => {
     // Clean empty strings
     const hasCity = city && city.trim() !== ''
     const hasSport = sport && sport.trim() !== ''
@@ -203,15 +260,21 @@ function FacilityFilters({
     // For repair shops, include category in URL
     if (type === 'repair_shop' && hasRepairCategory) {
       const repairCategorySlug = repairCategoryToSlug(repairCategory)
-      
-      // 1. City + Type + Repair Category → /city/type/category
       if (hasCity && hasType) {
         return `/${cityNameToSlug(city)}/${facilityTypeToSlug(type)}/${repairCategorySlug}`
       }
-      
-      // 2. Type + Repair Category (no city) → /type/category
       if (hasType) {
         return `/${facilityTypeToSlug(type)}/${repairCategorySlug}`
+      }
+    }
+    const hasRecoveryService = recoveryServiceFilter && recoveryServiceFilter.trim() !== ''
+    if (type === 'sports_recovery' && hasRecoveryService) {
+      const serviceSlug = recoveryServiceToSlug(recoveryServiceFilter)
+      if (hasCity && hasType) {
+        return `/${cityNameToSlug(city)}/${facilityTypeToSlug(type)}/${serviceSlug}`
+      }
+      if (hasType) {
+        return `/${facilityTypeToSlug(type)}/${serviceSlug}`
       }
     }
     
@@ -252,24 +315,34 @@ function FacilityFilters({
         'field': '/terenuri',
         'coach': '/antrenori',
         'repair_shop': '/magazine-reparatii',
-        'equipment_shop': '/magazine-articole'
+        equipment_shop: '/magazine-articole',
+        sports_recovery: '/recuperare-sportiva'
       }
       return baseUrls[type] || '/toate'
     }
-    
-    // 8. Nothing → /toate
+
     return '/toate'
   }
 
-  const updateFilters = (newCity: string, newSport: string, newType: string, newRepairCategory: string = '') => {
+  const updateFilters = (
+    newCity: string,
+    newSport: string,
+    newType: string,
+    newRepairCategory: string = '',
+    newRecoveryService: string = recoveryService || selectedRecoveryService || ''
+  ) => {
     if (onFiltersChange) {
-      onFiltersChange({ city: newCity, sport: newSport, type: newType, repairCategory: newRepairCategory })
+      onFiltersChange({
+        city: newCity,
+        sport: newSport,
+        type: newType,
+        repairCategory: newRepairCategory,
+        recoveryService: newRecoveryService
+      })
       return
     }
 
-    // Use simple, deterministic URL generation
-    // Repair category is now part of URL structure for repair shops
-    const newURL = generateURLFromFilters(newCity, newSport, newType, newRepairCategory)
+    const newURL = generateURLFromFilters(newCity, newSport, newType, newRepairCategory, newRecoveryService)
     navigate(newURL)
   }
 
@@ -306,6 +379,14 @@ function FacilityFilters({
       return categoryObj ? categoryObj.label : ''
     }
     return repairCategorySearch
+  }
+
+  const getRecoveryServiceDisplayValue = () => {
+    if (recoveryService || selectedRecoveryService) {
+      const serviceObj = RECOVERY_SERVICE_OPTIONS.find((c) => c.value === (recoveryService || selectedRecoveryService))
+      return serviceObj ? serviceObj.label : recoveryService || selectedRecoveryService
+    }
+    return recoveryServiceSearch
   }
 
   return (
@@ -884,6 +965,147 @@ function FacilityFilters({
                       }}
                     >
                       {categoryOption.label}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {showRecoveryServiceFilter && (
+          <div style={{ position: 'relative' }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.75rem',
+              color: '#0f172a',
+              fontWeight: '600',
+              fontSize: '0.875rem'
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+              <span>Serviciu recuperare</span>
+            </label>
+            <input
+              type="text"
+              value={getRecoveryServiceDisplayValue()}
+              onChange={(e) => {
+                setRecoveryServiceSearch(e.target.value)
+                setShowRecoveryServiceDropdown(true)
+                if (!e.target.value) {
+                  setRecoveryService('')
+                  setRecoveryServiceSearch('')
+                }
+              }}
+              onClick={() => setShowRecoveryServiceDropdown(true)}
+              onFocus={(e) => {
+                setShowRecoveryServiceDropdown(true)
+                e.target.style.borderColor = '#10b981'
+                e.target.style.background = '#ffffff'
+                e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e7eef5'
+                e.target.style.background = '#ffffff'
+                e.target.style.boxShadow = 'none'
+                setTimeout(() => setShowRecoveryServiceDropdown(false), 250)
+              }}
+              placeholder="Caută sau selectează serviciu"
+              style={{
+                width: '100%',
+                padding: '0.875rem 1rem',
+                paddingRight: '2.5rem',
+                border: '1px solid #e7eef5',
+                borderRadius: '12px',
+                fontSize: '1rem',
+                outline: 'none',
+                background: '#ffffff',
+                color: '#0f172a',
+                transition: 'all 0.2s ease',
+                fontWeight: '400',
+                lineHeight: '1.5',
+                boxShadow: 'none'
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              right: '0.75rem',
+              top: '2.75rem',
+              pointerEvents: 'none'
+            }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                <path d="M5 7.5l5 5 5-5"/>
+              </svg>
+            </div>
+            {showRecoveryServiceDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: '0.5rem',
+                background: '#ffffff',
+                border: '1px solid #e7eef5',
+                borderRadius: '12px',
+                boxShadow: '0 10px 28px rgba(15, 23, 42, 0.06)',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                zIndex: 1000
+              }}>
+                <div
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    handleRecoveryServiceChange('')
+                  }}
+                  style={{
+                    padding: '0.75rem 1rem',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid #f1f5f9',
+                    color: '#0f172a',
+                    fontSize: '0.9375rem',
+                    fontWeight: '500',
+                    transition: 'background 0.15s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f0fdf4'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#ffffff'
+                  }}
+                >
+                  Toate serviciile
+                </div>
+                {RECOVERY_SERVICE_OPTIONS.filter((option) => option.value)
+                  .filter((option) =>
+                    !recoveryServiceSearch ||
+                    option.label.toLowerCase().includes(recoveryServiceSearch.toLowerCase())
+                  )
+                  .map((option) => (
+                    <div
+                      key={option.value}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        handleRecoveryServiceChange(option.value)
+                      }}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f1f5f9',
+                        color: '#0f172a',
+                        fontSize: '0.9375rem',
+                        fontWeight: '500',
+                        transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#f0fdf4'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#ffffff'
+                      }}
+                    >
+                      {option.label}
                     </div>
                   ))}
               </div>

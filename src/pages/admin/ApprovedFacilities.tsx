@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import API_BASE_URL from '../../config'
+import { card, colors, disabledButton, field, primaryButton } from '../../ui/theme'
 import { ROMANIAN_CITIES, getCityNames } from '../../data/romanian-cities'
 
 interface Facility {
@@ -24,7 +25,8 @@ const FACILITY_TYPES = [
   { value: 'field', label: 'Terenuri' },
   { value: 'coach', label: 'Antrenori' },
   { value: 'repair_shop', label: 'Magazine Reparații' },
-  { value: 'equipment_shop', label: 'Magazine Articole' }
+  { value: 'equipment_shop', label: 'Magazine Articole' },
+  { value: 'sports_recovery', label: 'Recuperare sportivă' }
 ]
 
 const SPORTS = [
@@ -116,7 +118,8 @@ function ApprovedFacilities() {
       'field': 'Teren Sportiv',
       'coach': 'Antrenor',
       'repair_shop': 'Magazin Reparații',
-      'equipment_shop': 'Magazin Articole'
+      equipment_shop: 'Magazin Articole',
+      sports_recovery: 'Recuperare sportivă'
     }
     return labels[type] || type
   }
@@ -146,19 +149,17 @@ function ApprovedFacilities() {
   return (
     <div>
       <div style={{ padding: '2rem' }}>
-      <h1 style={{ fontSize: '2rem', color: '#1e3c72', marginBottom: '2rem' }}>
+      <h1 style={{ fontSize: '2rem', color: colors.ink, marginBottom: '2rem' }}>
         Facilități aprobate ({filteredFacilities.length})
       </h1>
 
       {/* Filters */}
       <div style={{
-        background: 'white',
+        ...card,
         padding: '1.5rem',
-        borderRadius: '12px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         marginBottom: '2rem',
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '1rem'
       }}>
         <div>
@@ -168,15 +169,7 @@ function ApprovedFacilities() {
           <select
             value={filterCity}
             onChange={(e) => setFilterCity(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
+            style={{ ...field, cursor: 'pointer' }}
           >
             <option value="">Toate orașele</option>
             {availableCities.map(city => (
@@ -192,15 +185,7 @@ function ApprovedFacilities() {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
+            style={{ ...field, cursor: 'pointer' }}
           >
             {FACILITY_TYPES.map(type => (
               <option key={type.value} value={type.value}>{type.label}</option>
@@ -215,15 +200,7 @@ function ApprovedFacilities() {
           <select
             value={filterSport}
             onChange={(e) => setFilterSport(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '2px solid #e0e0e0',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
+            style={{ ...field, cursor: 'pointer' }}
           >
             {availableSports.map(sport => (
               <option key={sport} value={sport}>
@@ -235,13 +212,7 @@ function ApprovedFacilities() {
       </div>
 
       {filteredFacilities.length === 0 ? (
-        <div style={{
-          background: 'white',
-          padding: '3rem',
-          borderRadius: '12px',
-          textAlign: 'center',
-          color: '#666'
-        }}>
+        <div style={{ ...card, padding: '3rem', textAlign: 'center', color: colors.muted }}>
           Nu sunt facilități care să corespundă filtrelor
         </div>
       ) : (
@@ -251,11 +222,8 @@ function ApprovedFacilities() {
               <div
                 key={facility.id}
                 style={{
-                  background: 'white',
+                  ...card,
                   padding: '1.5rem',
-                  borderRadius: '12px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  border: '1px solid #e5e7eb',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'start'
@@ -296,17 +264,7 @@ function ApprovedFacilities() {
                 </div>
                 <Link
                   to={`/admin/facilities/${facility.id}`}
-                  style={{
-                    padding: '0.5rem 1.5rem',
-                    background: '#1e3c72',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.9rem',
-                    fontWeight: 'bold',
-                    textAlign: 'center',
-                    marginLeft: '1rem'
-                  }}
+                  style={{ ...primaryButton, marginLeft: '1rem' }}
                 >
                   Vezi/Editează
                 </Link>
@@ -326,15 +284,7 @@ function ApprovedFacilities() {
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: currentPage === 1 ? '#e5e7eb' : '#1e3c72',
-                  color: currentPage === 1 ? '#666' : 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                  fontSize: '0.9rem'
-                }}
+                style={currentPage === 1 ? disabledButton : primaryButton}
               >
                 ← Anterior
               </button>
@@ -344,15 +294,7 @@ function ApprovedFacilities() {
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: currentPage === totalPages ? '#e5e7eb' : '#1e3c72',
-                  color: currentPage === totalPages ? '#666' : 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                  fontSize: '0.9rem'
-                }}
+                style={currentPage === totalPages ? disabledButton : primaryButton}
               >
                 Următor →
               </button>

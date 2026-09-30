@@ -38,7 +38,8 @@ const FACILITY_TYPE_LABELS: Record<string, string> = {
   'field': 'Terenuri Sportive',
   'coach': 'Antrenori',
   'repair_shop': 'Magazine Reparații',
-  'equipment_shop': 'Magazine Articole Sportive'
+  equipment_shop: 'Magazine Articole Sportive',
+  sports_recovery: 'Recuperare sportivă'
 }
 
 const SPORT_NAMES: Record<string, string> = {
@@ -51,7 +52,7 @@ const SPORT_NAMES: Record<string, string> = {
   'squash': 'Squash'
 }
 
-type FacilityType = 'field' | 'coach' | 'repair_shop' | 'equipment_shop'
+type FacilityType = 'field' | 'coach' | 'repair_shop' | 'equipment_shop' | 'sports_recovery'
 
 interface FacilitiesListProps {
   type: FacilityType
@@ -82,7 +83,9 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
     try {
       const params = new URLSearchParams({ type, status: 'active' })
       if (selectedCity) params.append('city', selectedCity)
-      if (selectedSport && type === 'field') params.append('sport', selectedSport)
+      if (selectedSport && (type === 'field' || type === 'coach' || type === 'sports_recovery')) {
+        params.append('sport', selectedSport)
+      }
 
       const response = await fetch(`${API_BASE_URL}/facilities?${params}`)
       const data = await response.json()

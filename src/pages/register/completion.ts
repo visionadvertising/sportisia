@@ -92,6 +92,7 @@ export function readProfile(facility: Record<string, unknown> | null | undefined
       })
     : []
   const categoriesRaw = parsed(row.repair_categories ?? row.repairCategories)
+  const recoveryRaw = parsed(row.recovery_services ?? row.recoveryServices)
   return {
     name: String(row.name || ''),
     city: String(row.city || ''),
@@ -117,6 +118,8 @@ export function readProfile(facility: Record<string, unknown> | null | undefined
     brandsAvailable: String(row.brands_available || ''),
     deliveryAvailable: Number(row.delivery_available) === 1,
     repairCategories: Array.isArray(categoriesRaw) ? categoriesRaw.map(String) : [],
+    recoveryServices: Array.isArray(recoveryRaw) ? recoveryRaw.map(String) : [],
+    servicesOffered: String(row.services_offered || row.servicesOffered || ''),
     sportsFields
   }
 }

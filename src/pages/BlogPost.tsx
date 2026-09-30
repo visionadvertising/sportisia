@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState, type CSSProperties } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { absoluteUrl, usePageSeo } from '../utils/blogSeo'
+import { sanitizeHtml } from '../utils/sanitizeHtml'
 
 interface Comment {
   id: number
@@ -185,7 +186,7 @@ function BlogPost() {
       <div style={{ background: '#ffffff', padding: isMobile ? '2rem 1rem 3rem' : '3rem 2rem 4rem' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           {post.cover_image && <img src={post.cover_image} alt="" style={{ width: '100%', maxHeight: '440px', objectFit: 'cover', borderRadius: '16px', marginBottom: '1.5rem', border: '1px solid #eef2f6' }} />}
-          <div className="blog-content" style={{ color: '#1e293b', fontSize: '1.05rem', lineHeight: 1.75 }} dangerouslySetInnerHTML={{ __html: post.content }} />
+          <div className="blog-content" style={{ color: '#1e293b', fontSize: '1.05rem', lineHeight: 1.75 }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content || '') }} />
           {post.tags && post.tags.length > 0 && (
             <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', marginTop: '1.25rem' }}>
               {post.tags.map((tag) => <span key={tag} style={{ background: '#f8fafc', border: '1px solid #eef2f6', borderRadius: '999px', padding: '0.3rem 0.7rem', color: '#475569', fontSize: '0.85rem' }}>{tag}</span>)}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import API_BASE_URL from '../../config'
+import { card, colors, dangerButton, disabledButton, primaryButton } from '../../ui/theme'
 
 interface Facility {
   id: number
@@ -98,7 +99,8 @@ function PendingFacilities() {
     const labels: Record<string, string> = {
       'field': 'Teren Sportiv',
       'coach': 'Antrenor',
-      'repair_shop': 'Magazin Reparații',
+      repair_shop: 'Magazin Reparații',
+      sports_recovery: 'Recuperare sportivă',
       'equipment_shop': 'Magazin Articole'
     }
     return labels[type] || type
@@ -122,7 +124,7 @@ function PendingFacilities() {
     <div>
       <div style={{ padding: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', color: '#1e3c72', margin: 0 }}>
+        <h1 style={{ fontSize: '2rem', color: colors.ink, margin: 0 }}>
           Cereri în așteptare ({facilities.length})
         </h1>
       </div>
@@ -154,13 +156,7 @@ function PendingFacilities() {
       )}
 
       {facilities.length === 0 ? (
-        <div style={{
-          background: 'white',
-          padding: '3rem',
-          borderRadius: '12px',
-          textAlign: 'center',
-          color: '#666'
-        }}>
+        <div style={{ ...card, padding: '3rem', textAlign: 'center', color: colors.muted }}>
           Nu sunt cereri în așteptare
         </div>
       ) : (
@@ -169,13 +165,7 @@ function PendingFacilities() {
             {currentFacilities.map((facility) => (
               <div
                 key={facility.id}
-                style={{
-                  background: 'white',
-                  padding: '1.5rem',
-                  borderRadius: '12px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  border: '1px solid #e5e7eb'
-                }}
+                style={{ ...card, padding: '1.5rem' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                   <div style={{ flex: 1 }}>
@@ -222,46 +212,19 @@ function PendingFacilities() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginLeft: '1rem' }}>
                     <Link
                       to={`/admin/facilities/${facility.id}`}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        background: '#1e3c72',
-                        color: 'white',
-                        textDecoration: 'none',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
-                        fontWeight: 'bold',
-                        textAlign: 'center'
-                      }}
+                      style={primaryButton}
                     >
                       Vezi detalii
                     </Link>
                     <button
                       onClick={() => handleApproveFacility(facility.id)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        background: '#10b981',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '0.9rem'
-                      }}
+                      style={primaryButton}
                     >
                       Aprobă
                     </button>
                     <button
                       onClick={() => handleRejectFacility(facility.id)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        background: '#ef4444',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '0.9rem'
-                      }}
+                      style={dangerButton}
                     >
                       Respinge
                     </button>
@@ -283,15 +246,7 @@ function PendingFacilities() {
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: currentPage === 1 ? '#e5e7eb' : '#1e3c72',
-                  color: currentPage === 1 ? '#666' : 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                  fontSize: '0.9rem'
-                }}
+                style={currentPage === 1 ? disabledButton : primaryButton}
               >
                 ← Anterior
               </button>
@@ -301,15 +256,7 @@ function PendingFacilities() {
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: currentPage === totalPages ? '#e5e7eb' : '#1e3c72',
-                  color: currentPage === totalPages ? '#666' : 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                  fontSize: '0.9rem'
-                }}
+                style={currentPage === totalPages ? disabledButton : primaryButton}
               >
                 Următor →
               </button>

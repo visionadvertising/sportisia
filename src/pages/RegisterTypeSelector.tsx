@@ -15,7 +15,8 @@ function RegisterTypeSelector() {
         'field': 'baze-sportive',
         'coach': 'antrenori',
         'repair_shop': 'magazine-reparatii',
-        'equipment_shop': 'magazine-articole'
+        equipment_shop: 'magazine-articole',
+        sports_recovery: 'recuperare-sportiva'
       }
       const slug = typeMap[type]
       if (slug) {
@@ -89,6 +90,16 @@ function RegisterTypeSelector() {
           <path d="M16 10a4 4 0 0 1-8 0"></path>
         </svg>
       )
+    },
+    {
+      value: 'recuperare-sportiva',
+      label: 'Recuperare sportivă',
+      description: 'Kinetoterapie, fizioterapie, masaj sportiv',
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+      )
     }
   ]
 
@@ -102,13 +113,18 @@ function RegisterTypeSelector() {
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
+        <p style={{ textAlign: 'center', margin: '0 0 0.75rem' }}>
+          <Link to="/register" style={{ color: '#059669', fontWeight: 700, textDecoration: 'none', fontSize: '0.92rem' }}>
+            ← Înapoi la tipuri de cont
+          </Link>
+        </p>
         <h1 style={{
           fontSize: isMobile ? '2rem' : '3rem',
           fontWeight: '700',
           color: '#0f172a',
           marginBottom: '1rem',
           textAlign: 'center'
-        }}>Alege tipul de facilitate</h1>
+        }}>Administrator facilitate — alege categoria</h1>
         <p style={{
           fontSize: isMobile ? '1rem' : '1.125rem',
           color: '#64748b',

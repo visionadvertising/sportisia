@@ -1,15 +1,25 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, type CSSProperties, type FormEvent } from 'react'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import API_BASE_URL from '../config'
+import { notifyAuthChange } from '../utils/memberSession'
+import { clearMemberSavedCache, refreshMemberSavedIds } from '../utils/savedFacilities'
 
-function Login() {
+type LoginProps = {
+  accountKind: 'member' | 'business'
+}
+
+function Login({ accountKind }: LoginProps) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isMemberFlow = accountKind === 'member'
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [focused, setFocused] = useState<'user' | 'pass' | ''>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -26,9 +36,31 @@ function Login() {
       const data = await response.json()
 
       if (data.success) {
+        const kind = data.user?.accountKind === 'member' ? 'member' : 'business'
+        if (isMemberFlow && kind !== 'member') {
+          setError('Acest cont este de administrator facilitate. Alege login pentru administrator.')
+          return
+        }
+        if (!isMemberFlow && kind === 'member') {
+          setError('Acest cont este de membru comunitate. Alege login pentru membri.')
+          return
+        }
+
         localStorage.setItem('user', JSON.stringify(data.user))
         if (data.token) localStorage.setItem('userToken', data.token)
-        navigate('/dashboard')
+        clearMemberSavedCache()
+        if (kind === 'member') {
+          await refreshMemberSavedIds()
+        }
+        notifyAuthChange()
+        const next = searchParams.get('next')
+        if (next && next.startsWith('/')) {
+          navigate(next)
+        } else if (kind === 'member') {
+          navigate('/cont')
+        } else {
+          navigate('/dashboard')
+        }
         return
       }
 
@@ -57,131 +89,153 @@ function Login() {
     }
   }
 
+  const fieldStyle = (name: 'user' | 'pass'): CSSProperties => ({
+    width: '100%',
+    boxSizing: 'border-box',
+    marginTop: '0.4rem',
+    padding: '0.85rem 0.95rem',
+    border: `1px solid ${focused === name ? '#10b981' : '#e2e8f0'}`,
+    borderRadius: '12px',
+    fontSize: '1rem',
+    outline: 'none',
+    background: '#f8fafc',
+    color: '#0f172a',
+    fontFamily: 'inherit',
+    boxShadow: focused === name ? '0 0 0 3px rgba(16, 185, 129, 0.15)' : 'none'
+  })
+
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: 'calc(100vh - 180px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem'
+      position: 'relative',
+      overflow: 'hidden',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #0f172a 100%)',
+      padding: '3rem 1rem'
     }}>
       <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.16) 0%, transparent 42%), radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 40%)',
+        pointerEvents: 'none'
+      }} />
+      <div style={{
+        position: 'relative',
         background: 'white',
-        borderRadius: '16px',
-        padding: '3rem',
-        maxWidth: '500px',
+        border: '1px solid #eef2f6',
+        borderRadius: '20px',
+        padding: '2rem 1.5rem',
+        maxWidth: '440px',
         width: '100%',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+        boxShadow: '0 24px 60px rgba(15, 23, 42, 0.28)'
       }}>
-        <h1 style={{
-          fontSize: '2.5rem',
-          color: '#1e3c72',
-          marginBottom: '0.5rem',
-          textAlign: 'center'
-        }}>Autentificare</h1>
-        <p style={{
-          color: '#666',
-          textAlign: 'center',
-          marginBottom: '2rem'
-        }}>Conectează-te pentru a gestiona facilitatea ta</p>
+        <p style={{ margin: '0 0 0.45rem', color: '#059669', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.75rem', textAlign: 'center' }}>Sportisia</p>
+        <h1 style={{ margin: 0, fontSize: '1.85rem', color: '#0f172a', textAlign: 'center', letterSpacing: '-0.03em' }}>
+          {isMemberFlow ? 'Login membru comunitate' : 'Login administrator facilitate'}
+        </h1>
+        <p style={{ color: '#64748b', textAlign: 'center', margin: '0.55rem 0 1.5rem', lineHeight: 1.5 }}>
+          {isMemberFlow
+            ? 'Intră în contul tău de sportiv pentru favorite și setări personale.'
+            : 'Intră în panoul de administrare al facilității tale.'}
+        </p>
 
         {error && (
-          <div style={{
-            background: '#fee2e2',
-            border: '1px solid #ef4444',
-            color: '#991b1b',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '2rem'
-          }}>
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.8rem 0.9rem', borderRadius: '12px', marginBottom: '1rem', fontSize: '0.92rem' }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#333',
-              fontWeight: '500'
-            }}>Username</label>
+          <label style={label}>
+            Utilizator sau email
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              onFocus={() => setFocused('user')}
+              onBlur={() => setFocused('')}
+              autoComplete="username"
               required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
+              style={fieldStyle('user')}
             />
-          </div>
+          </label>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#333',
-              fontWeight: '500'
-            }}>Parolă</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
-            />
-          </div>
+          <label style={{ ...label, marginTop: '0.9rem' }}>
+            Parolă
+            <span style={{ position: 'relative', display: 'block', marginTop: '0.4rem' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setFocused('pass')}
+                onBlur={() => setFocused('')}
+                autoComplete="current-password"
+                required
+                style={{ ...fieldStyle('pass'), marginTop: 0, paddingRight: '4.5rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                style={toggle}
+              >
+                {showPassword ? 'Ascunde' : 'Arată'}
+              </button>
+            </span>
+          </label>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              background: loading ? '#9ca3af' : '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              marginBottom: '1rem'
-            }}
-          >
+          <button type="submit" disabled={loading} style={{ ...submit, opacity: loading ? 0.7 : 1, cursor: loading ? 'wait' : 'pointer' }}>
             {loading ? 'Se conectează...' : 'Conectează-te'}
           </button>
 
-          <div style={{ textAlign: 'center' }}>
-            <Link
-              to="/register"
-              style={{
-                color: '#10b981',
-                textDecoration: 'none',
-                fontWeight: '500'
-              }}
-            >
-              Nu ai cont? Înregistrează-te
+          <p style={{ textAlign: 'center', margin: '1rem 0 0', color: '#64748b', fontSize: '0.92rem', lineHeight: 1.5 }}>
+            <Link to="/login" style={{ color: '#059669', fontWeight: 700, textDecoration: 'none' }}>
+              ← Alt tip de cont
             </Link>
-          </div>
+            {' · '}
+            <Link to="/register" style={{ color: '#059669', fontWeight: 700, textDecoration: 'none' }}>
+              Înregistrare
+            </Link>
+          </p>
         </form>
       </div>
     </div>
   )
 }
 
-export default Login
+const label: CSSProperties = {
+  display: 'block',
+  color: '#0f172a',
+  fontWeight: 700,
+  fontSize: '0.9rem'
+}
 
+const toggle: CSSProperties = {
+  position: 'absolute',
+  right: '0.75rem',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  border: 0,
+  background: 'transparent',
+  color: '#059669',
+  fontWeight: 700,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  fontSize: '0.85rem'
+}
+
+const submit: CSSProperties = {
+  width: '100%',
+  marginTop: '1.15rem',
+  padding: '0.9rem 1rem',
+  background: '#10b981',
+  color: 'white',
+  border: 'none',
+  borderRadius: '999px',
+  fontSize: '1rem',
+  fontWeight: 700,
+  fontFamily: 'inherit'
+}
+
+export default Login

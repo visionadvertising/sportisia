@@ -2,6 +2,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import PublicMap from '../components/PublicMap'
+import FacilityCommunity from '../components/FacilityCommunity'
 import { slugify } from '../utils/seo'
 
 interface TimeSlot {
@@ -81,6 +82,7 @@ interface Facility {
   brands_serviced?: string
   average_repair_time?: string
   repair_categories?: string[] | string
+  recovery_services?: string[] | string
   products_categories?: string
   brands_available?: string
   delivery_available?: boolean | number
@@ -297,6 +299,13 @@ function SportsBasePublic() {
             facilityData.repair_categories = JSON.parse(facilityData.repair_categories)
           } catch (e) {
             facilityData.repair_categories = []
+          }
+        }
+        if (facilityData.recovery_services && typeof facilityData.recovery_services === 'string') {
+          try {
+            facilityData.recovery_services = JSON.parse(facilityData.recovery_services)
+          } catch (e) {
+            facilityData.recovery_services = []
           }
         }
         if (facilityData.sportsFields && typeof facilityData.sportsFields === 'string') {
@@ -1161,7 +1170,12 @@ function SportsBasePublic() {
             {facility.sport && <div><strong>Sport:</strong> {facility.sport}</div>}
             {facility.specialization && <div><strong>Specializare:</strong> {facility.specialization}</div>}
             {facility.experience_years != null && <div><strong>Experiență:</strong> {facility.experience_years} ani</div>}
-            {facility.price_per_lesson != null && <div><strong>Preț / lecție:</strong> {facility.price_per_lesson} lei</div>}
+            {facility.price_per_lesson != null && (
+              <div>
+                <strong>{facility.facility_type === 'sports_recovery' ? 'Preț / ședință' : 'Preț / lecție'}:</strong>{' '}
+                {facility.price_per_lesson} lei
+              </div>
+            )}
             {facility.certifications && <div><strong>Certificări:</strong> {facility.certifications}</div>}
             {facility.languages && <div><strong>Limbi:</strong> {facility.languages}</div>}
             {facility.services_offered && <div><strong>Servicii:</strong> {facility.services_offered}</div>}
@@ -1169,6 +1183,14 @@ function SportsBasePublic() {
             {facility.average_repair_time && <div><strong>Timp mediu:</strong> {facility.average_repair_time}</div>}
             {Array.isArray(facility.repair_categories) && facility.repair_categories.length > 0 && (
               <div><strong>Categorii:</strong> {facility.repair_categories.join(', ')}</div>
+            )}
+            {Array.isArray(facility.recovery_services) && facility.recovery_services.length > 0 && (
+              <div><strong>Servicii recuperare:</strong> {facility.recovery_services.join(', ')}</div>
+            )}
+            {facility.facility_type === 'sports_recovery' && (
+              <p style={{ margin: '0.75rem 0 0', fontSize: '0.82rem', color: '#64748b' }}>
+                Informațiile sunt orientative — confirmă detaliile direct cu cabinetul.
+              </p>
             )}
             {facility.products_categories && <div><strong>Produse:</strong> {facility.products_categories}</div>}
             {facility.brands_available && <div><strong>Branduri:</strong> {facility.brands_available}</div>}
@@ -1561,13 +1583,21 @@ function SportsBasePublic() {
         )}
 
       </div>
+      <FacilityCommunity
+        facilityId={facility.id}
+        name={facility.name}
+        city={facility.city}
+        type={facility.facility_type}
+        sport={facility.sport || facility.sportsFields?.[0]?.sportType}
+        phone={phones[0]}
+        whatsapp={whatsapps[0]}
+      />
       
       <div style={{
           position: 'fixed',
           zIndex: 40,
-          ...(isMobile
-            ? { left: '0.75rem', right: '0.75rem', bottom: '0.75rem' }
-            : { right: '1.5rem', bottom: '1.5rem' })
+          top: '5.5rem',
+          right: '1rem'
         }}>
           {facility.profile_tier === 'recommended' ? (
             <div style={{

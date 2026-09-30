@@ -4,6 +4,7 @@ import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 import { ROMANIAN_COUNTIES } from '../data/romanian-counties'
 import MapSelector from '../components/MapSelector'
+import { card, colors, field, loginCard, loginGlow, loginShell, primaryButton } from '../ui/theme'
 
 type FacilityType = 'field' | 'coach' | 'repair_shop' | 'equipment_shop'
 
@@ -408,63 +409,37 @@ function Register() {
 
   if (credentials) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '2rem'
-      }}>
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '3rem',
-          maxWidth: '600px',
-          width: '100%',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-        }}>
+      <div style={loginShell}>
+        <div style={loginGlow} />
+        <div style={{ ...loginCard, maxWidth: '560px', padding: '2.25rem 1.75rem' }}>
+          <p style={{ margin: '0 0 0.45rem', color: colors.greenDark, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.75rem', textAlign: 'center' }}>Sportisia</p>
           <h2 style={{
-            color: '#10b981',
-            fontSize: '2rem',
-            marginBottom: '1rem',
-            textAlign: 'center'
-          }}>✅ Înregistrare reușită!</h2>
+            color: colors.ink,
+            fontSize: '1.85rem',
+            margin: '0 0 0.6rem',
+            textAlign: 'center',
+            letterSpacing: '-0.03em'
+          }}>Înregistrare reușită</h2>
           <p style={{
-            color: '#666',
-            marginBottom: '2rem',
-            textAlign: 'center'
+            color: colors.muted,
+            margin: '0 0 1.5rem',
+            textAlign: 'center',
+            lineHeight: 1.5
           }}>Facilitatea ta a fost înregistrată. Contul tău a fost creat cu următoarele credențiale:</p>
           
           <div style={{
-            background: '#f9fafb',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            marginBottom: '2rem'
+            ...card,
+            background: colors.page,
+            padding: '1.15rem',
+            marginBottom: '1.25rem'
           }}>
             <div style={{ marginBottom: '1rem' }}>
-              <strong style={{ color: '#333' }}>Username:</strong>
-              <div style={{
-                background: 'white',
-                padding: '0.75rem',
-                borderRadius: '6px',
-                marginTop: '0.5rem',
-                fontFamily: 'monospace',
-                fontSize: '1.1rem',
-                color: '#1e3c72'
-              }}>{credentials.username}</div>
+              <strong style={{ color: colors.ink }}>Username</strong>
+              <div style={{ ...field, marginTop: '0.45rem', fontFamily: 'monospace' }}>{credentials.username}</div>
             </div>
             <div>
-              <strong style={{ color: '#333' }}>Parolă:</strong>
-              <div style={{
-                background: 'white',
-                padding: '0.75rem',
-                borderRadius: '6px',
-                marginTop: '0.5rem',
-                fontFamily: 'monospace',
-                fontSize: '1.1rem',
-                color: '#1e3c72'
-              }}>{credentials.password}</div>
+              <strong style={{ color: colors.ink }}>Parolă</strong>
+              <div style={{ ...field, marginTop: '0.45rem', fontFamily: 'monospace' }}>{credentials.password}</div>
             </div>
           </div>
 
@@ -490,34 +465,13 @@ function Register() {
                 navigator.clipboard.writeText(`Username: ${credentials.username}\nParolă: ${credentials.password}`)
                 alert('Credențiale copiate în clipboard!')
               }}
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                background: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                cursor: 'pointer'
-              }}
+              style={{ ...primaryButton, flex: 1 }}
             >
               Copiază credențiale
             </button>
             <Link
               to="/login"
-              style={{
-                flex: 1,
-                padding: '0.75rem',
-                background: '#1e3c72',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                textAlign: 'center',
-                display: 'block'
-              }}
+              style={{ ...primaryButton, flex: 1, background: colors.ink }}
             >
               Mergi la Login
             </Link>

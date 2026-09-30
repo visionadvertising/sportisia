@@ -77,6 +77,7 @@ function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
   const [pricePerLesson, setPricePerLesson] = useState('')
   const [certifications, setCertifications] = useState('')
   const [languages, setLanguages] = useState('')
+  const [audience, setAudience] = useState<string[]>([])
   const profileApplied = useRef(false)
 
   useEffect(() => {
@@ -103,6 +104,11 @@ function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
     setPricePerLesson(profile.pricePerLesson)
     setCertifications(profile.certifications)
     setLanguages(profile.languages)
+    const savedAudience = completion.facility.audience
+    if (Array.isArray(savedAudience)) setAudience(savedAudience as string[])
+    else if (typeof savedAudience === 'string') {
+      try { setAudience(JSON.parse(savedAudience)) } catch { setAudience([]) }
+    }
   }, [completion])
 
   useEffect(() => {
@@ -335,7 +341,8 @@ function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
         experienceYears: experienceYears ? parseInt(experienceYears) : null,
         pricePerLesson: pricePerLesson ? parseFloat(pricePerLesson) : null,
         certifications: certifications || null,
-        languages: languages || null
+        languages: languages || null,
+        audience
       }
 
       const data = completion
@@ -2232,6 +2239,28 @@ function RegisterCoach({ completion }: { completion?: ProfileCompletion }) {
                     e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)'
                   }}
                 />
+              </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ marginBottom: '0.6rem', color: '#0f172a', fontWeight: 600, fontSize: '0.875rem' }}>Pentru cine</div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {[
+                    ['copii', 'Copii'],
+                    ['adulti', 'Adulți'],
+                    ['incepatori', 'Începători']
+                  ].map(([key, label]) => {
+                    const selected = audience.includes(key)
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setAudience((current) => selected ? current.filter((item) => item !== key) : [...current, key])}
+                        style={{ border: selected ? '1px solid #10b981' : '1.5px solid #e2e8f0', background: selected ? '#ecfdf5' : 'white', borderRadius: '999px', padding: '0.55rem 0.85rem', cursor: 'pointer', fontWeight: 700 }}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
               <div style={{
                 display: 'grid',

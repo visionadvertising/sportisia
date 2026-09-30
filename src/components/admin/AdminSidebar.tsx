@@ -92,6 +92,7 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
         { path: '/admin/seo-pages?category=field', label: 'SEO - Baze Sportive', icon: '' },
         { path: '/admin/seo-pages?category=coach', label: 'SEO - Antrenori', icon: '' },
         { path: '/admin/seo-pages?category=repair_shop', label: 'SEO - Magazine Reparații', icon: '' },
+        { path: '/admin/seo-pages?category=sports_recovery', label: 'SEO - Recuperare sportivă', icon: '' },
         { path: '/admin/seo-pages?category=equipment_shop', label: 'SEO - Magazine Articole', icon: '' },
         { path: '/admin/seo-pages', label: 'SEO - Toate', icon: '' }
       ]
@@ -109,6 +110,8 @@ function AdminSidebar({ onLogout }: AdminSidebarProps) {
 
   const singleMenuItems = [
     { path: '/admin/suggestions', label: 'Sugestii', icon: '' },
+    { path: '/admin/recenzii', label: 'Recenzii', icon: '' },
+    { path: '/admin/sesizari', label: 'Sesizări', icon: '' },
     { path: '/admin/users', label: 'Utilizatori', icon: '' },
     { path: '/admin/settings', label: 'Setări Site', icon: '' },
     { path: '/admin/smtp-config', label: 'Configurare SMTP', icon: '' }

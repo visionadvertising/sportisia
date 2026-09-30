@@ -1,10 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import AdminSidebar from '../../components/admin/AdminSidebar'
+import { colors } from '../../ui/theme'
 
 function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
+  const mainRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     // Check if admin is logged in
@@ -31,15 +33,22 @@ function AdminLayout() {
     }
   }, [location.pathname, navigate])
 
+  useEffect(() => {
+    mainRef.current?.scrollTo(0, 0)
+    window.scrollTo(0, 0)
+  }, [location.pathname])
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#f9fafb',
+      background: colors.page,
       display: 'flex',
       width: '100%'
     }}>
       <AdminSidebar onLogout={handleLogout} />
-      <main style={{
+      <main
+        ref={mainRef}
+        style={{
         marginLeft: '280px',
         flex: 1,
         minHeight: '100vh',

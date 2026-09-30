@@ -10,12 +10,13 @@ import {
   generateSportURL
 } from '../utils/seo'
 import FacilityFilters from '../components/FacilityFilters'
+import { card, colors, column, contentBand, hero, heroOverlay, heroTitle, pageShell, primaryButton, secondaryButton } from '../ui/theme'
 
 // List of known sport slugs
 const KNOWN_SPORTS = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans']
 
 // List of facility type slugs
-const FACILITY_TYPE_SLUGS = ['terenuri', 'antrenori', 'magazine-reparatii', 'magazine-articole']
+const FACILITY_TYPE_SLUGS = ['terenuri', 'antrenori', 'magazine-reparatii', 'magazine-articole', 'recuperare-sportiva']
 
 interface Facility {
   id: number
@@ -40,7 +41,8 @@ const FACILITY_TYPE_TITLES: Record<string, string> = {
   'field': 'Terenuri Sportive',
   'coach': 'Antrenori',
   'repair_shop': 'Magazine Reparații Articole Sportive',
-  'equipment_shop': 'Magazine Articole Sportive'
+  equipment_shop: 'Magazine Articole Sportive',
+  sports_recovery: 'Recuperare sportivă'
 }
 
 const SPORT_NAMES: Record<string, string> = {
@@ -196,7 +198,8 @@ function SEOFacilityPage() {
           'field': '/terenuri',
           'coach': '/antrenori',
           'repair_shop': '/magazine-reparatii',
-          'equipment_shop': '/magazine-articole'
+          equipment_shop: '/magazine-articole',
+          sports_recovery: '/recuperare-sportiva'
         }
         navigate(baseUrls[facilityType] || '/')
       }
@@ -224,7 +227,8 @@ function SEOFacilityPage() {
           'field': '/terenuri',
           'coach': '/antrenori',
           'repair_shop': '/magazine-reparatii',
-          'equipment_shop': '/magazine-articole'
+          equipment_shop: '/magazine-articole',
+          sports_recovery: '/recuperare-sportiva'
         }
         navigate(baseUrls[facilityType] || '/')
       }
@@ -255,17 +259,14 @@ function SEOFacilityPage() {
 
   if (!facilityType) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '2rem',
-        textAlign: 'center',
-        color: 'white'
-      }}>
-        <h1>Pagina nu a fost găsită</h1>
-        <Link to="/" style={{ color: 'white', textDecoration: 'underline' }}>
-          Înapoi la Home
-        </Link>
+      <div style={pageShell}>
+        <header style={hero}>
+          <div style={heroOverlay} />
+          <div style={column}>
+            <h1 style={heroTitle}>Pagina nu a fost găsită</h1>
+            <Link to="/" style={{ ...primaryButton, marginTop: '1.25rem' }}>Înapoi la Home</Link>
+          </div>
+        </header>
       </div>
     )
   }
@@ -274,22 +275,15 @@ function SEOFacilityPage() {
   const showCitySelector = !city
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f8fafc',
-      padding: '1.5rem 1rem'
-    }}>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        <h1 style={{
-          fontSize: '2.5rem',
-          color: '#1e293b',
-          marginBottom: '1.5rem',
-          textAlign: 'center',
-          fontWeight: '700'
-        }}>{getPageTitle()}</h1>
+    <div style={pageShell}>
+      <header style={hero}>
+        <div style={heroOverlay} />
+        <div style={column}>
+          <h1 style={heroTitle}>{getPageTitle()}</h1>
+        </div>
+      </header>
+      <div style={contentBand}>
+      <div style={column}>
 
         <FacilityFilters
           selectedCity={city}
@@ -310,9 +304,8 @@ function SEOFacilityPage() {
           <div style={{
             textAlign: 'center',
             padding: '3rem',
-            background: 'white',
-            borderRadius: '12px',
-            color: '#666',
+            ...card,
+            color: colors.muted,
             maxWidth: '600px',
             margin: '0 auto'
           }}>
@@ -350,7 +343,8 @@ function SEOFacilityPage() {
                 to="/sugereaza"
                 style={{
                   padding: '2rem 2.5rem',
-                  background: '#6366f1',
+                  ...secondaryButton,
+                  background: colors.ink,
                   color: 'white',
                   textDecoration: 'none',
                   borderRadius: '12px',
@@ -363,17 +357,17 @@ function SEOFacilityPage() {
                   fontWeight: '600',
                   fontSize: '1.25rem',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)',
+                  boxShadow: '0 4px 6px rgba(15, 23, 42, 0.16)',
                   border: '1px solid rgba(255, 255, 255, 0.1)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#4f46e5'
-                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(99, 102, 241, 0.3)'
+                  e.currentTarget.style.background = colors.slate
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(15, 23, 42, 0.2)'
                   e.currentTarget.style.transform = 'translateY(-2px)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#6366f1'
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.2)'
+                  e.currentTarget.style.background = colors.ink
+                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(15, 23, 42, 0.16)'
                   e.currentTarget.style.transform = 'translateY(0)'
                 }}
               >
@@ -391,7 +385,7 @@ function SEOFacilityPage() {
                 to="/register"
                 style={{
                   padding: '2rem 2.5rem',
-                  background: '#10b981',
+                  ...primaryButton,
                   color: 'white',
                   textDecoration: 'none',
                   borderRadius: '12px',
@@ -441,22 +435,14 @@ function SEOFacilityPage() {
               <div
                 key={facility.id}
                 style={{
-                  background: 'white',
-                  borderRadius: '12px',
+                  ...card,
                   overflow: 'hidden',
-                  border: '1px solid #eef2f6',
                   cursor: 'pointer'
                 }}
               >
-                {(facility.image_url || facility.logo_url) && (
-                  <div style={{
-                    width: '100%',
-                    height: '200px',
-                    background: `url(${facility.image_url || facility.logo_url}) center/cover`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }} />
-                )}
+              {(facility.image_url || facility.logo_url) && (
+                <img src={facility.image_url || facility.logo_url} alt="" loading="lazy" style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
+              )}
                 <div style={{ padding: '1.5rem' }}>
                   <h3 style={{
                     margin: '0 0 0.5rem 0',
@@ -511,6 +497,7 @@ function SEOFacilityPage() {
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   )

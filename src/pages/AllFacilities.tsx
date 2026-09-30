@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../config'
-import { citySlugToName, sportSlugToName, slugToFacilityType, repairCategorySlugToName } from '../utils/seo'
+import {
+  citySlugToName,
+  sportSlugToName,
+  slugToFacilityType,
+  repairCategorySlugToName,
+  recoveryServiceSlugToName,
+  recoveryServiceSlugs
+} from '../utils/seo'
 import FacilityFilters from '../components/FacilityFilters'
 import FacilityResults from '../components/FacilityResults'
 import { parseURLToFilters, getFacilityCount, generateSEOTitle, generateSEODescription, generateDescription } from '../utils/seoContentGenerator'
+import { sanitizeHtml } from '../utils/sanitizeHtml'
 
 interface Facility {
   id: number
@@ -39,14 +47,16 @@ const FACILITY_TYPE_LABELS: Record<string, string> = {
   'field': 'Terenuri Sportive',
   'coach': 'Antrenori',
   'repair_shop': 'Magazine Reparații',
-  'equipment_shop': 'Magazine Articole Sportive'
+  equipment_shop: 'Magazine Articole Sportive',
+  sports_recovery: 'Recuperare sportivă'
 }
 
 const FACILITY_TYPE_ICONS: Record<string, string> = {
-  'field': '🏟️',
-  'coach': '👨‍🏫',
-  'repair_shop': '🔧',
-  'equipment_shop': '🛍️'
+  field: '🏟️',
+  coach: '👨‍🏫',
+  repair_shop: '🔧',
+  equipment_shop: '🛍️',
+  sports_recovery: '🩺'
 }
 
 const SPORT_NAMES: Record<string, string> = {
@@ -63,7 +73,7 @@ const SPORT_NAMES: Record<string, string> = {
 const KNOWN_SPORTS = ['tenis', 'fotbal', 'baschet', 'volei', 'handbal', 'badminton', 'squash', 'ping-pong', 'atletism', 'inot', 'fitness', 'box', 'karate', 'judo', 'dans']
 
 // List of facility type slugs
-const FACILITY_TYPE_SLUGS = ['terenuri', 'antrenori', 'magazine-reparatii', 'magazine-articole']
+const FACILITY_TYPE_SLUGS = ['terenuri', 'antrenori', 'magazine-reparatii', 'magazine-articole', 'recuperare-sportiva']
 
 function AllFacilities() {
   // Read URL parameters - support multiple formats
@@ -102,11 +112,12 @@ function AllFacilities() {
   let sport = ''
   let facilityType = ''
   let repairCategory = ''
-  
-  // Known repair category slugs
-  const REPAIR_CATEGORY_SLUGS = ['rachete-tenis', 'biciclete', 'echipamente-ski', 'echipamente-snowboard', 
-    'echipamente-fitness', 'echipamente-fotbal', 'echipamente-baschet', 'echipamente-volei', 
+  let recoveryService = ''
+
+  const REPAIR_CATEGORY_SLUGS = ['rachete-tenis', 'biciclete', 'echipamente-ski', 'echipamente-snowboard',
+    'echipamente-fitness', 'echipamente-fotbal', 'echipamente-baschet', 'echipamente-volei',
     'echipamente-handbal', 'altele']
+  const RECOVERY_SERVICE_SLUGS = recoveryServiceSlugs()
   
   // Determine what each parameter represents
   // Priority: Check facility types first, then sports, then cities
@@ -118,6 +129,9 @@ function AllFacilities() {
       // For repair shops, check if param2 is a repair category
       if (facilityType === 'repair_shop' && param2 && REPAIR_CATEGORY_SLUGS.includes(param2.toLowerCase())) {
         repairCategory = repairCategorySlugToName(param2)
+      }
+      if (facilityType === 'sports_recovery' && param2 && RECOVERY_SERVICE_SLUGS.includes(param2.toLowerCase())) {
+        recoveryService = recoveryServiceSlugToName(param2)
       }
     } else if (KNOWN_SPORTS.includes(param1.toLowerCase())) {
       // param1 is a sport (e.g., /tenis, /fotbal)
@@ -141,6 +155,9 @@ function AllFacilities() {
           if (facilityType === 'repair_shop' && param3 && REPAIR_CATEGORY_SLUGS.includes(param3.toLowerCase())) {
             repairCategory = repairCategorySlugToName(param3)
           }
+          if (facilityType === 'sports_recovery' && param3 && RECOVERY_SERVICE_SLUGS.includes(param3.toLowerCase())) {
+            recoveryService = recoveryServiceSlugToName(param3)
+          }
         } else if (KNOWN_SPORTS.includes(param2.toLowerCase())) {
           // param2 is a sport (e.g., /iasi/tenis)
           sport = param2
@@ -157,7 +174,7 @@ function AllFacilities() {
   useEffect(() => {
     fetchFacilities()
     fetchSeoData()
-  }, [city, sport, facilityType, repairCategory])
+  }, [city, sport, facilityType, repairCategory, recoveryService])
 
   const fetchSeoData = async () => {
     try {
@@ -227,10 +244,16 @@ function AllFacilities() {
       parts.push(sport)
     }
     if (facilityType) {
-      const typeSlug = facilityType === 'field' ? 'terenuri' : 
-                       facilityType === 'coach' ? 'antrenori' :
-                       facilityType === 'repair_shop' ? 'magazine-reparatii' :
-                       'magazine-articole'
+      const typeSlug =
+        facilityType === 'field'
+          ? 'terenuri'
+          : facilityType === 'coach'
+            ? 'antrenori'
+            : facilityType === 'repair_shop'
+              ? 'magazine-reparatii'
+              : facilityType === 'sports_recovery'
+                ? 'recuperare-sportiva'
+                : 'magazine-articole'
       parts.push(typeSlug)
     }
     return parts.length > 0 ? `/${parts.join('/')}` : '/toate'
@@ -242,7 +265,7 @@ function AllFacilities() {
       // Determine which types to fetch
       const typesToFetch = facilityType 
         ? [facilityType] 
-        : ['field', 'coach', 'repair_shop', 'equipment_shop']
+        : ['field', 'coach', 'repair_shop', 'equipment_shop', 'sports_recovery']
       
       const allFacilities: Facility[] = []
 
@@ -256,13 +279,15 @@ function AllFacilities() {
           queryParams.append('city', city)
         }
         
-        if (sport && (type === 'field' || type === 'coach' || type === 'equipment_shop')) {
+        if (sport && (type === 'field' || type === 'coach' || type === 'equipment_shop' || type === 'sports_recovery')) {
           queryParams.append('sport', sport)
         }
-        
-        // Add repair category filter for repair shops
+
         if (type === 'repair_shop' && repairCategory) {
           queryParams.append('repairCategory', repairCategory)
+        }
+        if (type === 'sports_recovery' && recoveryService) {
+          queryParams.append('recoveryService', recoveryService)
         }
         
         const response = await fetch(`${API_BASE_URL}/facilities?${queryParams}`)
@@ -412,7 +437,7 @@ function AllFacilities() {
                   lineHeight: '1.7'
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: descriptionExpanded ? getDescription() : `<p>${getDescriptionPreview()}...</p>`
+                  __html: sanitizeHtml(descriptionExpanded ? getDescription() : `<p>${getDescriptionPreview()}...</p>`)
                 }}
                 onClick={(e) => {
                   // Handle clicks on internal links - navigate with React Router
@@ -506,6 +531,7 @@ function AllFacilities() {
           selectedSport={sportValue}
           selectedType={typeValue}
           selectedRepairCategory={repairCategory}
+          selectedRecoveryService={recoveryService}
           showTypeFilter={!typeValue} // Hide type filter when a specific type is already selected
         />
 

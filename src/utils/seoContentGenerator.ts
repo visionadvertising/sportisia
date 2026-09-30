@@ -7,17 +7,19 @@ interface FilterParams {
 }
 
 const FACILITY_TYPE_LABELS: Record<string, string> = {
-  'field': 'Terenuri Sportive',
-  'coach': 'Antrenori',
-  'repair_shop': 'Magazine Reparații',
-  'equipment_shop': 'Magazine Articole Sportive'
+  field: 'Terenuri Sportive',
+  coach: 'Antrenori',
+  repair_shop: 'Magazine Reparații',
+  equipment_shop: 'Magazine Articole Sportive',
+  sports_recovery: 'Recuperare sportivă'
 }
 
 const FACILITY_TYPE_LABELS_LOWER: Record<string, string> = {
-  'field': 'terenuri sportive',
-  'coach': 'antrenori',
-  'repair_shop': 'magazine reparații',
-  'equipment_shop': 'magazine articole sportive'
+  field: 'terenuri sportive',
+  coach: 'antrenori',
+  repair_shop: 'magazine reparații',
+  equipment_shop: 'magazine articole sportive',
+  sports_recovery: 'recuperare sportivă'
 }
 
 const SPORT_NAMES: Record<string, string> = {
@@ -39,10 +41,11 @@ const SPORT_NAMES: Record<string, string> = {
 }
 
 const FACILITY_TYPE_SLUGS: Record<string, string> = {
-  'field': 'terenuri',
-  'coach': 'antrenori',
-  'repair_shop': 'magazine-reparatii',
-  'equipment_shop': 'magazine-articole'
+  field: 'terenuri',
+  coach: 'antrenori',
+  repair_shop: 'magazine-reparatii',
+  equipment_shop: 'magazine-articole',
+  sports_recovery: 'recuperare-sportiva'
 }
 
 export function parseURLToFilters(url: string): FilterParams {

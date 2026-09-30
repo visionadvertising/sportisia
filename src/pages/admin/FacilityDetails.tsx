@@ -91,6 +91,8 @@ interface Facility {
   services_offered?: string
   brands_serviced?: string
   average_repair_time?: string
+  repair_categories?: string[] | string
+  recovery_services?: string[] | string
   // Equipment shop specific
   products_categories?: string
   brands_available?: string
@@ -180,6 +182,20 @@ function FacilityDetails() {
             facilityData.map_coordinates = JSON.parse(facilityData.map_coordinates)
           } catch (e) {
             facilityData.map_coordinates = null
+          }
+        }
+        if (facilityData.recovery_services && typeof facilityData.recovery_services === 'string') {
+          try {
+            facilityData.recovery_services = JSON.parse(facilityData.recovery_services)
+          } catch (e) {
+            facilityData.recovery_services = []
+          }
+        }
+        if (facilityData.repair_categories && typeof facilityData.repair_categories === 'string') {
+          try {
+            facilityData.repair_categories = JSON.parse(facilityData.repair_categories)
+          } catch (e) {
+            facilityData.repair_categories = []
           }
         }
         
@@ -325,7 +341,8 @@ function FacilityDetails() {
       'field': 'Bază Sportivă',
       'coach': 'Antrenor',
       'repair_shop': 'Magazin Reparații',
-      'equipment_shop': 'Magazin Articole'
+      equipment_shop: 'Magazin Articole',
+      sports_recovery: 'Recuperare sportivă'
     }
     return labels[type] || type
   }
@@ -990,6 +1007,30 @@ function FacilityDetails() {
                   </div>
                 </div>
               </div>
+
+              {facility.facility_type === 'sports_recovery' && Array.isArray(facility.recovery_services) && facility.recovery_services.length > 0 && (
+                <div style={{
+                  padding: '1.5rem',
+                  background: '#f8fafc',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  marginBottom: '2rem'
+                }}>
+                  <h3 style={{
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    color: '#64748b',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    margin: '0 0 1rem 0'
+                  }}>
+                    Servicii recuperare
+                  </h3>
+                  <p style={{ margin: 0, color: '#0f172a', lineHeight: 1.6 }}>
+                    {facility.recovery_services.join(', ')}
+                  </p>
+                </div>
+              )}
 
               {/* Description */}
               {facility.description && (

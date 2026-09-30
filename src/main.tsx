@@ -23,7 +23,12 @@ window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     if (token) headers.set('X-Claim-Token', token)
   }
   const facilityWrite = method === 'PUT' && /\/api\/facilities\/\d+/.test(url)
-  if (url.includes('/api/my-facility') || url.includes('/api/users/reset-password') || (facilityWrite && !window.location.pathname.startsWith('/admin'))) {
+  if (
+    url.includes('/api/member/') ||
+    url.includes('/api/my-facility') ||
+    url.includes('/api/users/reset-password') ||
+    (facilityWrite && !window.location.pathname.startsWith('/admin'))
+  ) {
     const token = localStorage.getItem('userToken')
     if (token) headers.set('Authorization', `Bearer ${token}`)
   }

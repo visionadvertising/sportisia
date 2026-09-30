@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import AdminLayout from './admin/AdminLayout'
 import API_BASE_URL from '../config'
+import { card, colors, field, primaryButton } from '../ui/theme'
 
 interface Facility {
   id: number
@@ -154,7 +155,7 @@ function AdminDashboard() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f9fafb'
+        background: colors.page
       }}>
         <div style={{ textAlign: 'center', color: '#666' }}>
           <p>Se încarcă...</p>
@@ -195,15 +196,10 @@ function AdminDashboard() {
 
         {/* Users Tab */}
         {activeTab === 'users' && (
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-          }}>
+          <div style={{ ...card, padding: '2rem' }}>
             <h2 style={{
               fontSize: '1.8rem',
-              color: '#1e3c72',
+              color: colors.ink,
               marginBottom: '1.5rem'
             }}>Lista utilizatorilor</h2>
 
@@ -219,7 +215,7 @@ function AdminDashboard() {
                 }}>
                   <thead>
                     <tr style={{
-                      background: '#f9fafb',
+                      background: colors.page,
                       borderBottom: '2px solid #e0e0e0'
                     }}>
                       <th style={{ padding: '1rem', textAlign: 'left', color: '#333', fontWeight: 'bold' }}>ID</th>
@@ -287,15 +283,10 @@ function AdminDashboard() {
 
         {/* Settings Tab */}
         {activeTab === 'settings' && (
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '2rem',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-          }}>
+          <div style={{ ...card, padding: '2rem' }}>
             <h2 style={{
               fontSize: '1.8rem',
-              color: '#1e3c72',
+              color: colors.ink,
               marginBottom: '1.5rem'
             }}>Setări Site</h2>
 
@@ -337,29 +328,13 @@ function AdminDashboard() {
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
                   placeholder="https://example.com/logo.png"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '2px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  style={field}
                 />
               </div>
 
               <button
                 onClick={handleUpdateLogo}
-                style={{
-                  padding: '0.75rem 2rem',
-                  background: '#1e3c72',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  cursor: 'pointer'
-                }}
+                style={primaryButton}
               >
                 Actualizează Logo
               </button>

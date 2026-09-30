@@ -1,18 +1,21 @@
-import { useState } from 'react'
+import { useState, type CSSProperties, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../config'
+import { colors, fieldLabel, focusedField, loginCard, loginGlow, loginShell, primaryButton } from '../ui/theme'
 
 function AdminLogin() {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [focused, setFocused] = useState<'user' | 'pass' | ''>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   // Debug: verifică dacă componenta se încarcă
   console.log('AdminLogin component loaded')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -46,116 +49,74 @@ function AdminLogin() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-      padding: '2rem'
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: '16px',
-        padding: '3rem',
-        maxWidth: '500px',
-        width: '100%',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-      }}>
-        <h1 style={{
-          fontSize: '2.5rem',
-          color: '#1e3c72',
-          marginBottom: '0.5rem',
-          textAlign: 'center'
-        }}>Admin Login</h1>
-        <p style={{
-          color: '#666',
-          textAlign: 'center',
-          marginBottom: '2rem'
-        }}>Conectează-te pentru a accesa panoul de administrare</p>
+    <div style={loginShell}>
+      <div style={loginGlow} />
+      <div style={loginCard}>
+        <p style={{ margin: '0 0 0.45rem', color: colors.greenDark, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.75rem', textAlign: 'center' }}>Sportisia</p>
+        <h1 style={{ margin: 0, fontSize: '1.85rem', color: colors.ink, textAlign: 'center', letterSpacing: '-0.03em' }}>Admin</h1>
+        <p style={{ color: colors.muted, textAlign: 'center', margin: '0.55rem 0 1.5rem', lineHeight: 1.5 }}>Conectează-te pentru a accesa panoul de administrare.</p>
 
         {error && (
-          <div style={{
-            background: '#fee2e2',
-            border: '1px solid #ef4444',
-            color: '#991b1b',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '2rem'
-          }}>
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '0.8rem 0.9rem', borderRadius: '12px', marginBottom: '1rem', fontSize: '0.92rem' }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#333',
-              fontWeight: '500'
-            }}>Username</label>
+          <label style={fieldLabel}>
+            Utilizator
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              onFocus={() => setFocused('user')}
+              onBlur={() => setFocused('')}
+              autoComplete="username"
               required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
+              style={{ ...focusedField(focused === 'user'), marginTop: '0.4rem' }}
             />
-          </div>
+          </label>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              color: '#333',
-              fontWeight: '500'
-            }}>Parolă</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                border: '2px solid #e0e0e0',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
-            />
-          </div>
+          <label style={{ ...fieldLabel, marginTop: '0.9rem' }}>
+            Parolă
+            <span style={{ position: 'relative', display: 'block', marginTop: '0.4rem' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setFocused('pass')}
+                onBlur={() => setFocused('')}
+                autoComplete="current-password"
+                required
+                style={{ ...focusedField(focused === 'pass'), marginTop: 0, paddingRight: '4.5rem' }}
+              />
+              <button type="button" onClick={() => setShowPassword((value) => !value)} style={toggle}>
+                {showPassword ? 'Ascunde' : 'Arată'}
+              </button>
+            </span>
+          </label>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              background: loading ? '#9ca3af' : '#1e3c72',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              marginBottom: '1rem'
-            }}
-          >
+          <button type="submit" disabled={loading} style={{ ...primaryButton, width: '100%', marginTop: '1.15rem', opacity: loading ? 0.7 : 1, cursor: loading ? 'wait' : 'pointer' }}>
             {loading ? 'Se conectează...' : 'Conectează-te'}
           </button>
         </form>
       </div>
     </div>
   )
+}
+
+const toggle: CSSProperties = {
+  position: 'absolute',
+  right: '0.75rem',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  border: 0,
+  background: 'transparent',
+  color: colors.greenDark,
+  fontWeight: 700,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  fontSize: '0.85rem'
 }
 
 export default AdminLogin

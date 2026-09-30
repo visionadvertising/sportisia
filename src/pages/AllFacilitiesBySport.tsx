@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { sportSlugToName } from '../utils/seo'
 import FacilityFilters from '../components/FacilityFilters'
+import { card, colors, column, contentBand, hero, heroOverlay, heroTitle, pageShell, primaryButton, secondaryButton } from '../ui/theme'
 
 interface Facility {
   id: number
@@ -27,14 +28,16 @@ const FACILITY_TYPE_LABELS: Record<string, string> = {
   'field': 'Terenuri Sportive',
   'coach': 'Antrenori',
   'repair_shop': 'Magazine Reparații',
-  'equipment_shop': 'Magazine Articole Sportive'
+  'equipment_shop': 'Magazine Articole Sportive',
+  sports_recovery: 'Recuperare sportivă'
 }
 
 const FACILITY_TYPE_ICONS: Record<string, string> = {
   'field': '🏟️',
   'coach': '👨‍🏫',
   'repair_shop': '🔧',
-  'equipment_shop': '🛍️'
+  'equipment_shop': '🛍️',
+  sports_recovery: '🩺'
 }
 
 const SPORT_NAMES: Record<string, string> = {
@@ -67,7 +70,7 @@ function AllFacilitiesBySport() {
     setLoading(true)
     try {
       // Fetch all facility types for this sport
-      const types = ['field', 'coach', 'repair_shop']
+      const types = ['field', 'coach', 'repair_shop', 'equipment_shop', 'sports_recovery']
       const allFacilities: Facility[] = []
 
       for (const type of types) {
@@ -102,38 +105,28 @@ function AllFacilitiesBySport() {
 
   if (!sport) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '2rem',
-        textAlign: 'center',
-        color: 'white'
-      }}>
-        <h1>Sport invalid</h1>
-        <Link to="/" style={{ color: 'white', textDecoration: 'underline' }}>
-          Înapoi la Home
-        </Link>
+      <div style={pageShell}>
+        <header style={hero}>
+          <div style={heroOverlay} />
+          <div style={column}>
+            <h1 style={heroTitle}>Sport invalid</h1>
+            <Link to="/" style={{ ...primaryButton, marginTop: '1.25rem' }}>Înapoi la Home</Link>
+          </div>
+        </header>
       </div>
     )
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f8fafc',
-      padding: '1.5rem 1rem'
-    }}>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
-        <h1 style={{
-          fontSize: '2.5rem',
-          color: '#1e293b',
-          marginBottom: '1.5rem',
-          textAlign: 'center',
-          fontWeight: '700'
-        }}>Toate facilitățile pentru {sport}</h1>
+    <div style={pageShell}>
+      <header style={hero}>
+        <div style={heroOverlay} />
+        <div style={column}>
+          <h1 style={heroTitle}>Toate facilitățile pentru {sport}</h1>
+        </div>
+      </header>
+      <div style={contentBand}>
+      <div style={column}>
 
         <FacilityFilters
           selectedCity=""
@@ -154,9 +147,8 @@ function AllFacilitiesBySport() {
           <div style={{
             textAlign: 'center',
             padding: '3rem',
-            background: 'white',
-            borderRadius: '12px',
-            color: '#666',
+            ...card,
+            color: colors.muted,
             maxWidth: '600px',
             margin: '0 auto'
           }}>
@@ -194,7 +186,8 @@ function AllFacilitiesBySport() {
                 to="/sugereaza"
                 style={{
                   padding: '2rem 2.5rem',
-                  background: '#6366f1',
+                  ...secondaryButton,
+                  background: colors.ink,
                   color: 'white',
                   textDecoration: 'none',
                   borderRadius: '12px',
@@ -207,17 +200,17 @@ function AllFacilitiesBySport() {
                   fontWeight: '600',
                   fontSize: '1.25rem',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)',
+                  boxShadow: '0 4px 6px rgba(15, 23, 42, 0.16)',
                   border: '1px solid rgba(255, 255, 255, 0.1)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#4f46e5'
-                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(99, 102, 241, 0.3)'
+                  e.currentTarget.style.background = colors.slate
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(15, 23, 42, 0.2)'
                   e.currentTarget.style.transform = 'translateY(-2px)'
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#6366f1'
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.2)'
+                  e.currentTarget.style.background = colors.ink
+                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(15, 23, 42, 0.16)'
                   e.currentTarget.style.transform = 'translateY(0)'
                 }}
               >
@@ -235,7 +228,7 @@ function AllFacilitiesBySport() {
                 to="/register"
                 style={{
                   padding: '2rem 2.5rem',
-                  background: '#10b981',
+                  ...primaryButton,
                   color: 'white',
                   textDecoration: 'none',
                   borderRadius: '12px',
@@ -300,21 +293,13 @@ function AllFacilitiesBySport() {
                     <div
                       key={facility.id}
                       style={{
-                        background: 'white',
-                        borderRadius: '12px',
+                        ...card,
                         overflow: 'hidden',
-                        border: '1px solid #eef2f6',
                         cursor: 'pointer'
                       }}
                     >
                       {(facility.image_url || facility.logo_url) && (
-                        <div style={{
-                          width: '100%',
-                          height: '200px',
-                          background: `url(${facility.image_url || facility.logo_url}) center/cover`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center'
-                        }} />
+                        <img src={facility.image_url || facility.logo_url} alt="" loading="lazy" style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
                       )}
                       <div style={{ padding: '1.5rem' }}>
                         <h3 style={{
@@ -373,6 +358,7 @@ function AllFacilitiesBySport() {
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   )

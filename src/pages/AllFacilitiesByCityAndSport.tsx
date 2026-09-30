@@ -27,14 +27,16 @@ const FACILITY_TYPE_LABELS: Record<string, string> = {
   'field': 'Terenuri Sportive',
   'coach': 'Antrenori',
   'repair_shop': 'Magazine Reparații',
-  'equipment_shop': 'Magazine Articole Sportive'
+  'equipment_shop': 'Magazine Articole Sportive',
+  sports_recovery: 'Recuperare sportivă'
 }
 
 const FACILITY_TYPE_ICONS: Record<string, string> = {
   'field': '🏟️',
   'coach': '👨‍🏫',
   'repair_shop': '🔧',
-  'equipment_shop': '🛍️'
+  'equipment_shop': '🛍️',
+  sports_recovery: '🩺'
 }
 
 const SPORT_NAMES: Record<string, string> = {
@@ -68,7 +70,7 @@ function AllFacilitiesByCityAndSport() {
     setLoading(true)
     try {
       // Fetch all facility types for this city and sport
-      const types = ['field', 'coach', 'repair_shop']
+      const types = ['field', 'coach', 'repair_shop', 'equipment_shop', 'sports_recovery']
       const allFacilities: Facility[] = []
 
       for (const type of types) {
@@ -310,13 +312,7 @@ function AllFacilitiesByCityAndSport() {
                       }}
                     >
                       {(facility.image_url || facility.logo_url) && (
-                        <div style={{
-                          width: '100%',
-                          height: '200px',
-                          background: `url(${facility.image_url || facility.logo_url}) center/cover`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center'
-                        }} />
+                        <img src={facility.image_url || facility.logo_url} alt="" loading="lazy" style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }} />
                       )}
                       <div style={{ padding: '1.5rem' }}>
                         <h3 style={{

@@ -5,6 +5,10 @@
   # Proxy pentru /api/* către backend Node.js pe localhost:3001
   RewriteCond %{REQUEST_URI} ^/api/
   RewriteRule ^api/(.*)$ http://localhost:3001/api/$1 [P,L]
+
+  # Fișiere încărcate (avatar, logo, galerie)
+  RewriteCond %{REQUEST_URI} ^/uploads/
+  RewriteRule ^uploads/(.*)$ http://localhost:3001/uploads/$1 [P,L]
   
   # Serve static files pentru Vite
   RewriteCond %{REQUEST_FILENAME} !-f

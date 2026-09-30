@@ -4,10 +4,11 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { existsSync, readFileSync, mkdirSync, writeFileSync, appendFileSync } from 'fs'
+import { existsSync, readFileSync, mkdirSync, writeFileSync, appendFileSync, unlinkSync } from 'fs'
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
 import multer from 'multer'
+import { decorateFacility } from './facilitySignals.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -86,7 +87,18 @@ const AUTH_SECRET = loadAuthSecret()
 const rateBuckets = new Map()
 
 function clientIp(req) {
-  return req.socket?.remoteAddress || 'unknown'
+  const socket = req.socket?.remoteAddress || ''
+  const local = socket === '127.0.0.1' || socket === '::1' || socket === '::ffff:127.0.0.1'
+  if (local) {
+    const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+    if (forwarded) return forwarded
+  }
+  return socket || 'unknown'
+}
+
+function serverError(res, error) {
+  console.error(error)
+  res.status(500).json({ success: false, error: 'A apărut o eroare. Încearcă din nou.' })
 }
 
 function rateLimit(req, res, bucket, limit, windowMs) {
@@ -149,6 +161,26 @@ function requireUser(req, res) {
   return session
 }
 
+function requireMember(req, res) {
+  const session = verifyToken(bearerToken(req), 'member')
+  if (!session) {
+    res.status(401).json({ success: false, error: 'Neautorizat' })
+    return null
+  }
+  return session
+}
+
+function memberPasswordValid(password) {
+  const value = String(password || '')
+  return (
+    value.length >= 9 &&
+    /[a-z]/.test(value) &&
+    /[A-Z]/.test(value) &&
+    /\d/.test(value) &&
+    /[^A-Za-z0-9]/.test(value)
+  )
+}
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -156,18 +188,22 @@ const storage = multer.diskStorage({
     const logoDir = path.join(uploadDir, 'logos')
     const galleryDir = path.join(uploadDir, 'gallery')
     const blogDir = path.join(uploadDir, 'blog')
+    const avatarDir = path.join(uploadDir, 'avatars')
     
     // Create directories if they don't exist
     if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true })
     if (!existsSync(logoDir)) mkdirSync(logoDir, { recursive: true })
     if (!existsSync(galleryDir)) mkdirSync(galleryDir, { recursive: true })
     if (!existsSync(blogDir)) mkdirSync(blogDir, { recursive: true })
+    if (!existsSync(avatarDir)) mkdirSync(avatarDir, { recursive: true })
     
     // Determine destination based on field name
     if (file.fieldname === 'logo') {
       cb(null, logoDir)
     } else if (file.fieldname === 'gallery') {
       cb(null, galleryDir)
+    } else if (file.fieldname === 'avatar') {
+      cb(null, avatarDir)
     } else if (file.fieldname === 'image' || file.fieldname === 'cover') {
       cb(null, blogDir)
     } else {
@@ -175,12 +211,35 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
-    // Generate unique filename: timestamp-randomhash.extension
+    const ext = imageExtension(file.mimetype)
+    if (!ext) {
+      cb(new Error('Sunt acceptate doar JPEG, PNG și WebP'))
+      return
+    }
     const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
-    const ext = path.extname(file.originalname) || '.jpg'
     cb(null, uniqueSuffix + ext)
   }
 })
+
+const ALLOWED_IMAGES = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp'
+}
+
+function imageExtension(mime) {
+  return ALLOWED_IMAGES[String(mime || '').toLowerCase()] || null
+}
+
+function readDataImage(dataUrl) {
+  const match = String(dataUrl || '').match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=\s]+)$/i)
+  if (!match) return null
+  const ext = imageExtension(match[1].toLowerCase())
+  if (!ext) return null
+  const buffer = Buffer.from(match[2].replace(/\s/g, ''), 'base64')
+  if (!buffer.length || buffer.length > 5 * 1024 * 1024) return null
+  return { buffer, ext }
+}
 
 const upload = multer({
   storage,
@@ -192,11 +251,10 @@ const upload = multer({
     files: 11 // Maximum number of files (1 logo + 10 gallery)
   },
   fileFilter: (req, file, cb) => {
-    // Accept only images
-    if (file.mimetype.startsWith('image/')) {
+    if (imageExtension(file.mimetype)) {
       cb(null, true)
     } else {
-      cb(new Error('Only image files are allowed'))
+      cb(new Error('Sunt acceptate doar JPEG, PNG și WebP'))
     }
   }
 })
@@ -205,6 +263,7 @@ const upload = multer({
 const uploadsDir = path.join(__dirname, 'uploads')
 const logosDir = path.join(uploadsDir, 'logos')
 const galleryDir = path.join(uploadsDir, 'gallery')
+const avatarsDir = path.join(uploadsDir, 'avatars')
 
 if (!existsSync(uploadsDir)) {
   mkdirSync(uploadsDir, { recursive: true })
@@ -217,6 +276,21 @@ if (!existsSync(logosDir)) {
 if (!existsSync(galleryDir)) {
   mkdirSync(galleryDir, { recursive: true })
   console.log('✅ Created uploads/gallery directory')
+}
+if (!existsSync(avatarsDir)) {
+  mkdirSync(avatarsDir, { recursive: true })
+  console.log('✅ Created uploads/avatars directory')
+}
+
+function removeStoredUpload(relativePath) {
+  const rel = String(relativePath || '')
+  if (!rel.startsWith('/uploads/avatars/')) return
+  const full = path.join(__dirname, rel.replace(/^\//, ''))
+  try {
+    if (existsSync(full)) unlinkSync(full)
+  } catch {
+    /* ignore */
+  }
 }
 
 // Serve uploaded files statically
@@ -552,6 +626,87 @@ async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `)
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS facility_reviews (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        facility_id INT NOT NULL,
+        author_name VARCHAR(80) NOT NULL,
+        email VARCHAR(180) NOT NULL,
+        body TEXT NOT NULL,
+        rating TINYINT NOT NULL,
+        status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_facility_review (facility_id, status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS facility_reports (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        facility_id INT NOT NULL,
+        name VARCHAR(80) NOT NULL,
+        email VARCHAR(180) NOT NULL,
+        message TEXT NOT NULL,
+        status ENUM('open', 'resolved') DEFAULT 'open',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_facility_report (facility_id, status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS facility_events (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        facility_id INT NOT NULL,
+        event_type ENUM('view', 'phone', 'whatsapp', 'map') NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_facility_event (facility_id, event_type, created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS member_users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        first_name VARCHAR(100) NULL,
+        last_name VARCHAR(100) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_member_email (email)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS member_saved_facilities (
+        member_id INT NOT NULL,
+        facility_id INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (member_id, facility_id),
+        INDEX idx_member_saved (member_id),
+        CONSTRAINT fk_member_saved_user FOREIGN KEY (member_id) REFERENCES member_users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+
+    const demoMemberUsername = 'demo.sportiv'
+    const demoMemberEmail = 'demo.sportiv@sportisia.ro'
+    const demoMemberPassword = process.env.DEMO_MEMBER_PASSWORD || 'DemoSportiv2026!'
+    const [demoMemberRows] = await pool.query('SELECT id FROM member_users WHERE username = ?', [demoMemberUsername])
+    if (demoMemberRows.length === 0) {
+      await pool.query(
+        'INSERT INTO member_users (username, password, email, first_name, last_name) VALUES (?, ?, ?, ?, ?)',
+        [demoMemberUsername, hashPassword(demoMemberPassword), demoMemberEmail, 'Demo', 'Sportiv']
+      )
+      console.log(`✅ Cont sportiv demo: ${demoMemberUsername} / ${demoMemberPassword}`)
+    }
+
+    const [memberUserColumns] = await pool.query('SHOW COLUMNS FROM member_users')
+    const memberUserColumnNames = memberUserColumns.map((col) => col.Field)
+    if (!memberUserColumnNames.includes('avatar_url')) {
+      await pool.query('ALTER TABLE member_users ADD COLUMN avatar_url VARCHAR(500) NULL AFTER last_name')
+      console.log('✅ Added member_users.avatar_url column')
+    }
+
     // Create facility suggestions table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS facility_suggestions (
@@ -567,7 +722,7 @@ async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `)
 
-    const weakAdminHash = hashPassword('admin123')
+    const weakAdminHash = crypto.createHash('sha256').update('admin123').digest('hex')
     const [adminExists] = await pool.query('SELECT id, password FROM admin_users WHERE username = ?', ['admin'])
     if (adminExists.length === 0 || adminExists[0].password === weakAdminHash) {
       let password = process.env.ADMIN_PASSWORD
@@ -739,6 +894,23 @@ async function addMissingColumns() {
       await pool.query(`ALTER TABLE facilities ADD COLUMN repair_categories JSON AFTER average_repair_time`)
       console.log('✅ Added repair_categories column')
     }
+    if (!existingColumns.includes('recovery_services')) {
+      await pool.query(`ALTER TABLE facilities ADD COLUMN recovery_services JSON NULL AFTER repair_categories`)
+      console.log('✅ Added recovery_services column')
+    }
+
+    try {
+      await pool.query(`
+        ALTER TABLE facilities
+        MODIFY COLUMN facility_type ENUM('field', 'coach', 'repair_shop', 'equipment_shop', 'sports_recovery') NOT NULL
+      `)
+      await pool.query(`
+        ALTER TABLE users
+        MODIFY COLUMN facility_type ENUM('field', 'coach', 'repair_shop', 'equipment_shop', 'sports_recovery') NOT NULL
+      `)
+    } catch (enumError) {
+      console.warn('⚠️ facility_type ENUM update (sports_recovery):', enumError.message)
+    }
     if (!existingColumns.includes('is_company')) {
       await pool.query(`ALTER TABLE facilities ADD COLUMN is_company TINYINT(1) NOT NULL DEFAULT 0`)
       console.log('✅ Added facilities.is_company')
@@ -809,6 +981,11 @@ async function addMissingColumns() {
       console.log('✅ Added county column to pending_cities')
     }
 
+    if (!existingColumns.includes('audience')) {
+      await pool.query('ALTER TABLE facilities ADD COLUMN audience JSON NULL')
+      console.log('✅ Added audience column')
+    }
+
     if (!existingColumns.includes('subscription_ends_at')) {
       await pool.query(`ALTER TABLE facilities ADD COLUMN subscription_ends_at DATETIME NULL`)
       console.log('✅ Added subscription_ends_at column')
@@ -829,6 +1006,9 @@ async function addMissingColumns() {
           f.is_verified = 1
       WHERE f.subscription_ends_at IS NULL
     `)
+    await pool.query('ALTER TABLE users MODIFY password VARCHAR(255) NOT NULL')
+    await pool.query('ALTER TABLE admin_users MODIFY password VARCHAR(255) NOT NULL')
+    await pool.query('ALTER TABLE facility_claims MODIFY password_hash VARCHAR(255) NOT NULL')
   } catch (error) {
     console.error('❌ Error adding missing columns:', error)
     // Don't throw, just log the error
@@ -897,7 +1077,7 @@ async function sendEmail(to, subject, html) {
     return { success: true, messageId: info.messageId }
   } catch (error) {
     console.error('❌ Error sending email:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Emailul nu a putut fi trimis' }
   }
 }
 
@@ -1035,7 +1215,7 @@ app.get('/api/blog/categories', async (_req, res) => {
     const [rows] = await pool.query('SELECT * FROM blog_categories ORDER BY sort_order ASC, name ASC')
     res.json({ success: true, data: rows })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1083,7 +1263,7 @@ app.get('/api/blog/posts', async (req, res) => {
       pagination: { page, limit, total, pages: Math.max(1, Math.ceil(total / limit)) }
     })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1113,7 +1293,7 @@ app.get('/api/blog/posts/:slug', async (req, res) => {
     )
     res.json({ success: true, data: { ...post, comments, related } })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1149,7 +1329,7 @@ app.post('/api/blog/posts/:slug/comments', async (req, res) => {
     )
     res.json({ success: true, message: 'Comentariul a fost trimis și așteaptă aprobarea.' })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1198,7 +1378,7 @@ app.get('/api/admin/blog/categories', async (_req, res) => {
     const [rows] = await pool.query('SELECT * FROM blog_categories ORDER BY sort_order ASC, name ASC')
     res.json({ success: true, data: rows })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1220,7 +1400,7 @@ app.post('/api/admin/blog/categories', async (req, res) => {
     )
     res.json({ success: true, data: { id: result.insertId, slug } })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1244,7 +1424,7 @@ app.put('/api/admin/blog/categories/:id', async (req, res) => {
     )
     res.json({ success: true, data: { slug } })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1256,7 +1436,7 @@ app.delete('/api/admin/blog/categories/:id', async (req, res) => {
     await pool.query('DELETE FROM blog_categories WHERE id = ?', [id])
     res.json({ success: true })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1284,7 +1464,7 @@ app.get('/api/admin/blog/posts', async (req, res) => {
     )
     res.json({ success: true, data: rows })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1296,7 +1476,7 @@ app.get('/api/admin/blog/posts/:id', async (req, res) => {
     post.tags = parseTags(post.tags)
     res.json({ success: true, data: post })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1348,7 +1528,7 @@ app.delete('/api/admin/blog/posts/:id', async (req, res) => {
     await pool.query('DELETE FROM blog_posts WHERE id = ?', [req.params.id])
     res.json({ success: true })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1371,7 +1551,7 @@ app.get('/api/admin/blog/comments', async (req, res) => {
     )
     res.json({ success: true, data: rows })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1384,7 +1564,7 @@ app.put('/api/admin/blog/comments/:id', async (req, res) => {
     await pool.query('UPDATE blog_comments SET status = ? WHERE id = ?', [status, req.params.id])
     res.json({ success: true })
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1406,7 +1586,7 @@ app.get('/api/fields', async (req, res) => {
     res.json({ success: true, data: rows })
   } catch (error) {
     console.error('Error fetching fields:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1450,7 +1630,7 @@ app.post('/api/fields', async (req, res) => {
     })
   } catch (error) {
     console.error('Error adding field:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -1467,13 +1647,45 @@ app.get('/api/fields/:id', async (req, res) => {
     res.json({ success: true, data: rows[0] })
   } catch (error) {
     console.error('Error fetching field:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
-// Helper function to hash password
+const SCRYPT_N = 16384
+const SCRYPT_R = 8
+const SCRYPT_P = 1
+
 function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex')
+  const salt = crypto.randomBytes(16)
+  const hash = crypto.scryptSync(String(password), salt, 32, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P })
+  return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString('base64url')}$${hash.toString('base64url')}`
+}
+
+function passwordMatches(password, stored) {
+  const value = String(stored || '')
+  if (!password || !value) return false
+  if (value.startsWith('scrypt$')) {
+    const parts = value.split('$')
+    if (parts.length !== 6) return false
+    const N = Number(parts[1])
+    const r = Number(parts[2])
+    const p = Number(parts[3])
+    if (!N || !r || !p) return false
+    try {
+      const expected = Buffer.from(parts[5], 'base64url')
+      const actual = crypto.scryptSync(String(password), Buffer.from(parts[4], 'base64url'), expected.length, { N, r, p })
+      return actual.length === expected.length && crypto.timingSafeEqual(actual, expected)
+    } catch {
+      return false
+    }
+  }
+  const legacy = Buffer.from(crypto.createHash('sha256').update(String(password)).digest('hex'))
+  const current = Buffer.from(value)
+  return legacy.length === current.length && crypto.timingSafeEqual(legacy, current)
+}
+
+function passwordNeedsUpgrade(stored) {
+  return !String(stored || '').startsWith('scrypt$')
 }
 
 // Helper function to generate username from facility name
@@ -1520,6 +1732,7 @@ app.post('/api/register', upload.fields([
       specialization, experienceYears, certifications, languages,
       // Repair shop specific
       servicesOffered, brandsServiced, averageRepairTime, repairCategories,
+      recoveryServices,
       // Equipment shop specific
       productsCategories, brandsAvailable, deliveryAvailable,
       // Common
@@ -1621,6 +1834,23 @@ app.post('/api/register', upload.fields([
       })
     }
 
+    let parsedRecoveryServices = recoveryServices
+    if (typeof recoveryServices === 'string') {
+      try {
+        parsedRecoveryServices = JSON.parse(recoveryServices)
+      } catch {
+        parsedRecoveryServices = null
+      }
+    }
+    if (facilityType === 'sports_recovery') {
+      if (!Array.isArray(parsedRecoveryServices) || parsedRecoveryServices.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Pentru recuperare sportivă, selectează cel puțin un serviciu'
+        })
+      }
+    }
+
     // Extract pricePerHour from pricingDetails if not provided directly
     if (facilityType === 'field' && !pricePerHour && pricingDetails && pricingDetails.length > 0) {
       pricePerHour = pricingDetails[0].price
@@ -1641,17 +1871,14 @@ app.post('/api/register', upload.fields([
     } else {
       // Check if logo is sent as base64 in body (fallback for old clients)
       const logoFile = req.body.logoFile || req.body.logo
-      if (logoFile && typeof logoFile === 'string' && logoFile.startsWith('data:image')) {
-        // Fallback: if base64 is still sent, save it as file
-        const base64Data = logoFile.replace(/^data:image\/\w+;base64,/, '')
-        const buffer = Buffer.from(base64Data, 'base64')
+      const savedLogo = readDataImage(logoFile)
+      if (savedLogo) {
         const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
-        const filename = `${uniqueSuffix}.jpg`
+        const filename = `${uniqueSuffix}${savedLogo.ext}`
         const logoDir = path.join(__dirname, 'uploads', 'logos')
         if (!existsSync(logoDir)) mkdirSync(logoDir, { recursive: true })
-        writeFileSync(path.join(logoDir, filename), buffer)
+        writeFileSync(path.join(logoDir, filename), savedLogo.buffer)
         logoUrlFinal = `/uploads/logos/${filename}`
-        console.log('[REGISTER] Logo saved from base64, logoUrlFinal:', logoUrlFinal)
       }
     }
 
@@ -1671,14 +1898,12 @@ app.post('/api/register', upload.fields([
         if (!existsSync(galleryDir)) mkdirSync(galleryDir, { recursive: true })
         
         for (const base64Image of gallery) {
-          if (typeof base64Image === 'string' && base64Image.startsWith('data:image')) {
-            const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '')
-            const buffer = Buffer.from(base64Data, 'base64')
-            const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
-            const filename = `${uniqueSuffix}.jpg`
-            writeFileSync(path.join(galleryDir, filename), buffer)
-            galleryFinal.push(`/uploads/gallery/${filename}`)
-          }
+          const saved = readDataImage(base64Image)
+          if (!saved) continue
+          const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex')
+          const filename = `${uniqueSuffix}${saved.ext}`
+          writeFileSync(path.join(galleryDir, filename), saved.buffer)
+          galleryFinal.push(`/uploads/gallery/${filename}`)
         }
         console.log('[REGISTER] Gallery saved from base64, galleryFinal:', galleryFinal)
       }
@@ -1706,7 +1931,9 @@ app.post('/api/register', upload.fields([
         socialMedia ? JSON.stringify(socialMedia) : null,
         galleryFinal ? JSON.stringify(galleryFinal) : null,
         // sport: for fields use sport, for equipment shops use sport (can be 'general'), for others null
-        (facilityType === 'field' || facilityType === 'equipment_shop') ? (sport || null) : null,
+        (facilityType === 'field' || facilityType === 'equipment_shop' || facilityType === 'coach' || facilityType === 'sports_recovery')
+          ? (sport || null)
+          : null,
         pricePerHour,
         pricingDetails ? JSON.stringify(pricingDetails) : null,
         hasParkingBool || false, hasShowerBool || false, hasChangingRoomBool || false,
@@ -1715,22 +1942,23 @@ app.post('/api/register', upload.fields([
         certifications || null, languages || null,
         servicesOffered || null, brandsServiced || null, averageRepairTime || null,
         repairCategories ? JSON.stringify(repairCategories) : null,
+        parsedRecoveryServices ? JSON.stringify(parsedRecoveryServices) : null,
         productsCategories || null, brandsAvailable || null, deliveryAvailable || false,
         website || null, openingHours || null,
         'pending' // status
       ]
 
-      // Verify values count - MUST BE 42 (42 columns in INSERT)
-      if (values.length !== 42) {
-        const errorMsg = `Values array must have 42 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
+      // Verify values count - MUST BE 43 (43 columns in INSERT)
+      if (values.length !== 43) {
+        const errorMsg = `Values array must have 43 elements, but has ${values.length}. Last value: ${values[values.length - 1]}`
         console.error(`[REGISTER ERROR] ${errorMsg}`)
         throw new Error(errorMsg)
       }
 
       // Debug: log values count
       console.log(`[REGISTER] Inserting facility: ${name}`)
-      console.log(`[REGISTER] Values count: ${values.length}, expected: 42`)
-      console.log(`[REGISTER] Last value (status): ${values[41]}`)
+      console.log(`[REGISTER] Values count: ${values.length}, expected: 43`)
+      console.log(`[REGISTER] Last value (status): ${values[42]}`)
 
       // Insert facility
       // Note: sport is used for both fields and equipment shops
@@ -1742,10 +1970,10 @@ app.post('/api/register', upload.fields([
           sport, price_per_hour, pricing_details, has_parking, has_shower, has_changing_room, 
           has_air_conditioning, has_lighting,
           specialization, experience_years, price_per_lesson, certifications, languages,
-          services_offered, brands_serviced, average_repair_time, repair_categories,
+          services_offered, brands_serviced, average_repair_time, repair_categories, recovery_services,
           products_categories, brands_available, delivery_available,
           website, opening_hours, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         values
       )
 
@@ -1907,11 +2135,7 @@ app.post('/api/register', upload.fields([
     console.error('❌ Error stack:', error.stack)
     console.error('❌ Error stack:', error.stack)
     console.error('❌ Request body:', JSON.stringify(req.body, null, 2))
-    res.status(500).json({ 
-      success: false, 
-      error: error.message || 'Eroare la înregistrare',
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    })
+    serverError(res, error)
   }
 })
 
@@ -1932,50 +2156,335 @@ app.post('/api/login', async (req, res) => {
       })
     }
 
-    const hashedPassword = hashPassword(password)
     const [rows] = await pool.query(
-      `SELECT u.id, u.username, u.email, u.facility_id, u.facility_type, f.*
+      `SELECT u.id, u.username, u.email, u.password, u.facility_id, u.facility_type,
+              f.name, f.city, f.location, f.phone, f.status
        FROM users u
        LEFT JOIN facilities f ON u.facility_id = f.id AND u.facility_type = f.facility_type
-       WHERE (u.username = ? OR u.email = ?) AND u.password = ?`,
-      [username, String(username).trim().toLowerCase(), hashedPassword]
+       WHERE u.username = ? OR u.email = ?`,
+      [username, String(username).trim().toLowerCase()]
     )
 
-    if (rows.length === 0) {
+    if (rows.length > 0 && passwordMatches(password, rows[0].password)) {
+      if (passwordNeedsUpgrade(rows[0].password)) {
+        await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashPassword(password), rows[0].id])
+      }
+
+      const user = rows[0]
+      delete user.password
+
+      return res.json({
+        success: true,
+        message: 'Autentificare reușită',
+        token: signToken({ role: 'user', id: user.id, username: user.username, facilityId: user.facility_id }, 14 * 24 * 60 * 60),
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          accountKind: 'business',
+          facilityId: user.facility_id,
+          facilityType: user.facility_type,
+          facility: user.facility_id ? {
+            id: user.id,
+            name: user.name,
+            city: user.city,
+            location: user.location,
+            phone: user.phone,
+            email: user.email,
+            status: user.status
+          } : null
+        }
+      })
+    }
+
+    const [memberRows] = await pool.query(
+      'SELECT id, username, email, password, first_name, last_name, avatar_url FROM member_users WHERE username = ? OR email = ?',
+      [username, String(username).trim().toLowerCase()]
+    )
+
+    if (memberRows.length === 0 || !passwordMatches(password, memberRows[0].password)) {
       return res.status(401).json({
         success: false,
         error: 'Credențiale invalide'
       })
     }
 
-    const user = rows[0]
-    // Don't send password hash
-    delete user.password
+    if (passwordNeedsUpgrade(memberRows[0].password)) {
+      await pool.query('UPDATE member_users SET password = ? WHERE id = ?', [hashPassword(password), memberRows[0].id])
+    }
 
-    res.json({
+    const member = memberRows[0]
+    delete member.password
+
+    return res.json({
       success: true,
       message: 'Autentificare reușită',
-      token: signToken({ role: 'user', id: user.id, username: user.username, facilityId: user.facility_id }, 14 * 24 * 60 * 60),
+      token: signToken({ role: 'member', id: member.id, username: member.username }, 14 * 24 * 60 * 60),
       user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        facilityId: user.facility_id,
-        facilityType: user.facility_type,
-        facility: user.facility_id ? {
-          id: user.id,
-          name: user.name,
-          city: user.city,
-          location: user.location,
-          phone: user.phone,
-          email: user.email,
-          status: user.status
-        } : null
+        id: member.id,
+        username: member.username,
+        email: member.email,
+        firstName: member.first_name,
+        lastName: member.last_name,
+        avatarUrl: member.avatar_url || null,
+        accountKind: 'member'
       }
     })
   } catch (error) {
     console.error('Error during login:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
+  }
+})
+
+// POST register sport user account (favorites, cont personal)
+app.post('/api/member/register', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    if (!rateLimit(req, res, 'member-register', 8, 60 * 60 * 1000)) return
+
+    const email = String(req.body.email || '').trim().toLowerCase()
+    const password = String(req.body.password || '')
+    const firstName = String(req.body.firstName || req.body.first_name || '').trim()
+    const lastName = String(req.body.lastName || req.body.last_name || '').trim()
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email și parola sunt obligatorii' })
+    }
+    if (!memberPasswordValid(password)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Parola trebuie să aibă minim 9 caractere, majuscule, minuscule, cifră și simbol'
+      })
+    }
+
+    const baseUsername = email.split('@')[0].replace(/[^a-z0-9._-]/gi, '').slice(0, 40) || 'sportiv'
+    let username = baseUsername
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const candidate = attempt === 0 ? username : `${baseUsername}${attempt}`
+      const [existsUser] = await pool.query('SELECT id FROM users WHERE username = ?', [candidate])
+      const [existsMember] = await pool.query('SELECT id FROM member_users WHERE username = ?', [candidate])
+      if (existsUser.length === 0 && existsMember.length === 0) {
+        username = candidate
+        break
+      }
+    }
+
+    const [emailTaken] = await pool.query(
+      'SELECT id FROM member_users WHERE email = ? UNION SELECT id FROM users WHERE email = ? LIMIT 1',
+      [email, email]
+    )
+    if (emailTaken.length > 0) {
+      return res.status(409).json({ success: false, error: 'Există deja un cont cu acest email' })
+    }
+
+    const [result] = await pool.query(
+      'INSERT INTO member_users (username, password, email, first_name, last_name) VALUES (?, ?, ?, ?, ?)',
+      [username, hashPassword(password), email, firstName || null, lastName || null]
+    )
+
+    const memberId = result.insertId
+    res.status(201).json({
+      success: true,
+      message: 'Cont creat cu succes',
+      token: signToken({ role: 'member', id: memberId, username }, 14 * 24 * 60 * 60),
+      user: {
+        id: memberId,
+        username,
+        email,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        avatarUrl: null,
+        accountKind: 'member'
+      }
+    })
+  } catch (error) {
+    console.error('Error registering member:', error)
+    serverError(res, error)
+  }
+})
+
+app.get('/api/member/me', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    const session = requireMember(req, res)
+    if (!session) return
+
+    const [rows] = await pool.query(
+      'SELECT id, username, email, first_name, last_name, avatar_url, created_at FROM member_users WHERE id = ?',
+      [session.id]
+    )
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Contul nu a fost găsit' })
+    }
+    const member = rows[0]
+    res.json({
+      success: true,
+      data: {
+        id: member.id,
+        username: member.username,
+        email: member.email,
+        firstName: member.first_name,
+        lastName: member.last_name,
+        avatarUrl: member.avatar_url || null,
+        createdAt: member.created_at,
+        accountKind: 'member'
+      }
+    })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.post('/api/member/avatar', upload.single('avatar'), async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    if (!rateLimit(req, res, 'member-avatar', 12, 60 * 60 * 1000)) return
+    const session = requireMember(req, res)
+    if (!session) return
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Selectează o imagine (JPEG, PNG sau WebP, max 5MB)' })
+    }
+
+    const [rows] = await pool.query('SELECT avatar_url FROM member_users WHERE id = ?', [session.id])
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Contul nu a fost găsit' })
+    }
+
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`
+    await pool.query('UPDATE member_users SET avatar_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [
+      avatarUrl,
+      session.id
+    ])
+    if (rows[0].avatar_url) removeStoredUpload(rows[0].avatar_url)
+
+    res.json({ success: true, data: { avatarUrl } })
+  } catch (error) {
+    console.error('Error uploading member avatar:', error)
+    serverError(res, error)
+  }
+})
+
+app.delete('/api/member/avatar', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    const session = requireMember(req, res)
+    if (!session) return
+
+    const [rows] = await pool.query('SELECT avatar_url FROM member_users WHERE id = ?', [session.id])
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Contul nu a fost găsit' })
+    }
+
+    if (rows[0].avatar_url) removeStoredUpload(rows[0].avatar_url)
+    await pool.query('UPDATE member_users SET avatar_url = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [
+      session.id
+    ])
+
+    res.json({ success: true, data: { avatarUrl: null } })
+  } catch (error) {
+    console.error('Error removing member avatar:', error)
+    serverError(res, error)
+  }
+})
+
+app.post('/api/member/change-password', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    if (!rateLimit(req, res, 'member-change-password', 8, 60 * 60 * 1000)) return
+    const session = requireMember(req, res)
+    if (!session) return
+
+    const currentPassword = String(req.body.currentPassword || '')
+    const newPassword = String(req.body.newPassword || '')
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Completează parola curentă și parola nouă' })
+    }
+    if (!memberPasswordValid(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Parola nouă trebuie să aibă minim 9 caractere, majuscule, minuscule, cifră și simbol'
+      })
+    }
+
+    const [rows] = await pool.query('SELECT password FROM member_users WHERE id = ?', [session.id])
+    if (rows.length === 0 || !passwordMatches(currentPassword, rows[0].password)) {
+      return res.status(401).json({ success: false, error: 'Parola curentă este greșită' })
+    }
+
+    await pool.query('UPDATE member_users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [
+      hashPassword(newPassword),
+      session.id
+    ])
+
+    res.json({ success: true, message: 'Parola a fost actualizată' })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.get('/api/member/saved-facilities', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    const session = requireMember(req, res)
+    if (!session) return
+
+    const [rows] = await pool.query(
+      'SELECT facility_id FROM member_saved_facilities WHERE member_id = ? ORDER BY created_at DESC',
+      [session.id]
+    )
+    res.json({ success: true, data: rows.map((row) => row.facility_id) })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.post('/api/member/saved-facilities/:facilityId/toggle', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(503).json({ success: false, error: 'Database not initialized' })
+    }
+    const session = requireMember(req, res)
+    if (!session) return
+
+    const facilityId = Number(req.params.facilityId)
+    if (!Number.isFinite(facilityId) || facilityId <= 0) {
+      return res.status(400).json({ success: false, error: 'Facilitate invalidă' })
+    }
+
+    const [facilityRows] = await pool.query('SELECT id FROM facilities WHERE id = ? AND status = ?', [facilityId, 'active'])
+    if (facilityRows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Facilitatea nu există' })
+    }
+
+    const [existing] = await pool.query(
+      'SELECT facility_id FROM member_saved_facilities WHERE member_id = ? AND facility_id = ?',
+      [session.id, facilityId]
+    )
+
+    let saved = false
+    if (existing.length > 0) {
+      await pool.query('DELETE FROM member_saved_facilities WHERE member_id = ? AND facility_id = ?', [session.id, facilityId])
+      saved = false
+    } else {
+      await pool.query('INSERT INTO member_saved_facilities (member_id, facility_id) VALUES (?, ?)', [session.id, facilityId])
+      saved = true
+    }
+
+    res.json({ success: true, saved, facilityId })
+  } catch (error) {
+    serverError(res, error)
   }
 })
 
@@ -2007,7 +2516,7 @@ app.get('/api/my-facility', async (req, res) => {
     res.json({ success: true, data: rows[0] })
   } catch (error) {
     console.error('Error fetching facility:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -2044,7 +2553,7 @@ app.post('/api/users/reset-password', async (req, res) => {
     })
   } catch (error) {
     console.error('Error resetting password:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -2094,10 +2603,12 @@ app.put('/api/facilities/:id', async (req, res) => {
     const pricePerLesson = body.pricePerLesson ?? body.price_per_lesson
     const certifications = body.certifications
     const languages = body.languages
+    const audience = body.audience
     const servicesOffered = body.servicesOffered ?? body.services_offered
     const brandsServiced = body.brandsServiced ?? body.brands_serviced
     const averageRepairTime = body.averageRepairTime ?? body.average_repair_time
     const repairCategories = body.repairCategories ?? body.repair_categories
+    const recoveryServices = body.recoveryServices ?? body.recovery_services
     const productsCategories = body.productsCategories ?? body.products_categories
     const brandsAvailable = body.brandsAvailable ?? body.brands_available
     const deliveryAvailable = body.deliveryAvailable ?? body.delivery_available
@@ -2175,6 +2686,11 @@ app.put('/api/facilities/:id', async (req, res) => {
     }
     if (certifications !== undefined) { updates.push('certifications = ?'); values.push(certifications) }
     if (languages !== undefined) { updates.push('languages = ?'); values.push(languages) }
+    if (audience !== undefined) {
+      const audienceList = Array.isArray(audience) ? audience : []
+      updates.push('audience = ?')
+      values.push(JSON.stringify(audienceList))
+    }
 
     // Repair shop specific
     if (servicesOffered !== undefined) { updates.push('services_offered = ?'); values.push(servicesOffered) }
@@ -2183,6 +2699,10 @@ app.put('/api/facilities/:id', async (req, res) => {
     if (repairCategories !== undefined) {
       updates.push('repair_categories = ?')
       values.push(typeof repairCategories === 'string' ? repairCategories : JSON.stringify(repairCategories))
+    }
+    if (recoveryServices !== undefined) {
+      updates.push('recovery_services = ?')
+      values.push(typeof recoveryServices === 'string' ? recoveryServices : JSON.stringify(recoveryServices))
     }
 
     // Equipment shop specific
@@ -2235,7 +2755,7 @@ app.put('/api/facilities/:id', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating facility:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -2299,7 +2819,7 @@ app.post('/api/registrations', async (req, res) => {
     const facilityType = String(req.body.facilityType || '').trim()
     const name = String(req.body.facilityName || '').trim()
     const city = String(req.body.city || '').trim()
-    const allowed = ['field', 'coach', 'repair_shop', 'equipment_shop']
+    const allowed = ['field', 'coach', 'repair_shop', 'equipment_shop', 'sports_recovery']
     if (!allowed.includes(facilityType) || !name || !city) {
       return res.status(400).json({ success: false, error: 'Completează tipul, denumirea și orașul.' })
     }
@@ -2315,7 +2835,7 @@ app.post('/api/registrations', async (req, res) => {
     return createFacilityClaim(req, res)
   } catch (error) {
     console.error('Error starting registration:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -2385,8 +2905,11 @@ async function createFacilityClaim(req, res) {
       }
     }
     if (existingClaims.length > 0) {
-      if (existingClaims[0].password_hash !== hashPassword(password)) {
+      if (!passwordMatches(password, existingClaims[0].password_hash)) {
         return res.status(401).json({ success: false, error: 'Există deja o cerere pentru acest email. Parola nu corespunde.' })
+      }
+      if (passwordNeedsUpgrade(existingClaims[0].password_hash)) {
+        await pool.query('UPDATE facility_claims SET password_hash = ? WHERE id = ?', [hashPassword(password), existingClaims[0].id])
       }
       if (existingClaims[0].status === 'awaiting_payment') {
         await pool.query(
@@ -2430,7 +2953,7 @@ async function createFacilityClaim(req, res) {
     })
   } catch (error) {
     console.error('Error creating claim:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 }
 
@@ -2478,7 +3001,7 @@ app.get('/api/claims/:id', async (req, res) => {
     })
   } catch (error) {
     console.error('Error fetching claim:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -2562,7 +3085,7 @@ app.post('/api/claims/:id/pay', async (req, res) => {
   } catch (error) {
     await connection.rollback()
     console.error('Error simulating payment:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   } finally {
     connection.release()
   }
@@ -2613,13 +3136,12 @@ app.post('/api/claims/:id/onboarding', upload.fields([
     const has = (key) => Object.prototype.hasOwnProperty.call(req.body, key)
     const flag = (key) => req.body[key] === 'true' || req.body[key] === true || req.body[key] === '1' || req.body[key] === 1
     const saveDataImage = (dataUrl, folder) => {
-      if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) return null
-      const buffer = Buffer.from(dataUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64')
-      if (!buffer.length || buffer.length > 8 * 1024 * 1024) return null
-      const filename = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}.jpg`
+      const saved = readDataImage(dataUrl)
+      if (!saved) return null
+      const filename = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${saved.ext}`
       const dir = path.join(__dirname, 'uploads', folder)
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
-      writeFileSync(path.join(dir, filename), buffer)
+      writeFileSync(path.join(dir, filename), saved.buffer)
       return `/uploads/${folder}/${filename}`
     }
 
@@ -2630,6 +3152,7 @@ app.post('/api/claims/:id/onboarding', upload.fields([
     const sportsFields = parseMaybe(req.body.sportsFields)
     const mapCoordinates = parseMaybe(req.body.mapCoordinates)
     const repairCategories = parseMaybe(req.body.repairCategories)
+    const recoveryServices = parseMaybe(req.body.recoveryServices)
     const pricingDetails = parseMaybe(req.body.pricingDetails)
     const phoneList = Array.isArray(phones) ? phones.map((item) => String(item || '').trim()).filter(Boolean) : []
     const emailList = Array.isArray(emails) ? emails.map((item) => String(item || '').trim()).filter(Boolean) : []
@@ -2653,6 +3176,12 @@ app.post('/api/claims/:id/onboarding', upload.fields([
     }
     if (facilityType === 'repair_shop' && (!Array.isArray(repairCategories) || repairCategories.length === 0)) {
       return res.status(400).json({ success: false, error: 'Alege cel puțin o categorie de reparații.' })
+    }
+    if (facilityType === 'sports_recovery' && (!Array.isArray(recoveryServices) || recoveryServices.length === 0)) {
+      return res.status(400).json({ success: false, error: 'Alege cel puțin un serviciu de recuperare sportivă.' })
+    }
+    if (facilityType === 'sports_recovery' && !text('specialization')) {
+      return res.status(400).json({ success: false, error: 'Completează specializarea (ex. genunchi, umeri).' })
     }
     if (facilityType === 'equipment_shop' && !text('sport')) {
       return res.status(400).json({ success: false, error: 'Alege sportul magazinului.' })
@@ -2734,7 +3263,7 @@ app.post('/api/claims/:id/onboarding', upload.fields([
       sets.push('gallery = ?')
       values.push(JSON.stringify(gallery))
     }
-    if (facilityType === 'field' || facilityType === 'equipment_shop') {
+    if (facilityType === 'field' || facilityType === 'equipment_shop' || facilityType === 'coach' || facilityType === 'sports_recovery') {
       const sport = text('sport') || (Array.isArray(sportsFields) && sportsFields[0] ? sportsFields[0].sportType : '')
       sets.push('sport = ?')
       values.push(sport || null)
@@ -2783,9 +3312,18 @@ app.post('/api/claims/:id/onboarding', upload.fields([
       sets.push('experience_years = ?')
       values.push(text('experienceYears') ? parseInt(text('experienceYears'), 10) : null)
     }
+    if (has('audience')) {
+      const audience = parseMaybe(req.body.audience)
+      sets.push('audience = ?')
+      values.push(JSON.stringify(Array.isArray(audience) ? audience : []))
+    }
     if (has('repairCategories')) {
       sets.push('repair_categories = ?')
       values.push(JSON.stringify(Array.isArray(repairCategories) ? repairCategories : []))
+    }
+    if (has('recoveryServices')) {
+      sets.push('recovery_services = ?')
+      values.push(JSON.stringify(Array.isArray(recoveryServices) ? recoveryServices : []))
     }
 
     values.push(claim.facility_id)
@@ -2906,7 +3444,7 @@ app.get('/api/sports', async (req, res) => {
     res.json({ success: true, data: sports })
   } catch (error) {
     console.error('Error fetching sports:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -2965,7 +3503,7 @@ app.get('/api/cities', async (req, res) => {
     res.json({ success: true, data: cities })
   } catch (error) {
     console.error('Error fetching cities:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3118,152 +3656,318 @@ app.get('/api/facilities/:slug', async (req, res) => {
     res.json({ success: true, data: facility })
   } catch (error) {
     console.error('Error fetching facility:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
 // GET facilities filtered by type, city, sport, repairCategory
+const LIST_FIELDS = [
+  'id', 'facility_type', 'name', 'city', 'county', 'location', 'phone', 'whatsapp', 'email',
+  'image_url', 'logo_url', 'gallery', 'sport', 'specialization',
+  'price_per_hour', 'price_per_lesson', 'opening_hours',
+  'has_parking', 'has_shower', 'has_changing_room', 'has_lighting', 'has_air_conditioning',
+  'audience', 'map_coordinates', 'is_verified', 'subscription_ends_at', 'status', 'created_at',
+  'repair_categories', 'recovery_services', 'services_offered', 'certifications', 'languages', 'experience_years'
+]
+
+function listColumns(alias = '') {
+  const prefix = alias ? `${alias}.` : ''
+  return LIST_FIELDS.map((field) => `${prefix}${field}`).join(', ')
+}
+
+function parseJson(value, fallback) {
+  if (!value) return fallback
+  if (typeof value !== 'string') return value
+  try { return JSON.parse(value) } catch { return fallback }
+}
+
+function coverImage(facility) {
+  const gallery = parseJson(facility.gallery, [])
+  if (Array.isArray(gallery) && gallery[0]) return gallery[0]
+  return facility.image_url || facility.logo_url || null
+}
+
 app.get('/api/facilities', async (req, res) => {
   try {
     if (!pool) {
       return res.status(503).json({ success: false, error: 'Database not initialized' })
     }
 
-    const { type, city, sport, status = 'active', repairCategory } = req.query
+    const { type, city, sport, status = 'active', repairCategory, recoveryService } = req.query
+    const idList = String(req.query.ids || '')
+      .split(',')
+      .map((value) => parseInt(value, 10))
+      .filter((value) => value > 0)
+      .slice(0, 40)
 
-    // For sports bases (field type), we need to check both the sport column and facility_sports_fields table
     let query = ''
     const params = []
+    const fieldList = sport && type === 'field'
 
-    if (sport && type === 'field') {
-      // For sports bases, include facilities that have the sport in the sport column OR have fields with that sport type
-      query = `SELECT DISTINCT f.* FROM facilities f
-               LEFT JOIN facility_sports_fields fsf ON f.id = fsf.facility_id
-               WHERE 1=1`
-      
+    if (fieldList) {
+      query = `SELECT ${listColumns('f')} FROM facilities f WHERE 1=1`
       if (type) {
         query += ' AND f.facility_type = ?'
         params.push(type)
       }
-
       if (city) {
         query += ' AND f.city = ?'
         params.push(city)
       }
-
-      // Sport filter: either in sport column OR in facility_sports_fields
-      query += ' AND (f.sport = ? OR fsf.sport_type = ?)'
+      query += ' AND (f.sport = ? OR EXISTS (SELECT 1 FROM facility_sports_fields fsf WHERE fsf.facility_id = f.id AND fsf.sport_type = ?))'
       params.push(sport, sport)
-
       if (status) {
         query += ' AND f.status = ?'
         params.push(status)
       }
-
+      if (idList.length) {
+        query += ` AND f.id IN (${idList.map(() => '?').join(',')})`
+        params.push(...idList)
+      }
       query += ' ORDER BY (f.subscription_ends_at IS NOT NULL AND f.subscription_ends_at > NOW()) DESC, (f.is_verified = 1) DESC, f.created_at DESC'
     } else {
-      // For other types, use the original query
-      query = 'SELECT * FROM facilities WHERE 1=1'
-
+      query = `SELECT ${listColumns()} FROM facilities WHERE 1=1`
       if (type) {
         query += ' AND facility_type = ?'
         params.push(type)
       }
-
       if (city) {
         query += ' AND city = ?'
         params.push(city)
       }
-
       if (sport) {
         query += ' AND sport = ?'
         params.push(sport)
       }
-
       if (status) {
         query += ' AND status = ?'
         params.push(status)
       }
-
-      // Filter by repair category for repair shops
+      if (idList.length) {
+        query += ` AND id IN (${idList.map(() => '?').join(',')})`
+        params.push(...idList)
+      }
       if (repairCategory && type === 'repair_shop') {
         query += ' AND JSON_CONTAINS(repair_categories, ?)'
         params.push(JSON.stringify(repairCategory))
       }
-
+      if (recoveryService && type === 'sports_recovery') {
+        query += ' AND JSON_CONTAINS(recovery_services, ?)'
+        params.push(JSON.stringify(recoveryService))
+      }
       query += ' ORDER BY (subscription_ends_at IS NOT NULL AND subscription_ends_at > NOW()) DESC, (is_verified = 1) DESC, created_at DESC'
     }
 
-    console.log('[API /facilities] Query:', query)
-    console.log('[API /facilities] Params:', params)
-    
     const [rows] = await pool.query(query, params)
-    console.log('[API /facilities] Results count:', rows.length)
-    if (rows.length > 0) {
-      console.log('[API /facilities] First result facility_type:', rows[0].facility_type)
+    const fieldIds = rows.filter((row) => row.facility_type === 'field').map((row) => row.id)
+    const fieldsByFacility = new Map()
+    if (fieldIds.length) {
+      const [fieldRows] = await pool.query(
+        `SELECT facility_id, sport_type, price_per_hour, features, time_slots
+         FROM facility_sports_fields
+         WHERE facility_id IN (${fieldIds.map(() => '?').join(',')})`,
+        fieldIds
+      )
+      for (const row of fieldRows) {
+        const field = {
+          sportType: row.sport_type,
+          price_per_hour: row.price_per_hour,
+          features: parseJson(row.features, {}),
+          timeSlots: parseJson(row.time_slots, [])
+        }
+        const list = fieldsByFacility.get(row.facility_id) || []
+        list.push(field)
+        fieldsByFacility.set(row.facility_id, list)
+      }
     }
 
-    // For sports bases, fetch associated sports fields and parse gallery
-    const facilitiesWithDetails = await Promise.all(rows.map(async (facility) => {
+    for (const facility of rows) {
       attachProfileTier(facility)
       if (facility.facility_type === 'field') {
-        const [sportsFieldsRows] = await pool.query(
-          'SELECT * FROM facility_sports_fields WHERE facility_id = ? ORDER BY created_at ASC',
-          [facility.id]
-        )
-        
-        // Parse and map sports fields to match frontend structure
-        facility.sportsFields = sportsFieldsRows.map((row) => {
-          const field = {
-            id: row.id,
-            fieldName: row.field_name || row.fieldName,
-            sportType: row.sport_type || row.sportType,
-            description: row.description || '',
-            slotSize: row.slot_size || row.slotSize || 60,
-            features: {},
-            timeSlots: []
-          }
-          
-          // Parse features JSON
-          if (row.features) {
-            try {
-              field.features = typeof row.features === 'string' ? JSON.parse(row.features) : row.features
-            } catch (e) {
-              console.error('Error parsing features for field', row.id, ':', e)
-              field.features = {}
-            }
-          }
-          
-          // Parse time_slots JSON
-          if (row.time_slots) {
-            try {
-              field.timeSlots = typeof row.time_slots === 'string' ? JSON.parse(row.time_slots) : row.time_slots
-            } catch (e) {
-              console.error('Error parsing time_slots for field', row.id, ':', e)
-              field.timeSlots = []
-            }
-          }
-          
-          return field
-        })
+        facility.sportsFields = fieldsByFacility.get(facility.id) || []
       }
-      
-      // Parse gallery if it's a string
-      if (facility.gallery && typeof facility.gallery === 'string') {
-        try {
-          facility.gallery = JSON.parse(facility.gallery)
-        } catch (e) {
-          facility.gallery = []
-        }
-      }
-      
-      return facility
-    }))
+      const image = coverImage(facility)
+      decorateFacility(facility)
+      facility.image_url = image
+      facility.sportsFields = (facility.sportsFields || [])
+        .map((field) => ({ sportType: field.sportType }))
+        .filter((field) => field.sportType)
+      delete facility.logo_url
+      delete facility.gallery
+      delete facility.opening_hours
+      delete facility.audience
+      delete facility.has_parking
+      delete facility.has_shower
+      delete facility.has_changing_room
+      delete facility.has_lighting
+      delete facility.has_air_conditioning
+    }
 
-    res.json({ success: true, data: facilitiesWithDetails })
+    const ids = rows.map((facility) => facility.id)
+    if (ids.length) {
+      const [stats] = await pool.query(
+        `SELECT facility_id, ROUND(AVG(rating), 1) AS ratingAvg, COUNT(*) AS ratingCount
+         FROM facility_reviews
+         WHERE status = 'approved' AND facility_id IN (${ids.map(() => '?').join(',')})
+         GROUP BY facility_id`,
+        ids
+      )
+      const byId = new Map(stats.map((row) => [row.facility_id, row]))
+      for (const facility of rows) {
+        const stat = byId.get(facility.id)
+        facility.ratingAvg = stat ? Number(stat.ratingAvg) : null
+        facility.ratingCount = stat ? Number(stat.ratingCount) : 0
+      }
+    }
+
+    res.json({ success: true, data: rows })
   } catch (error) {
     console.error('Error fetching facilities:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
+  }
+})
+
+app.get('/api/facilities/:id/reviews', async (req, res) => {
+  try {
+    const facilityId = parseInt(req.params.id, 10)
+    const [rows] = await pool.query(
+      `SELECT id, author_name, body, rating, created_at
+       FROM facility_reviews
+       WHERE facility_id = ? AND status = 'approved'
+       ORDER BY created_at DESC
+       LIMIT 30`,
+      [facilityId]
+    )
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.post('/api/facilities/:id/reviews', async (req, res) => {
+  try {
+    if (!rateLimit(req, res, 'facility-review', 5, 60 * 60 * 1000)) return
+    const facilityId = parseInt(req.params.id, 10)
+    const name = String(req.body.authorName || '').trim().slice(0, 80)
+    const email = String(req.body.email || '').trim().toLowerCase().slice(0, 180)
+    const body = String(req.body.body || '').trim().slice(0, 1500)
+    const rating = parseInt(req.body.rating, 10)
+    if (!name || !email || body.length < 5 || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, error: 'Completează numele, emailul, o notă și un text de cel puțin 5 caractere.' })
+    }
+    const [facilities] = await pool.query('SELECT id FROM facilities WHERE id = ? AND status = \'active\'', [facilityId])
+    if (facilities.length === 0) return res.status(404).json({ success: false, error: 'Profilul nu există.' })
+    await pool.query(
+      'INSERT INTO facility_reviews (facility_id, author_name, email, body, rating, status) VALUES (?, ?, ?, ?, ?, \'pending\')',
+      [facilityId, name, email, body, rating]
+    )
+    res.json({ success: true, message: 'Recenzia a fost trimisă și așteaptă aprobarea.' })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.post('/api/facilities/:id/reports', async (req, res) => {
+  try {
+    if (!rateLimit(req, res, 'facility-report', 5, 60 * 60 * 1000)) return
+    const facilityId = parseInt(req.params.id, 10)
+    const name = String(req.body.name || '').trim().slice(0, 80)
+    const email = String(req.body.email || '').trim().toLowerCase().slice(0, 180)
+    const message = String(req.body.message || '').trim().slice(0, 1500)
+    if (!name || !email || message.length < 10) {
+      return res.status(400).json({ success: false, error: 'Spune-ne ce este greșit, cu nume și email.' })
+    }
+    await pool.query(
+      'INSERT INTO facility_reports (facility_id, name, email, message) VALUES (?, ?, ?, ?)',
+      [facilityId, name, email, message]
+    )
+    res.json({ success: true, message: 'Sesizarea a fost trimisă. O verificăm.' })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.post('/api/facilities/:id/events', async (req, res) => {
+  try {
+    if (!rateLimit(req, res, 'facility-event', 40, 60 * 1000)) return
+    const facilityId = parseInt(req.params.id, 10)
+    const type = String(req.body.type || '')
+    if (!['view', 'phone', 'whatsapp', 'map'].includes(type)) {
+      return res.status(400).json({ success: false, error: 'Tip invalid.' })
+    }
+    await pool.query('INSERT INTO facility_events (facility_id, event_type) VALUES (?, ?)', [facilityId, type])
+    res.json({ success: true })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.get('/api/my-facility/stats', async (req, res) => {
+  try {
+    const session = requireUser(req, res)
+    if (!session) return
+    const [rows] = await pool.query(
+      `SELECT event_type, COUNT(*) AS total
+       FROM facility_events
+       WHERE facility_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+       GROUP BY event_type`,
+      [session.facilityId]
+    )
+    const stats = { view: 0, phone: 0, whatsapp: 0, map: 0 }
+    for (const row of rows) stats[row.event_type] = Number(row.total)
+    res.json({ success: true, data: stats })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.get('/api/admin/facility-reviews', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT r.*, f.name AS facility_name
+       FROM facility_reviews r
+       LEFT JOIN facilities f ON f.id = r.facility_id
+       ORDER BY r.created_at DESC
+       LIMIT 200`
+    )
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.put('/api/admin/facility-reviews/:id', async (req, res) => {
+  try {
+    const status = req.body.status === 'approved' || req.body.status === 'rejected' ? req.body.status : 'pending'
+    await pool.query('UPDATE facility_reviews SET status = ? WHERE id = ?', [status, req.params.id])
+    res.json({ success: true })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.get('/api/admin/facility-reports', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT r.*, f.name AS facility_name
+       FROM facility_reports r
+       LEFT JOIN facilities f ON f.id = r.facility_id
+       ORDER BY r.created_at DESC
+       LIMIT 200`
+    )
+    res.json({ success: true, data: rows })
+  } catch (error) {
+    serverError(res, error)
+  }
+})
+
+app.put('/api/admin/facility-reports/:id', async (req, res) => {
+  try {
+    const status = req.body.status === 'resolved' ? 'resolved' : 'open'
+    await pool.query('UPDATE facility_reports SET status = ? WHERE id = ?', [status, req.params.id])
+    res.json({ success: true })
+  } catch (error) {
+    serverError(res, error)
   }
 })
 
@@ -3286,17 +3990,20 @@ app.post('/api/admin/login', async (req, res) => {
       })
     }
 
-    const hashedPassword = hashPassword(password)
     const [rows] = await pool.query(
-      'SELECT id, username, email FROM admin_users WHERE username = ? AND password = ?',
-      [username, hashedPassword]
+      'SELECT id, username, email, password FROM admin_users WHERE username = ?',
+      [username]
     )
 
-    if (rows.length === 0) {
+    if (rows.length === 0 || !passwordMatches(password, rows[0].password)) {
       return res.status(401).json({
         success: false,
         error: 'Credențiale invalide'
       })
+    }
+
+    if (passwordNeedsUpgrade(rows[0].password)) {
+      await pool.query('UPDATE admin_users SET password = ? WHERE id = ?', [hashPassword(password), rows[0].id])
     }
 
     res.json({
@@ -3311,7 +4018,7 @@ app.post('/api/admin/login', async (req, res) => {
     })
   } catch (error) {
     console.error('Error during admin login:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3351,7 +4058,7 @@ app.get('/api/admin/pending-facilities', async (req, res) => {
     res.json({ success: true, data: rows })
   } catch (error) {
     console.error('❌ Error fetching pending facilities:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3463,7 +4170,7 @@ app.put('/api/admin/facilities/:id/status', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating facility status:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3485,7 +4192,7 @@ app.get('/api/admin/users', async (req, res) => {
     res.json({ success: true, data: rows })
   } catch (error) {
     console.error('Error fetching users:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3512,7 +4219,7 @@ app.post('/api/admin/users/:id/reset-password', async (req, res) => {
     })
   } catch (error) {
     console.error('Error resetting password:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3534,7 +4241,7 @@ app.get('/api/admin/site-settings', async (req, res) => {
     res.json({ success: true, data: settings })
   } catch (error) {
     console.error('Error fetching site settings:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3574,7 +4281,7 @@ app.put('/api/admin/site-settings/:key', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating site setting:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3609,7 +4316,7 @@ app.get('/api/admin/smtp-config', async (req, res) => {
     res.json({ success: true, data: config })
   } catch (error) {
     console.error('Error fetching SMTP config:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3666,7 +4373,7 @@ app.put('/api/admin/smtp-config', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating SMTP config:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3718,7 +4425,7 @@ app.post('/api/admin/smtp-test', async (req, res) => {
     }
   } catch (error) {
     console.error('Error testing SMTP:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3751,7 +4458,7 @@ app.put('/api/admin/site-settings/logo', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating site logo:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3803,7 +4510,7 @@ app.post('/api/pending-cities', async (req, res) => {
     })
   } catch (error) {
     console.error('Error submitting pending city:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3848,7 +4555,7 @@ app.post('/api/pending-sports', async (req, res) => {
     })
   } catch (error) {
     console.error('Error submitting pending sport:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3867,7 +4574,7 @@ app.get('/api/admin/pending-cities', async (req, res) => {
     res.json({ success: true, data: rows })
   } catch (error) {
     console.error('Error fetching pending cities:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3886,7 +4593,7 @@ app.get('/api/admin/pending-sports', async (req, res) => {
     res.json({ success: true, data: rows })
   } catch (error) {
     console.error('Error fetching pending sports:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3918,7 +4625,7 @@ app.put('/api/admin/pending-cities/:id/status', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating pending city status:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3950,7 +4657,7 @@ app.put('/api/admin/pending-sports/:id/status', async (req, res) => {
     })
   } catch (error) {
     console.error('Error updating pending sport status:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -3979,7 +4686,7 @@ app.get('/api/seo-pages', async (req, res) => {
     res.json({ success: true, data: rows[0] })
   } catch (error) {
     console.error('Error fetching SEO page:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -4003,7 +4710,7 @@ app.get('/api/admin/seo-pages', async (req, res) => {
     res.json({ success: true, data: rows })
   } catch (error) {
     console.error('Error fetching SEO pages:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -4033,7 +4740,7 @@ app.get('/api/admin/seo-pages/:id', async (req, res) => {
     res.json({ success: true, data: rows[0] })
   } catch (error) {
     console.error('Error fetching SEO page:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -4067,7 +4774,7 @@ app.post('/api/admin/seo-pages', async (req, res) => {
       return res.status(400).json({ success: false, error: 'URL already exists' })
     }
     console.error('Error creating SEO page:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -4095,7 +4802,7 @@ app.put('/api/admin/seo-pages/:id', async (req, res) => {
     res.json({ success: true, message: 'SEO page updated successfully' })
   } catch (error) {
     console.error('Error updating SEO page:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -4128,7 +4835,7 @@ app.post('/api/suggestions', async (req, res) => {
     })
   } catch (error) {
     console.error('Error saving suggestion:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -4161,7 +4868,7 @@ app.get('/api/admin/suggestions', async (req, res) => {
     res.json({ success: true, data: rows })
   } catch (error) {
     console.error('Error fetching suggestions:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -4196,7 +4903,7 @@ app.put('/api/admin/suggestions/:id/status', async (req, res) => {
     res.json({ success: true, message: 'Status actualizat cu succes' })
   } catch (error) {
     console.error('Error updating suggestion status:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -4219,7 +4926,7 @@ app.delete('/api/admin/suggestions/:id', async (req, res) => {
     res.json({ success: true, message: 'Sugestie ștearsă cu succes' })
   } catch (error) {
     console.error('Error deleting suggestion:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
 })
 
@@ -4241,8 +4948,19 @@ app.delete('/api/admin/seo-pages/:id', async (req, res) => {
     res.json({ success: true, message: 'SEO page deleted successfully' })
   } catch (error) {
     console.error('Error deleting SEO page:', error)
-    res.status(500).json({ success: false, error: error.message })
+    serverError(res, error)
   }
+})
+
+app.use((err, req, res, next) => {
+  console.error(err)
+  if (res.headersSent) return next(err)
+  const tooBig = err.code === 'LIMIT_FILE_SIZE'
+  const badType = err.message === 'Sunt acceptate doar JPEG, PNG și WebP'
+  res.status(tooBig || badType ? 400 : 500).json({
+    success: false,
+    error: tooBig ? 'Fișierul este prea mare.' : badType ? 'Sunt acceptate doar JPEG, PNG și WebP.' : 'A apărut o eroare. Încearcă din nou.'
+  })
 })
 
 app.listen(PORT, '0.0.0.0', () => {

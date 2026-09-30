@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Fitness">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#991b1b"/></linearGradient></defs>
+  <rect width="128" height="128" fill="url(#g)"/>
+  <rect x="28" y="58" width="72" height="12" rx="4" fill="#fecaca"/>
+  <rect x="20" y="52" width="14" height="24" rx="3" fill="#fff"/>
+  <rect x="94" y="52" width="14" height="24" rx="3" fill="#fff"/>
+  <rect x="58" y="48" width="12" height="32" rx="2" fill="#450a0a"/>
+</svg>

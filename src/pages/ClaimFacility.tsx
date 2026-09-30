@@ -13,7 +13,8 @@ const REGISTER_TYPE_BY_SLUG: Record<string, string> = {
   'baze-sportive': 'field',
   antrenori: 'coach',
   'magazine-reparatii': 'repair_shop',
-  'magazine-articole': 'equipment_shop'
+  'magazine-articole': 'equipment_shop',
+  'recuperare-sportiva': 'sports_recovery'
 }
 
 type Step = 'start' | 'pay' | 'onboarding' | 'done'

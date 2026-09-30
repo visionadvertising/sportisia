@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
-import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug, repairCategoryToSlug } from '../utils/seo'
+import { cityNameToSlug, sportNameToSlug, facilityTypeToSlug, repairCategoryToSlug, recoveryServiceToSlug } from '../utils/seo'
+import { RECOVERY_SERVICES } from '../data/recovery-services'
 import BusinessScrollCards from '../components/BusinessScrollCards'
 
 
@@ -15,12 +16,15 @@ function Home() {
   const [selectedSport, setSelectedSport] = useState('')
   const [selectedType, setSelectedType] = useState('')
   const [selectedRepairCategory, setSelectedRepairCategory] = useState('')
+  const [selectedRecoveryService, setSelectedRecoveryService] = useState('')
   const [citySearch, setCitySearch] = useState('')
   const [showCityDropdown, setShowCityDropdown] = useState(false)
   const [sportSearch, setSportSearch] = useState('')
   const [showSportDropdown, setShowSportDropdown] = useState(false)
   const [repairCategorySearch, setRepairCategorySearch] = useState('')
   const [showRepairCategoryDropdown, setShowRepairCategoryDropdown] = useState(false)
+  const [recoveryServiceSearch, setRecoveryServiceSearch] = useState('')
+  const [showRecoveryServiceDropdown, setShowRecoveryServiceDropdown] = useState(false)
   const [typeSearch, setTypeSearch] = useState('')
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
   const [availableCities, setAvailableCities] = useState<Array<{city: string, county?: string | null}>>(ROMANIAN_CITIES)
@@ -31,8 +35,11 @@ function Home() {
     { value: 'field', label: 'Terenuri' },
     { value: 'coach', label: 'Antrenori' },
     { value: 'repair_shop', label: 'Magazine Reparații' },
-    { value: 'equipment_shop', label: 'Magazine Articole' }
+    { value: 'equipment_shop', label: 'Magazine Articole' },
+    { value: 'sports_recovery', label: 'Recuperare sportivă' }
   ]
+
+  const RECOVERY_SERVICE_OPTIONS = [{ value: '', label: 'Toate serviciile' }, ...RECOVERY_SERVICES.map((s) => ({ value: s, label: s }))]
 
   const REPAIR_CATEGORIES = [
     { value: '', label: 'Toate categoriile' },
@@ -50,14 +57,24 @@ function Home() {
 
   // Determine which options to show based on selected type
   const isRepairShop = selectedType === 'repair_shop'
-  const showSportFilter = selectedType === 'field' || selectedType === 'coach' || selectedType === 'equipment_shop' || selectedType === ''
+  const isSportsRecovery = selectedType === 'sports_recovery'
+  const showSportFilter =
+    selectedType === 'field' ||
+    selectedType === 'coach' ||
+    selectedType === 'sports_recovery' ||
+    selectedType === 'equipment_shop' ||
+    selectedType === ''
   const showRepairCategoryFilter = isRepairShop
+  const showRecoveryServiceFilter = isSportsRecovery
 
-  // Reset sport/repair category when type changes
   useEffect(() => {
     if (selectedType !== 'repair_shop') {
       setSelectedRepairCategory('')
       setRepairCategorySearch('')
+    }
+    if (selectedType !== 'sports_recovery') {
+      setSelectedRecoveryService('')
+      setRecoveryServiceSearch('')
     }
     if (selectedType === 'repair_shop') {
       setSelectedSport('')
@@ -121,18 +138,30 @@ function Home() {
 
 
   // Generate URL from filters (same logic as FacilityFilters)
-  const generateURLFromFilters = (city: string, sport: string, type: string, repairCategory?: string): string => {
+  const generateURLFromFilters = (
+    city: string,
+    sport: string,
+    type: string,
+    repairCategory?: string,
+    recoveryService?: string
+  ): string => {
     const hasCity = city && city.trim() !== ''
     const hasSport = sport && sport.trim() !== ''
     const hasType = type && type.trim() !== ''
     const hasRepairCategory = repairCategory && repairCategory.trim() !== ''
-    
-    // For repair shops with category
+    const hasRecoveryService = recoveryService && recoveryService.trim() !== ''
+
     if (hasType && type === 'repair_shop' && hasRepairCategory) {
       if (hasCity) {
         return `/${cityNameToSlug(city)}/magazine-reparatii/${repairCategoryToSlug(repairCategory)}`
       }
       return `/magazine-reparatii/${repairCategoryToSlug(repairCategory)}`
+    }
+    if (hasType && type === 'sports_recovery' && hasRecoveryService) {
+      if (hasCity) {
+        return `/${cityNameToSlug(city)}/recuperare-sportiva/${recoveryServiceToSlug(recoveryService)}`
+      }
+      return `/recuperare-sportiva/${recoveryServiceToSlug(recoveryService)}`
     }
     
     if (hasCity && hasSport && hasType) {
@@ -158,7 +187,8 @@ function Home() {
         'field': '/terenuri',
         'coach': '/antrenori',
         'repair_shop': '/magazine-reparatii',
-        'equipment_shop': '/magazine-articole'
+        equipment_shop: '/magazine-articole',
+        sports_recovery: '/recuperare-sportiva'
       }
       return baseUrls[type] || '/toate'
     }
@@ -166,7 +196,13 @@ function Home() {
   }
 
   const handleSearch = () => {
-    const url = generateURLFromFilters(selectedCity, selectedSport, selectedType, selectedRepairCategory)
+    const url = generateURLFromFilters(
+      selectedCity,
+      selectedSport,
+      selectedType,
+      selectedRepairCategory,
+      selectedRecoveryService
+    )
     navigate(url)
   }
 
@@ -560,6 +596,117 @@ function Home() {
             </div>
           )}
 
+          {showRecoveryServiceFilter && (
+            <div style={{ position: 'relative' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '0.75rem',
+                color: '#0f172a',
+                fontWeight: '600',
+                fontSize: '0.875rem'
+              }}>Serviciu recuperare</label>
+              <input
+                type="text"
+                value={selectedRecoveryService ? RECOVERY_SERVICE_OPTIONS.find(c => c.value === selectedRecoveryService)?.label || '' : recoveryServiceSearch}
+                onChange={(e) => {
+                  setRecoveryServiceSearch(e.target.value)
+                  setShowRecoveryServiceDropdown(true)
+                  if (!e.target.value) {
+                    setSelectedRecoveryService('')
+                  }
+                }}
+                onClick={() => setShowRecoveryServiceDropdown(true)}
+                onFocus={(e) => {
+                  setShowRecoveryServiceDropdown(true)
+                  e.target.style.borderColor = '#10b981'
+                  e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)'
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0'
+                  e.target.style.boxShadow = 'none'
+                  setTimeout(() => setShowRecoveryServiceDropdown(false), 250)
+                }}
+                placeholder="Caută sau selectează serviciu"
+                style={{
+                  width: '100%',
+                  padding: '0.875rem 1rem',
+                  paddingRight: '2.5rem',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '400',
+                  lineHeight: '1.5',
+                  boxShadow: 'none'
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                right: '0.75rem',
+                top: '2.75rem',
+                pointerEvents: 'none'
+              }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#94a3b8" strokeWidth="2">
+                  <path d="M5 7.5l5 5 5-5"/>
+                </svg>
+              </div>
+              {showRecoveryServiceDropdown && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '0.25rem',
+                  background: '#ffffff',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  zIndex: 1000
+                }}>
+                  {RECOVERY_SERVICE_OPTIONS
+                    .filter(option => option.value)
+                    .filter(option =>
+                      !recoveryServiceSearch ||
+                      option.label.toLowerCase().includes(recoveryServiceSearch.toLowerCase())
+                    )
+                    .map(option => (
+                      <div
+                        key={option.value}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          setSelectedRecoveryService(option.value)
+                          setRecoveryServiceSearch('')
+                          setShowRecoveryServiceDropdown(false)
+                        }}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f1f5f9',
+                          color: '#0f172a',
+                          fontSize: '0.9375rem',
+                          fontWeight: '500',
+                          transition: 'background 0.15s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#f0fdf4'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#ffffff'
+                        }}
+                      >
+                        {option.label}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {showRepairCategoryFilter && (
             <div style={{ position: 'relative' }}>
               <label style={{
@@ -670,7 +817,7 @@ function Home() {
             </div>
           )}
 
-          {!showSportFilter && !showRepairCategoryFilter && (
+          {!showSportFilter && !showRepairCategoryFilter && !showRecoveryServiceFilter && (
             <div style={{ position: 'relative' }}>
               <label style={{
                 display: 'block',

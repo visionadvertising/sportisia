@@ -4,6 +4,16 @@ import API_BASE_URL from '../config'
 import { ROMANIAN_CITIES } from '../data/romanian-cities'
 import MapSelector from '../components/MapSelector'
 import ShopHours, { formatShopHours, shopHoursFromText } from '../components/ShopHours'
+import {
+  AccountHomeLink,
+  AccountPageLayout,
+  AccountTabs,
+  accountActionButton
+} from '../components/account/AccountPageLayout'
+import { card, colors, primaryButton } from '../ui/theme'
+import { clearUserSession } from '../utils/memberSession'
+import { sportAvatarSeed } from '../utils/sportAvatars'
+import { RECOVERY_SERVICES } from '../data/recovery-services'
 
 interface TimeSlot {
   day: string
@@ -99,6 +109,7 @@ function Dashboard() {
   const [passwordResetLoading, setPasswordResetLoading] = useState(false)
   const [newPassword, setNewPassword] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [stats, setStats] = useState<{ view: number; phone: number; whatsapp: number; map: number } | null>(null)
 
   // Form state
   const [formData, setFormData] = useState<any>({})
@@ -120,6 +131,10 @@ function Dashboard() {
     }
 
     const userData = JSON.parse(storedUser)
+    if (userData.accountKind === 'member') {
+      navigate('/cont', { replace: true })
+      return
+    }
     setUser(userData)
     fetchFacility(userData.username)
   }, [navigate])
@@ -181,13 +196,27 @@ function Dashboard() {
           facilityData.repair_categories = []
         }
 
+        if (facilityData.recovery_services) {
+          try {
+            facilityData.recovery_services = typeof facilityData.recovery_services === 'string' ? JSON.parse(facilityData.recovery_services) : facilityData.recovery_services
+          } catch { facilityData.recovery_services = [] }
+        } else {
+          facilityData.recovery_services = []
+        }
+
         if (facilityData.map_coordinates) {
           try {
             facilityData.map_coordinates = typeof facilityData.map_coordinates === 'string' ? JSON.parse(facilityData.map_coordinates) : facilityData.map_coordinates
           } catch { facilityData.map_coordinates = null }
         }
 
+        if (facilityData.audience && typeof facilityData.audience === 'string') {
+          try { facilityData.audience = JSON.parse(facilityData.audience) } catch { facilityData.audience = [] }
+        }
         setFacility(facilityData)
+        fetch(`${API_BASE_URL}/my-facility/stats`).then((response) => response.json()).then((statsData) => {
+          if (statsData.success) setStats(statsData.data)
+        }).catch(() => {})
         setFormData(facilityData)
 
         // Fetch sports fields if it's a sports base
@@ -239,6 +268,7 @@ function Dashboard() {
         socialMedia: formData.social_media || formData.socialMedia,
         gallery: formData.gallery || [],
         mapCoordinates: formData.map_coordinates || formData.mapCoordinates,
+        recoveryServices: formData.recovery_services,
         sportsFields: activeTab === 'fields' ? sportsFields : undefined
       }
 
@@ -303,8 +333,7 @@ function Dashboard() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('user')
-    localStorage.removeItem('userToken')
+    clearUserSession()
     navigate('/')
   }
 
@@ -315,7 +344,7 @@ function Dashboard() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f9fafb'
+        background: colors.page
       }}>
         <div style={{ textAlign: 'center', color: '#64748b' }}>
           <div style={{
@@ -340,22 +369,14 @@ function Dashboard() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f9fafb',
+        background: colors.page,
         padding: '2rem'
       }}>
         <div style={{ textAlign: 'center' }}>
           <p style={{ color: '#64748b', marginBottom: '1rem' }}>Facilitatea nu a fost găsită.</p>
           <Link
             to="/"
-            style={{
-              padding: '0.75rem 2rem',
-              background: '#10b981',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '8px',
-              display: 'inline-block',
-              fontWeight: '500'
-            }}
+            style={primaryButton}
           >
             Mergi la Home
           </Link>
@@ -373,149 +394,43 @@ function Dashboard() {
     { id: 'password', label: 'Securitate' }
   ]
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f9fafb'
-    }}>
-      {/* Header */}
-      <div style={{
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        padding: isMobile ? '1rem' : '1.5rem 2rem',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
-      }}>
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem'
-        }}>
-          <div>
-            <h1 style={{
-              fontSize: isMobile ? '1.5rem' : '1.875rem',
-              color: '#0f172a',
-              margin: 0,
-              marginBottom: '0.25rem',
-              fontWeight: '600'
-            }}>Dashboard</h1>
-            <p style={{
-              color: '#64748b',
-              margin: 0,
-              fontSize: '0.875rem'
-            }}>{facility.name}</p>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            {facility.status === 'active' && (() => {
-              // Create SEO-friendly slug
-              const createSlug = (name: string, city: string): string => {
-                const text = `${name} ${city}`
-                return text
-                  .toLowerCase()
-                  .normalize('NFD')
-                  .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-                  .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
-                  .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
-              }
-              const slug = createSlug(facility.name || '', facility.city || '')
-              return (
-                <Link
-                  to={`/baza-sportiva/${slug}`}
-                  target="_blank"
-                  style={{
-                    padding: '0.625rem 1.25rem',
-                    background: '#10b981',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '500',
-                    fontSize: '0.875rem',
-                    transition: 'all 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#059669'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#10b981'
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
-                  Vezi pagina publică
-                </Link>
-              )
-            })()}
-            <Link
-              to="/"
-              style={{
-                padding: '0.625rem 1.25rem',
-                background: '#f1f5f9',
-                color: '#475569',
-                textDecoration: 'none',
-                borderRadius: '8px',
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#e2e8f0'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#f1f5f9'
-              }}
-            >
-              Home
-            </Link>
-            <button
-              onClick={handleLogout}
-              style={{
-                padding: '0.625rem 1.25rem',
-                background: '#ef4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#dc2626'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#ef4444'
-              }}
-            >
-              Deconectare
-            </button>
-          </div>
-        </div>
-      </div>
+  const publicSlug = (() => {
+    const text = `${facility.name || ''} ${facility.city || ''}`
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  })()
 
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto',
-        padding: isMobile ? '1.5rem 1rem' : '2rem'
-      }}>
+  return (
+    <AccountPageLayout
+      eyebrow="Administrator facilitate"
+      title={facility.name}
+      subtitle={facility.city}
+      avatarSeed={sportAvatarSeed(user)}
+      avatarUrl={user?.avatarUrl}
+      isMobile={isMobile}
+      actions={
+        <>
+          {facility.status === 'active' ? (
+            <Link to={`/baza-sportiva/${publicSlug}`} target="_blank" style={accountActionButton('primary')}>
+              Pagina publică
+            </Link>
+          ) : null}
+          <AccountHomeLink isMobile={isMobile} />
+          <button type="button" onClick={handleLogout} style={accountActionButton('danger')}>
+            Ieșire
+          </button>
+        </>
+      }
+    >
         {/* Status Badge */}
         <div style={{
-          background: 'white',
+          ...card,
           padding: '1rem 1.5rem',
-          borderRadius: '12px',
           marginBottom: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
           display: 'flex',
           alignItems: 'center',
           gap: '1rem',
@@ -534,10 +449,24 @@ function Dashboard() {
             {facility.status === 'active' ? 'Activ' : 'În așteptare'}
           </div>
           <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
-            {facility.status === 'pending' && 'Facilitatea ta este în așteptarea aprobării de către administrator.'}
-            {facility.status === 'active' && 'Facilitatea ta este activă și vizibilă pe site.'}
+            {facility.status === 'pending' ? 'În așteptarea aprobării.' : 'Vizibil pe site.'}
           </span>
         </div>
+        {stats && (
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            {[
+              ['Deschideri', stats.view],
+              ['Apeluri', stats.phone],
+              ['WhatsApp', stats.whatsapp],
+              ['Hartă', stats.map]
+            ].map(([label, value]) => (
+              <div key={String(label)} style={{ ...card, padding: '0.9rem 1rem' }}>
+                <div style={{ color: '#64748b', fontSize: '0.8rem' }}>{label}, ultimele 30 de zile</div>
+                <strong style={{ fontSize: '1.4rem', color: '#0f172a' }}>{value}</strong>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Messages */}
         {error && (
@@ -568,47 +497,13 @@ function Dashboard() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div style={{
-          background: 'white',
-          borderRadius: '12px',
-          padding: '0.5rem',
-          marginBottom: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-          display: 'flex',
-          gap: '0.5rem',
-          overflowX: 'auto',
-          WebkitOverflowScrolling: 'touch'
-        }}>
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                padding: '0.75rem 1.5rem',
-                background: activeTab === tab.id ? '#10b981' : 'transparent',
-                color: activeTab === tab.id ? 'white' : '#64748b',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: activeTab === tab.id ? '600' : '500',
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <AccountTabs isMobile={isMobile} tabs={tabs} active={activeTab} onChange={setActiveTab} />
 
         {/* Form Content */}
         <form onSubmit={handleSubmit}>
           <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: isMobile ? '1.5rem' : '2rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+            ...card,
+            padding: isMobile ? '1.5rem' : '2rem'
           }}>
             {/* General Tab */}
             {activeTab === 'general' && (
@@ -813,15 +708,59 @@ function Dashboard() {
                     <label style={dashLabel}>Județ</label>
                     <input value={formData.county || ''} onChange={(e) => setFormData({ ...formData, county: e.target.value })} style={dashInput} />
                   </div>
-                  {(facility.facility_type === 'field' || facility.facility_type === 'coach') && (
+                  {(facility.facility_type === 'field' || facility.facility_type === 'coach' || facility.facility_type === 'sports_recovery') && (
                     <div>
-                      <label style={dashLabel}>{facility.facility_type === 'coach' ? 'Preț / lecție (lei)' : 'Preț / oră (lei)'}</label>
-                      <input type="number" value={facility.facility_type === 'coach' ? (formData.price_per_lesson ?? '') : (formData.price_per_hour ?? '')} onChange={(e) => setFormData({ ...formData, [facility.facility_type === 'coach' ? 'price_per_lesson' : 'price_per_hour']: e.target.value })} style={dashInput} />
+                      <label style={dashLabel}>
+                        {facility.facility_type === 'field' ? 'Preț / oră (lei)' : 'Preț / ședință (lei)'}
+                      </label>
+                      <input
+                        type="number"
+                        value={
+                          facility.facility_type === 'field'
+                            ? (formData.price_per_hour ?? '')
+                            : (formData.price_per_lesson ?? '')
+                        }
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [facility.facility_type === 'field' ? 'price_per_hour' : 'price_per_lesson']: e.target.value
+                          })
+                        }
+                        style={dashInput}
+                      />
                     </div>
                   )}
                 </div>
+                {facility.facility_type === 'coach' && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <div style={dashLabel}>Pentru cine</div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {[
+                        ['copii', 'Copii'],
+                        ['adulti', 'Adulți'],
+                        ['incepatori', 'Începători']
+                      ].map(([key, label]) => {
+                        const selected = Array.isArray(formData.audience) && formData.audience.includes(key)
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => {
+                              const current = Array.isArray(formData.audience) ? formData.audience : []
+                              const next = selected ? current.filter((item: string) => item !== key) : [...current, key]
+                              setFormData({ ...formData, audience: next })
+                            }}
+                            style={{ border: selected ? '1px solid #10b981' : '1px solid #e2e8f0', background: selected ? '#ecfdf5' : 'white', borderRadius: '999px', padding: '0.45rem 0.8rem', cursor: 'pointer', fontWeight: 700 }}
+                          >
+                            {label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
 
-                {(facility.facility_type === 'field' || facility.facility_type === 'equipment_shop') && (
+                {(facility.facility_type === 'field' || facility.facility_type === 'equipment_shop' || facility.facility_type === 'sports_recovery') && (
                   <div style={{ marginTop: '1.5rem' }}>
                     <label style={dashLabel}>Sport</label>
                     <select value={formData.sport || ''} onChange={(e) => setFormData({ ...formData, sport: e.target.value })} style={dashInput}>
@@ -840,12 +779,49 @@ function Dashboard() {
                   </div>
                 )}
 
-                {facility.facility_type === 'coach' && (
+                {(facility.facility_type === 'coach' || facility.facility_type === 'sports_recovery') && (
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>
                     <div><label style={dashLabel}>Specializare</label><input value={formData.specialization || ''} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} style={dashInput} /></div>
                     <div><label style={dashLabel}>Ani de experiență</label><input type="number" value={formData.experience_years ?? ''} onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })} style={dashInput} /></div>
                     <div><label style={dashLabel}>Certificări</label><input value={formData.certifications || ''} onChange={(e) => setFormData({ ...formData, certifications: e.target.value })} style={dashInput} /></div>
                     <div><label style={dashLabel}>Limbi</label><input value={formData.languages || ''} onChange={(e) => setFormData({ ...formData, languages: e.target.value })} style={dashInput} /></div>
+                  </div>
+                )}
+
+                {facility.facility_type === 'sports_recovery' && (
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <div><label style={dashLabel}>Pachete / servicii (text)</label><input value={formData.services_offered || ''} onChange={(e) => setFormData({ ...formData, services_offered: e.target.value })} style={dashInput} /></div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem' }}>
+                      {RECOVERY_SERVICES.map((service) => {
+                        const selected = (formData.recovery_services || []).includes(service)
+                        return (
+                          <button
+                            key={service}
+                            type="button"
+                            onClick={() => {
+                              const current = formData.recovery_services || []
+                              setFormData({
+                                ...formData,
+                                recovery_services: selected
+                                  ? current.filter((item: string) => item !== service)
+                                  : [...current, service]
+                              })
+                            }}
+                            style={{
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '999px',
+                              padding: '0.45rem 0.8rem',
+                              background: selected ? '#ecfdf5' : 'white',
+                              color: selected ? '#047857' : '#475569',
+                              fontWeight: 600,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {service}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 )}
 
@@ -1597,7 +1573,7 @@ function Dashboard() {
 
                 {(formData.gallery || []).length === 0 && (
                   <div style={{
-                    background: '#f9fafb',
+                    background: colors.page,
                     padding: '3rem',
                     borderRadius: '8px',
                     textAlign: 'center',
@@ -1627,7 +1603,7 @@ function Dashboard() {
                 </p>
                 {/* Sports fields management will be added here */}
                 <div style={{
-                  background: '#f9fafb',
+                  background: colors.page,
                   padding: '2rem',
                   borderRadius: '8px',
                   textAlign: 'center',
@@ -1649,7 +1625,7 @@ function Dashboard() {
                 }}>Securitate</h2>
 
                 <div style={{
-                  background: '#f9fafb',
+                  background: colors.page,
                   padding: '1.5rem',
                   borderRadius: '8px',
                   marginBottom: '1.5rem'
@@ -1749,14 +1725,13 @@ function Dashboard() {
             )}
           </div>
         </form>
-      </div>
 
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
       `}</style>
-    </div>
+    </AccountPageLayout>
   )
 }
 

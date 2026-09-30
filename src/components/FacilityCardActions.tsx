@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { trackFacility } from '../utils/facilityLocal'
 
 interface CardFacility {
   id: number
@@ -53,11 +54,11 @@ export default function FacilityCardActions({ facility, profileUrl, compact = fa
     }}>
       <div style={{ display: 'flex', gap: '0.4rem' }}>
         {phone && (
-          <a href={`tel:${phone}`} style={{ ...compactButton, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' }}>
+          <a href={`tel:${phone}`} onClick={() => trackFacility(facility.id, 'phone')} style={{ ...compactButton, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' }}>
             Sună acum
           </a>
         )}
-        <a href={mapsUrl(facility)} target="_blank" rel="noopener noreferrer" style={{ ...compactButton, background: '#fefce8', color: '#a16207', border: '1px solid #fef08a' }}>
+        <a href={mapsUrl(facility)} onClick={() => trackFacility(facility.id, 'map')} target="_blank" rel="noopener noreferrer" style={{ ...compactButton, background: '#fefce8', color: '#a16207', border: '1px solid #fef08a' }}>
           Spre locație
         </a>
       </div>

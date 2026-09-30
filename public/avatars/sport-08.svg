@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Volei">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0891b2"/><stop offset="100%" stop-color="#0e7490"/></linearGradient></defs>
+  <rect width="128" height="128" fill="url(#g)"/>
+  <circle cx="64" cy="64" r="30" fill="#f0fdfa" stroke="#fff" stroke-width="3"/>
+  <path stroke="#134e4a" stroke-width="2" fill="none" d="M64 34v60M34 64h60"/>
+  <path stroke="#134e4a" stroke-width="1.5" fill="none" d="M44 44c12 12 28 12 40 0M44 84c12-12 28-12 40 0"/>
+</svg>

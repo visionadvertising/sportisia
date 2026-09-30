@@ -184,10 +184,11 @@ export function sportNameToSlug(sport: string): string {
 }
 
 const FACILITY_TYPE_SLUGS: Record<string, string> = {
-  'field': 'terenuri',
-  'coach': 'antrenori',
-  'repair_shop': 'magazine-reparatii',
-  'equipment_shop': 'magazine-articole'
+  field: 'terenuri',
+  coach: 'antrenori',
+  repair_shop: 'magazine-reparatii',
+  equipment_shop: 'magazine-articole',
+  sports_recovery: 'recuperare-sportiva'
 }
 
 export function facilityTypeToSlug(type: string): string {
@@ -196,10 +197,11 @@ export function facilityTypeToSlug(type: string): string {
 
 export function slugToFacilityType(slug: string): string {
   const reverseMap: Record<string, string> = {
-    'terenuri': 'field',
-    'antrenori': 'coach',
+    terenuri: 'field',
+    antrenori: 'coach',
     'magazine-reparatii': 'repair_shop',
-    'magazine-articole': 'equipment_shop'
+    'magazine-articole': 'equipment_shop',
+    'recuperare-sportiva': 'sports_recovery'
   }
   return reverseMap[slug] || slug
 }
@@ -228,6 +230,34 @@ export function repairCategorySlugToName(slug: string): string {
     reverseMap[slugValue] = name
   })
   return reverseMap[slug.toLowerCase()] || deslugify(slug)
+}
+
+const RECOVERY_SERVICE_SLUG_MAP: Record<string, string> = {
+  Kinetoterapie: 'kinetoterapie',
+  Fizioterapie: 'fizioterapie',
+  'Masaj sportiv / terapeutic': 'masaj-sportiv-terapeutic',
+  'Terapie manuală': 'terapie-manuala',
+  'Recuperare post-accident / post-operatorie sportivă': 'recuperare-post-accident',
+  'Evaluare posturală / funcțională': 'evaluare-posturala-functionala',
+  'Terapii complementare': 'terapii-complementare',
+  'Recuperare pediatrică sportivă': 'recuperare-pediatrica-sportiva',
+  Altele: 'altele-recuperare'
+}
+
+export function recoveryServiceToSlug(service: string): string {
+  return RECOVERY_SERVICE_SLUG_MAP[service] || slugify(service)
+}
+
+export function recoveryServiceSlugToName(slug: string): string {
+  const reverseMap: Record<string, string> = {}
+  Object.entries(RECOVERY_SERVICE_SLUG_MAP).forEach(([name, slugValue]) => {
+    reverseMap[slugValue] = name
+  })
+  return reverseMap[slug.toLowerCase()] || deslugify(slug)
+}
+
+export function recoveryServiceSlugs(): string[] {
+  return Object.values(RECOVERY_SERVICE_SLUG_MAP)
 }
 
 // Generate SEO-friendly URL
