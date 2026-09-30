@@ -83,7 +83,7 @@ function FacilitiesList({ type, title }: FacilitiesListProps) {
     try {
       const params = new URLSearchParams({ type, status: 'active' })
       if (selectedCity) params.append('city', selectedCity)
-      if (selectedSport && (type === 'field' || type === 'coach' || type === 'sports_recovery')) {
+      if (selectedSport && (type === 'field' || type === 'coach')) {
         params.append('sport', selectedSport)
       }
 

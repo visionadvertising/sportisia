@@ -87,7 +87,7 @@ function FacilityFilters({
   const isSportsRecovery = selectedType === 'sports_recovery'
   const isEquipmentShop = selectedType === 'equipment_shop'
   const isFieldOrCoach = selectedType === 'field' || selectedType === 'coach'
-  const showSportFilter = !isRepairShop
+  const showSportFilter = !isRepairShop && !isSportsRecovery
   const showTypeFilterConditional =
     showTypeFilter && !isRepairShop && !isEquipmentShop && !isFieldOrCoach && !isSportsRecovery
   const showRepairCategoryFilter = isRepairShop
@@ -253,7 +253,7 @@ function FacilityFilters({
   ): string => {
     // Clean empty strings
     const hasCity = city && city.trim() !== ''
-    const hasSport = sport && sport.trim() !== ''
+    const hasSport = type !== 'sports_recovery' && sport && sport.trim() !== ''
     const hasType = type && type.trim() !== ''
     const hasRepairCategory = repairCategory && repairCategory.trim() !== ''
     
@@ -401,13 +401,13 @@ function FacilityFilters({
         display: 'grid',
         gridTemplateColumns: isMobile 
           ? '1fr' 
-          : (showRepairCategoryFilter 
-              ? 'repeat(2, 1fr)' // Type + City + Repair Category (when type is selected)
+          : (showRepairCategoryFilter || showRecoveryServiceFilter
+              ? 'repeat(2, 1fr)'
               : showTypeFilterConditional 
-                ? 'repeat(3, 1fr)' // Type + City + Sport
+                ? 'repeat(3, 1fr)'
                 : showSportFilter 
-                  ? 'repeat(2, 1fr)' // City + Sport (when type is selected)
-                  : '1fr'), // City only
+                  ? 'repeat(2, 1fr)'
+                  : '1fr'),
         gap: isMobile ? '1.25rem' : '1.5rem'
       }}>
         {/* Type Searchable Dropdown - FIRST (Only show when no specific type is selected) */}

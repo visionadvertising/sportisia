@@ -61,7 +61,6 @@ function Home() {
   const showSportFilter =
     selectedType === 'field' ||
     selectedType === 'coach' ||
-    selectedType === 'sports_recovery' ||
     selectedType === 'equipment_shop' ||
     selectedType === ''
   const showRepairCategoryFilter = isRepairShop
@@ -76,7 +75,7 @@ function Home() {
       setSelectedRecoveryService('')
       setRecoveryServiceSearch('')
     }
-    if (selectedType === 'repair_shop') {
+    if (selectedType === 'repair_shop' || selectedType === 'sports_recovery') {
       setSelectedSport('')
       setSportSearch('')
     }
@@ -146,7 +145,7 @@ function Home() {
     recoveryService?: string
   ): string => {
     const hasCity = city && city.trim() !== ''
-    const hasSport = sport && sport.trim() !== ''
+    const hasSport = type !== 'sports_recovery' && sport && sport.trim() !== ''
     const hasType = type && type.trim() !== ''
     const hasRepairCategory = repairCategory && repairCategory.trim() !== ''
     const hasRecoveryService = recoveryService && recoveryService.trim() !== ''
