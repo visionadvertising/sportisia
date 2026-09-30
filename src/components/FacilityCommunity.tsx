@@ -31,20 +31,14 @@ function profileUrl(facility: Similar) {
 
 export default function FacilityCommunity({
   facilityId,
-  name,
   city,
   type,
-  sport,
-  phone,
-  whatsapp
+  sport
 }: {
   facilityId: number
-  name: string
   city: string
   type: string
   sport?: string
-  phone?: string
-  whatsapp?: string
 }) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [similar, setSimilar] = useState<Similar[]>([])
@@ -69,11 +63,6 @@ export default function FacilityCommunity({
       if (data.success) setSimilar((data.data as Similar[]).filter((item) => item.id !== facilityId).slice(0, 3))
     }).catch(() => {})
   }, [facilityId, city, type, sport])
-
-  const share = () => {
-    const text = encodeURIComponent(`${name} ${window.location.href}`)
-    window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer')
-  }
 
   const sendReview = async (event: FormEvent) => {
     event.preventDefault()
@@ -110,15 +99,10 @@ export default function FacilityCommunity({
   }
 
   const average = reviews.length ? (reviews.reduce((sum, review) => sum + Number(review.rating), 0) / reviews.length).toFixed(1) : null
-  const cleanPhone = (phone || '').replace(/\s/g, '')
-  const cleanWhatsapp = (whatsapp || '').replace(/[^0-9]/g, '')
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1rem 5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '1.5rem' }}>
-        <h2 style={{ margin: 0, color: '#0f172a' }}>Recenzii {average ? `· ${average}` : ''}</h2>
-        <button type="button" onClick={share} style={primaryButton}>Trimite pe WhatsApp</button>
-      </div>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1rem 3rem' }}>
+      <h2 style={{ margin: '1.5rem 0 0', color: '#0f172a' }}>Recenzii {average ? `· ${average}` : ''}</h2>
       {reviews.length === 0 && <p style={{ color: '#64748b' }}>Încă nu sunt recenzii aprobate.</p>}
       <div style={{ display: 'grid', gap: '0.75rem' }}>
         {reviews.map((review) => (
@@ -173,20 +157,8 @@ export default function FacilityCommunity({
         <button type="submit" style={{ ...secondaryButton, marginTop: '0.75rem' }}>Trimite sesizarea</button>
         {reportNotice && <p style={{ color: '#047857' }}>{reportNotice}</p>}
       </form>
-
-      {(cleanPhone || cleanWhatsapp) && (
-        <div style={{ position: 'fixed', left: '0.75rem', right: '0.75rem', bottom: '0.75rem', zIndex: 30, display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-          {cleanPhone && (
-            <a href={`tel:${cleanPhone}`} onClick={() => trackFacility(facilityId, 'phone')} style={callButton}>Sună</a>
-          )}
-          {cleanWhatsapp && (
-            <a href={`https://wa.me/${cleanWhatsapp}`} target="_blank" rel="noopener noreferrer" onClick={() => trackFacility(facilityId, 'whatsapp')} style={{ ...callButton, background: '#059669' }}>WhatsApp</a>
-          )}
-        </div>
-      )}
     </div>
   )
 }
 
 const surface = { ...card, padding: '0.9rem 1rem' }
-const callButton = { ...secondaryButton, flex: 1, maxWidth: '220px', padding: '0.8rem 1rem' }

@@ -810,7 +810,7 @@ function SportsBasePublic() {
         maxWidth: '1400px',
         margin: '0 auto',
         padding: isMobile ? '1.5rem 1rem' : '3rem 2rem',
-        paddingBottom: isMobile ? '5.5rem' : '3rem'
+        paddingBottom: '3rem'
       }}>
         {/* Location and Contact */}
         <div style={{
@@ -1583,21 +1583,12 @@ function SportsBasePublic() {
         )}
 
       </div>
-      <FacilityCommunity
-        facilityId={facility.id}
-        name={facility.name}
-        city={facility.city}
-        type={facility.facility_type}
-        sport={facility.sport || facility.sportsFields?.[0]?.sportType}
-        phone={phones[0]}
-        whatsapp={whatsapps[0]}
-      />
-      
       <div style={{
-          position: 'fixed',
-          zIndex: 40,
-          top: '5.5rem',
-          right: '1rem'
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '0 1rem',
+          display: 'flex',
+          justifyContent: 'flex-end'
         }}>
           {facility.profile_tier === 'recommended' ? (
             <div style={{
@@ -1662,6 +1653,12 @@ function SportsBasePublic() {
             </Link>
           )}
         </div>
+      <FacilityCommunity
+        facilityId={facility.id}
+        city={facility.city}
+        type={facility.facility_type}
+        sport={facility.sport || facility.sportsFields?.[0]?.sportType}
+      />
 
     </div>
   )
